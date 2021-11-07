@@ -4,10 +4,15 @@ import org.gradle.api.GradleException;
 import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.*;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.VersionCatalog;
+import org.gradle.api.artifacts.VersionCatalogsExtension;
+import org.gradle.api.artifacts.VersionConstraint;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.JavaLibraryPlugin;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.util.GradleVersion;
@@ -20,7 +25,7 @@ import static de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExten
 
 @SuppressWarnings({"unused", "UnstableApiUsage"})
 @NonNullApi
-public class JavaModuleDependenciesPlugin implements Plugin<Project> {
+public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
     private final Map<File, ModuleInfo> moduleInfo = new HashMap<>();
     private boolean catalogFound = true;
@@ -60,12 +65,13 @@ public class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
     private void findAndReadModuleInfo(ModuleInfo.Directive moduleDirective, SourceSet sourceSet, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
         for (File folder : sourceSet.getJava().getSrcDirs()) {
-            File moduleInfoFile = new File(folder, "module-info.java");
-            if (moduleInfoFile.exists()) {
-                if (!this.moduleInfo.containsKey(moduleInfoFile)) {
-                    this.moduleInfo.put(moduleInfoFile, new ModuleInfo(moduleInfoFile));
+            Provider<RegularFile> moduleInfoFile = project.getLayout().file(project.provider(() -> new File(folder, "module-info.java")));
+            Provider<String> moduleInfoContent = project.getProviders().fileContents(moduleInfoFile).getAsText().forUseAtConfigurationTime();
+            if (moduleInfoContent.isPresent()) {
+                if (!this.moduleInfo.containsKey(folder)) {
+                    this.moduleInfo.put(folder, new ModuleInfo(moduleInfoContent.get()));
                 }
-                for (String moduleName : this.moduleInfo.get(moduleInfoFile).get(moduleDirective)) {
+                for (String moduleName : this.moduleInfo.get(folder).get(moduleDirective)) {
                     declareDependency(moduleName, project, configuration, javaModuleDependenciesExtension);
                 }
             }

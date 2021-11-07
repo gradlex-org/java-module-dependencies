@@ -1,10 +1,9 @@
 package de.jjohannes.gradle.moduledependencies;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class ModuleInfo {
 
@@ -20,11 +19,9 @@ public class ModuleInfo {
     private final List<String> requiresStatic = new ArrayList<>();
     private final List<String> requiresStaticTransitive = new ArrayList<>();
 
-    public ModuleInfo(File moduleInfoFile) {
-        try (Stream<String> stream = Files.lines(moduleInfoFile.toPath())) {
-            stream.forEach(this::parse);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    public ModuleInfo(String moduleInfoFileContent) {
+        for(String line: moduleInfoFileContent.split("\n")) {
+            parse(line);
         }
     }
 
