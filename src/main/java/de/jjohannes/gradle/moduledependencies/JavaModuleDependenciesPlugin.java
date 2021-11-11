@@ -95,9 +95,10 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                     configuration.getName(),
                     toGAV(moduleName, ga, project, javaModuleDependenciesExtension)
             );
+        } else {
+            throw new RuntimeException("No mapping registered for module: " + moduleName +
+                    " - use 'javaModuleDependencies.moduleNameToGA.put()' to add mapping.");
         }
-
-
     }
 
     private Map<String, Object> toGAV(String moduleName, String ga, Project project, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
