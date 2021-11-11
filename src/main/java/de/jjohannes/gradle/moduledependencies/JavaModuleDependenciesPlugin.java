@@ -127,7 +127,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
     private void warnVersionMissing(Logger logger, JavaModuleDependenciesExtension javaModuleDependenciesExtension, String message) {
         if (catalogFound && javaModuleDependenciesExtension.getWarnForMissingVersions().forUseAtConfigurationTime().get()) {
-            logger.warn("[WARN][Java Module Dependencies] " + message);
+            logger.warn("[WARN] [Java Module Dependencies] " + message);
         }
     }
 }

@@ -1,5 +1,5 @@
 > Task :build-logic:jar
-[WARN][Java Module Dependencies] No version defined in catalog - com_fasterxml_jackson_databind
+[WARN] [Java Module Dependencies] No version defined in catalog - com_fasterxml_jackson_databind
 > Task :app:compileJava
 > Task :app:processResources NO-SOURCE
 > Task :app:classes

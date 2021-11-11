@@ -1,5 +1,5 @@
 > Task :build-logic:jar
-[WARN][Java Module Dependencies] Version catalog feature not enabled in settings.gradle(.kts) - add 'enableFeaturePreview("VERSION_CATALOGS")'
+[WARN] [Java Module Dependencies] Version catalog feature not enabled in settings.gradle(.kts) - add 'enableFeaturePreview("VERSION_CATALOGS")'
 > Task :app:compileJava
 > Task :app:processResources NO-SOURCE
 > Task :app:classes
