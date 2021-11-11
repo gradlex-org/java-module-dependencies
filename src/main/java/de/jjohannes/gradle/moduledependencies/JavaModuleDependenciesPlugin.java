@@ -81,7 +81,12 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
     }
 
     private void declareDependency(String moduleName, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
-        String ownGroup = project.getGroup().toString();
+        if (JDKInfo.MODULES.contains(moduleName)) {
+            // The module is part of the JDK, no dependency required
+            return;
+        }
+
+        String ownModuleNamesPrefix = javaModuleDependenciesExtension.getOwnModuleNamesPrefix().forUseAtConfigurationTime().get();
         String ga = javaModuleDependenciesExtension.ga(moduleName);
         String projectName =  moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) : null;
 
