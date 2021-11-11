@@ -21,7 +21,7 @@ Add this to the build file of your convention plugin's build
 
 ```
 dependencies {
-    implementation("de.jjohannes.gradle:java-module-dependencies:0.1")
+    implementation("de.jjohannes.gradle:java-module-dependencies:0.2")
 }
 ```
 
@@ -63,6 +63,9 @@ This plugin makes the following assumption about _Module Names_ of your own modu
 A project name is determined by the `include(projectName)` statement in the settings file.
 The group is defined via the `group = ...` statement in the build files / convention plugin.
 This corresponds to how GA coordinates are typically mapped to module names.
+
+If you do not follow this pattern, you can also use a prefix that differs from the group:
+`javaModuleDependencies.getOwnModuleNamesPrefix.set("org.my.module.name.prefix")`.
 
 ## Defining module versions
 
