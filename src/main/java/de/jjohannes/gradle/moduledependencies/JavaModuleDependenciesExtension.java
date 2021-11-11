@@ -15,6 +15,8 @@ public abstract class JavaModuleDependenciesExtension {
 
     public abstract MapProperty<String, String> getModuleNameToGA();
 
+    public abstract Property<String> getOwnModuleNamesPrefix();
+
     public abstract Property<Boolean> getWarnForMissingVersions();
 
     public abstract Property<String> getVersionCatalogName();

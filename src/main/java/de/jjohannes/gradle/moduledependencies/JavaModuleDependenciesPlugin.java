@@ -39,6 +39,8 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         project.getPlugins().apply(JavaPlugin.class);
         JavaModuleDependenciesExtension javaModuleDependenciesExtension = project.getExtensions().create(
                 JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class);
+        javaModuleDependenciesExtension.getOwnModuleNamesPrefix().convention(
+                project.provider(() -> project.getGroup().toString()));
         javaModuleDependenciesExtension.getWarnForMissingVersions().convention(true);
         javaModuleDependenciesExtension.getVersionCatalogName().convention("libs");
 
@@ -81,7 +83,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
     private void declareDependency(String moduleName, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
         String ownGroup = project.getGroup().toString();
         String ga = javaModuleDependenciesExtension.ga(moduleName);
-        String projectName = moduleName.startsWith(ownGroup + ".") ? moduleName.substring(ownGroup.length() + 1) : null;
+        String projectName =  moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) : null;
 
         if (projectName != null) {
             project.getDependencies().add(
