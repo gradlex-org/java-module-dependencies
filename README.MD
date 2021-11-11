@@ -65,7 +65,7 @@ The group is defined via the `group = ...` statement in the build files / conven
 This corresponds to how GA coordinates are typically mapped to module names.
 
 If you do not follow this pattern, you can also use a prefix that differs from the group:
-`javaModuleDependencies.getOwnModuleNamesPrefix.set("org.my.module.name.prefix")`.
+`javaModuleDependencies.ownModuleNamesPrefix.set("org.my.module.name.prefix")`.
 
 ## Defining module versions
 
