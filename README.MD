@@ -21,7 +21,7 @@ Add this to the build file of your convention plugin's build
 
 ```
 dependencies {
-    implementation("de.jjohannes.gradle:java-module-dependencies:0.2")
+    implementation("de.jjohannes.gradle:java-module-dependencies:0.3")
 }
 ```
 
