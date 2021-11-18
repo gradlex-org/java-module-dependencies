@@ -28,7 +28,8 @@ import static de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExten
 public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
     private final Map<File, ModuleInfo> moduleInfo = new HashMap<>();
-    private boolean catalogFound = true;
+    private VersionCatalogsExtension versionCatalogs = null;
+    private boolean catalogNotFoundWarningPrinted = false;
 
     @Override
     public void apply(Project project) {
@@ -37,8 +38,11 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         }
 
         project.getPlugins().apply(JavaPlugin.class);
+
+        versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
+
         JavaModuleDependenciesExtension javaModuleDependenciesExtension = project.getExtensions().create(
-                JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class);
+                JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class, versionCatalogs);
         javaModuleDependenciesExtension.getOwnModuleNamesPrefix().convention(
                 project.provider(() -> project.getGroup().toString()));
         javaModuleDependenciesExtension.getWarnForMissingVersions().convention(true);
@@ -110,10 +114,9 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         Map<String, Object> gav = new HashMap<>();
 
         VersionConstraint version = null;
-        VersionCatalogsExtension versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
         if (versionCatalogs == null) {
             warnVersionMissing(project.getLogger(), javaModuleDependenciesExtension, "Version catalog feature not enabled in settings.gradle(.kts) - add 'enableFeaturePreview(\"VERSION_CATALOGS\")'");
-            catalogFound = false;
+            catalogNotFoundWarningPrinted = true;
         } else {
             String catalogName = javaModuleDependenciesExtension.getVersionCatalogName().forUseAtConfigurationTime().get();
             VersionCatalog catalog = versionCatalogs.named(catalogName);
@@ -134,7 +137,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
     }
 
     private void warnVersionMissing(Logger logger, JavaModuleDependenciesExtension javaModuleDependenciesExtension, String message) {
-        if (catalogFound && javaModuleDependenciesExtension.getWarnForMissingVersions().forUseAtConfigurationTime().get()) {
+        if (!catalogNotFoundWarningPrinted && javaModuleDependenciesExtension.getWarnForMissingVersions().forUseAtConfigurationTime().get()) {
             logger.warn("[WARN] [Java Module Dependencies] " + message);
         }
     }
