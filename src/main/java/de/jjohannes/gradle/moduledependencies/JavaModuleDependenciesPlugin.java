@@ -5,11 +5,8 @@ import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.VersionCatalog;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
-import org.gradle.api.artifacts.VersionConstraint;
 import org.gradle.api.file.RegularFile;
-import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.JavaLibraryPlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
@@ -28,8 +25,6 @@ import static de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExten
 public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
     private final Map<File, ModuleInfo> moduleInfo = new HashMap<>();
-    private VersionCatalogsExtension versionCatalogs = null;
-    private boolean catalogNotFoundWarningPrinted = false;
 
     @Override
     public void apply(Project project) {
@@ -39,10 +34,10 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
         project.getPlugins().apply(JavaPlugin.class);
 
-        versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
+        VersionCatalogsExtension versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
 
         JavaModuleDependenciesExtension javaModuleDependenciesExtension = project.getExtensions().create(
-                JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class, versionCatalogs);
+                JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class, versionCatalogs, project.getLogger());
         javaModuleDependenciesExtension.getOwnModuleNamesPrefix().convention(
                 project.provider(() -> project.getGroup().toString()));
         javaModuleDependenciesExtension.getWarnForMissingVersions().convention(true);
@@ -101,44 +96,11 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             );
         } else if (ga != null) {
             project.getDependencies().add(
-                    configuration.getName(),
-                    toGAV(moduleName, ga, project, javaModuleDependenciesExtension)
-            );
+                    configuration.getName(), javaModuleDependenciesExtension.gav(moduleName));
         } else {
             throw new RuntimeException("No mapping registered for module: " + moduleName +
                     " - use 'javaModuleDependencies.moduleNameToGA.put()' to add mapping.");
         }
     }
 
-    private Map<String, Object> toGAV(String moduleName, String ga, Project project, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
-        Map<String, Object> gav = new HashMap<>();
-
-        VersionConstraint version = null;
-        if (versionCatalogs == null) {
-            warnVersionMissing(project.getLogger(), javaModuleDependenciesExtension, "Version catalog feature not enabled in settings.gradle(.kts) - add 'enableFeaturePreview(\"VERSION_CATALOGS\")'");
-            catalogNotFoundWarningPrinted = true;
-        } else {
-            String catalogName = javaModuleDependenciesExtension.getVersionCatalogName().forUseAtConfigurationTime().get();
-            VersionCatalog catalog = versionCatalogs.named(catalogName);
-            version = catalog.findVersion(moduleName).orElse(null);
-            if (version == null) {
-                warnVersionMissing(project.getLogger(), javaModuleDependenciesExtension, "No version defined in catalog - " + moduleName.replace('.', '_'));
-            }
-        }
-
-        String[] gaSplit = ga.split(":");
-        gav.put("group", gaSplit[0]);
-        gav.put("name", gaSplit[1]);
-        if (version != null) {
-            gav.put("version", version);
-        }
-
-        return gav;
-    }
-
-    private void warnVersionMissing(Logger logger, JavaModuleDependenciesExtension javaModuleDependenciesExtension, String message) {
-        if (!catalogNotFoundWarningPrinted && javaModuleDependenciesExtension.getWarnForMissingVersions().forUseAtConfigurationTime().get()) {
-            logger.warn("[WARN] [Java Module Dependencies] " + message);
-        }
-    }
 }
