@@ -2,8 +2,7 @@
 org_apache_xmlbeans = "5.0.1"
 com_fasterxml_jackson_databind = "2.12.5"
 org_slf4j = "1.7.32"
+org_slf4j_simple = "1.7.32"
 
 org_junit_jupiter_api = "5.7.2"
-
-[libraries]
-slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "org_slf4j" }
+org_junit_jupiter_engine = "5.7.2"

@@ -9,5 +9,5 @@ tasks.test {
 }
 
 dependencies {
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testRuntimeOnly(javaModuleDependencies.gav("org.junit.jupiter.engine"))
 }
