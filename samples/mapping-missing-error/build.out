@@ -1,0 +1,5 @@
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Could not determine the dependencies of task ':lib:compileJava'.
+> No mapping registered for module: com.google.gson (required in lib/src/main/java/module-info.java) - use 'javaModuleDependencies.moduleNameToGA.put()' to add mapping.

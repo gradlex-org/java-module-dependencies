@@ -81,13 +81,13 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                     this.moduleInfo.put(folder, new ModuleInfo(moduleInfoContent.get()));
                 }
                 for (String moduleName : this.moduleInfo.get(folder).get(moduleDirective)) {
-                    declareDependency(moduleName, project, configuration, javaModuleDependenciesExtension);
+                    declareDependency(moduleName, moduleInfoFile, project, configuration, javaModuleDependenciesExtension);
                 }
             }
         }
     }
 
-    private void declareDependency(String moduleName, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
+    private void declareDependency(String moduleName, Provider<RegularFile> moduleInfoFile, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
         if (JDKInfo.MODULES.contains(moduleName)) {
             // The module is part of the JDK, no dependency required
             return;
@@ -106,9 +106,16 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             project.getDependencies().add(
                     configuration.getName(), javaModuleDependenciesExtension.gav(moduleName));
         } else {
-            throw new RuntimeException("No mapping registered for module: " + moduleName +
+            throw new RuntimeException("No mapping registered for module: " + moduleDebugInfo(moduleName, moduleInfoFile, project.getRootDir()) +
                     " - use 'javaModuleDependencies.moduleNameToGA.put()' to add mapping.");
         }
+    }
+
+    private String moduleDebugInfo(String moduleName, Provider<RegularFile> moduleInfo, File rootDir) {
+        return moduleName
+                + " (required in "
+                + moduleInfo.forUseAtConfigurationTime().get().getAsFile().getAbsolutePath().substring(rootDir.getAbsolutePath().length() + 1)
+                + ")";
     }
 
 }
