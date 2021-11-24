@@ -27,6 +27,7 @@ import static de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExten
 public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
     private final Map<File, ModuleInfo> moduleInfo = new HashMap<>();
+    private boolean warnForMissingCatalog;
 
     @Override
     public void apply(Project project) {
@@ -37,12 +38,13 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         project.getPlugins().apply(JavaPlugin.class);
 
         VersionCatalogsExtension versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
+        warnForMissingCatalog = versionCatalogs == null;
 
         JavaModuleDependenciesExtension javaModuleDependenciesExtension = project.getExtensions().create(
-                JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class, versionCatalogs, project.getLogger());
+                JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class, versionCatalogs);
         javaModuleDependenciesExtension.getOwnModuleNamesPrefix().convention(
                 project.provider(() -> project.getGroup().toString()));
-        javaModuleDependenciesExtension.getWarnForMissingVersions().convention(true);
+        javaModuleDependenciesExtension.getWarnForMissingVersions().convention(versionCatalogs != null);
         javaModuleDependenciesExtension.getVersionCatalogName().convention("libs");
 
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
@@ -87,15 +89,15 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         }
     }
 
-    private void declareDependency(String moduleName, Provider<RegularFile> moduleInfoFile, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
+    private void declareDependency(String moduleName, Provider<RegularFile> moduleInfoFile, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependencies) {
         if (JDKInfo.MODULES.contains(moduleName)) {
             // The module is part of the JDK, no dependency required
             return;
         }
 
-        String ownModuleNamesPrefix = javaModuleDependenciesExtension.getOwnModuleNamesPrefix().forUseAtConfigurationTime().get();
-        String ga = javaModuleDependenciesExtension.ga(moduleName);
-        String projectName =  moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) : null;
+        String ownModuleNamesPrefix = javaModuleDependencies.getOwnModuleNamesPrefix().forUseAtConfigurationTime().get();
+        String ga = javaModuleDependencies.ga(moduleName);
+        String projectName = moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) : null;
 
         if (projectName != null) {
             project.getDependencies().add(
@@ -103,18 +105,33 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                     project.project(":" + projectName)
             );
         } else if (ga != null) {
-            project.getDependencies().add(
-                    configuration.getName(), javaModuleDependenciesExtension.gav(moduleName));
+            Map<String, Object> gav = javaModuleDependencies.gav(moduleName);
+            project.getDependencies().add(configuration.getName(), gav);
+            if (!gav.containsKey("version")) {
+                warnVersionMissing(moduleName, ga, moduleInfoFile, project, javaModuleDependencies);
+            }
         } else {
             throw new RuntimeException("No mapping registered for module: " + moduleDebugInfo(moduleName, moduleInfoFile, project.getRootDir()) +
                     " - use 'javaModuleDependencies.moduleNameToGA.put()' to add mapping.");
         }
     }
 
-    private String moduleDebugInfo(String moduleName, Provider<RegularFile> moduleInfo, File rootDir) {
+    private void warnVersionMissing(String moduleName, String ga, Provider<RegularFile> moduleInfoFile, Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
+        if (warnForMissingCatalog) {
+            project.getLogger().warn("[WARN] [Java Module Dependencies] Version catalog feature not enabled in settings.gradle(.kts) - add 'enableFeaturePreview(\"VERSION_CATALOGS\")'");
+            warnForMissingCatalog = false;
+        }
+
+        if (javaModuleDependencies.getWarnForMissingVersions().forUseAtConfigurationTime().get()) {
+            project.getLogger().warn("[WARN] [Java Module Dependencies] No version defined in catalog - " + ga + " - "
+                    + moduleDebugInfo(moduleName.replace('.', '_'), moduleInfoFile, project.getRootDir()));
+        }
+    }
+
+    private String moduleDebugInfo(String moduleName, Provider<RegularFile> moduleInfoFile, File rootDir) {
         return moduleName
                 + " (required in "
-                + moduleInfo.forUseAtConfigurationTime().get().getAsFile().getAbsolutePath().substring(rootDir.getAbsolutePath().length() + 1)
+                + moduleInfoFile.forUseAtConfigurationTime().get().getAsFile().getAbsolutePath().substring(rootDir.getAbsolutePath().length() + 1)
                 + ")";
     }
 

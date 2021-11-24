@@ -1,10 +1,8 @@
 package de.jjohannes.gradle.moduledependencies;
 
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.VersionCatalog;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
 import org.gradle.api.artifacts.VersionConstraint;
-import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -20,8 +18,6 @@ public abstract class JavaModuleDependenciesExtension {
     public static String JAVA_MODULE_DEPENDENCIES = "javaModuleDependencies";
 
     private final VersionCatalogsExtension versionCatalogs;
-    private final Logger logger;
-    private boolean catalogNotFoundWarningPrinted = false;
 
     private Properties globalModuleNameToGA;
 
@@ -33,9 +29,8 @@ public abstract class JavaModuleDependenciesExtension {
 
     public abstract Property<String> getVersionCatalogName();
 
-    public JavaModuleDependenciesExtension(VersionCatalogsExtension versionCatalogs, Logger logger) {
+    public JavaModuleDependenciesExtension(VersionCatalogsExtension versionCatalogs) {
         this.versionCatalogs = versionCatalogs;
-        this.logger = logger;
     }
 
     public String ga(String moduleName) {
@@ -57,16 +52,10 @@ public abstract class JavaModuleDependenciesExtension {
         String ga = ga(moduleName);
 
         VersionConstraint version = null;
-        if (versionCatalogs == null) {
-            warnVersionMissing("Version catalog feature not enabled in settings.gradle(.kts) - add 'enableFeaturePreview(\"VERSION_CATALOGS\")'");
-            catalogNotFoundWarningPrinted = true;
-        } else {
+        if (versionCatalogs != null) {
             String catalogName = getVersionCatalogName().forUseAtConfigurationTime().get();
             VersionCatalog catalog = versionCatalogs.named(catalogName);
             version = catalog.findVersion(moduleName).orElse(null);
-            if (version == null) {
-                warnVersionMissing("No version defined in catalog - " + moduleName.replace('.', '_'));
-            }
         }
 
         String[] gaSplit = ga.split(":");
@@ -104,11 +93,5 @@ public abstract class JavaModuleDependenciesExtension {
             throw new RuntimeException(e);
         }
         return this.globalModuleNameToGA;
-    }
-
-    private void warnVersionMissing(String message) {
-        if (!catalogNotFoundWarningPrinted && getWarnForMissingVersions().forUseAtConfigurationTime().get()) {
-            logger.warn("[WARN] [Java Module Dependencies] " + message);
-        }
     }
 }
