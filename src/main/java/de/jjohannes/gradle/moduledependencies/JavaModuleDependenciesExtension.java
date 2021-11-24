@@ -79,6 +79,20 @@ public abstract class JavaModuleDependenciesExtension {
         return gav;
     }
 
+    public String moduleName(String ga) {
+        for(Map.Entry<String, String> mapping: getModuleNameToGA().get().entrySet()) {
+            if (mapping.getValue().equals(ga)) {
+                return mapping.getKey();
+            }
+        }
+        for(Map.Entry<Object, Object> mapping: getGlobalModuleNameToGA().entrySet()) {
+            if (mapping.getValue().equals(ga)) {
+                return (String) mapping.getKey();
+            }
+        }
+        return null;
+    }
+
     private Properties getGlobalModuleNameToGA() {
         if (this.globalModuleNameToGA != null) {
             return this.globalModuleNameToGA;

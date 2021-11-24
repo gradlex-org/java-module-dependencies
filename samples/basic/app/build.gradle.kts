@@ -10,5 +10,5 @@ application {
 }
 
 dependencies {
-    runtimeOnly(libs.slf4j.simple)
+    runtimeOnly(javaModuleDependencies.gav("org.slf4j.simple"))
 }

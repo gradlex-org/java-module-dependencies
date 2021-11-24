@@ -11,7 +11,6 @@ public class PluginBuildLocationSampleModifier implements SampleModifier {
     @Override
     public Sample modify(Sample sampleIn) {
         Command cmd = sampleIn.getCommands().remove(0);
-        System.out.println(cmd);
         File pluginProjectDir = new File(".");
         sampleIn.getCommands().add(
                 new Command(new File(pluginProjectDir, "gradlew").getAbsolutePath(),

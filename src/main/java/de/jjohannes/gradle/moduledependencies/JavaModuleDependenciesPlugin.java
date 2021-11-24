@@ -1,5 +1,7 @@
 package de.jjohannes.gradle.moduledependencies;
 
+import de.jjohannes.gradle.moduledependencies.tasks.RecommendModuleVersionsReportTask;
+import de.jjohannes.gradle.moduledependencies.tasks.ShowModuleNameMappingsReportTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
@@ -55,6 +57,12 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             }
         });
 
+        setupReportTasks(project, javaModuleDependenciesExtension);
+    }
+
+    private void setupReportTasks(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
+        project.getTasks().register("showModuleNameMappings", ShowModuleNameMappingsReportTask.class);
+        project.getTasks().register("recommendModuleVersions", RecommendModuleVersionsReportTask.class);
     }
 
     private void process(ModuleInfo.Directive moduleDirective, String gradleConfiguration, SourceSet sourceSet, Project project, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
