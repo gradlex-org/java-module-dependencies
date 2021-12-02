@@ -20,6 +20,8 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExtension.JAVA_MODULE_DEPENDENCIES;
 import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
@@ -101,19 +103,21 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             return;
         }
 
+        Set<String> allProjectNames = project.getRootProject().getSubprojects().stream().map(Project::getName).collect(Collectors.toSet());
+
         Map<String, Object> gav = javaModuleDependencies.gav(moduleName);
         String projectName = ownModuleNamesPrefix == null ? null : moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) : null;
 
-        if (!gav.isEmpty()) {
-            project.getDependencies().add(configuration.getName(), gav);
-            if (!gav.containsKey(GAV.VERSION)) {
-                warnVersionMissing(moduleName, gav, moduleInfoFile, project, javaModuleDependencies);
-            }
-        } else if (projectName != null) {
+        if (projectName != null && allProjectNames.contains(projectName)) {
             project.getDependencies().add(
                     configuration.getName(),
                     project.project(":" + projectName)
             );
+        } else if (!gav.isEmpty()) {
+            project.getDependencies().add(configuration.getName(), gav);
+            if (!gav.containsKey(GAV.VERSION)) {
+                warnVersionMissing(moduleName, gav, moduleInfoFile, project, javaModuleDependencies);
+            }
         } else {
             throw new RuntimeException("No mapping registered for module: " + moduleDebugInfo(moduleName, moduleInfoFile, project.getRootDir()) +
                     " - use 'javaModuleDependencies.moduleNameToGA.put()' to add mapping.");
