@@ -63,7 +63,7 @@ public abstract class JavaModuleDependenciesExtension {
         if (versionCatalogs != null) {
             String catalogName = getVersionCatalogName().forUseAtConfigurationTime().get();
             VersionCatalog catalog = versionCatalogs.named(catalogName);
-            version = catalog.findVersion(moduleName).orElse(null);
+            version = catalog.findVersion(moduleName.replace('_', '.')).orElse(null);
         }
 
         String[] gaSplit = ga.split(":");
