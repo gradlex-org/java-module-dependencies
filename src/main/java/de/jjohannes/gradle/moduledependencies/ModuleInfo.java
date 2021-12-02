@@ -60,9 +60,10 @@ public class ModuleInfo {
         if (moduleName.endsWith("." + projectName)) {
             return moduleName.substring(0, moduleName.length() - projectName.length() - 1);
         }
-        System.out.println("[WARN] [Java Module Dependencies] The last part of the module name (" + moduleName + ") needs to match " +
-                "the project name (" + projectName + ") or " +
-                "the project+sourceSet name (" + projectPlusSourceSetName + ")");
+        // TODO log this warning?
+        // "[WARN] [Java Module Dependencies] The last part of the module name (" + moduleName + ") needs to match " +
+        // "the project name (" + projectName + ") or " +
+        // "the project+sourceSet name (" + projectPlusSourceSetName + ")");
         return null;
     }
 
