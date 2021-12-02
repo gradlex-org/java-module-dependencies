@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExtension.JAVA_MODULE_DEPENDENCIES;
+import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
 
 @SuppressWarnings({"unused", "UnstableApiUsage"})
 @NonNullApi
@@ -42,29 +43,32 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
         JavaModuleDependenciesExtension javaModuleDependenciesExtension = project.getExtensions().create(
                 JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class, versionCatalogs);
-        javaModuleDependenciesExtension.getOwnModuleNamesPrefix().convention(
-                project.provider(() -> project.getGroup().toString()));
         javaModuleDependenciesExtension.getWarnForMissingVersions().convention(versionCatalogs != null);
         javaModuleDependenciesExtension.getVersionCatalogName().convention("libs");
 
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-        for (SourceSet sourceSet : sourceSets) {
+        sourceSets.all(sourceSet ->  {
             process(ModuleInfo.Directive.REQUIRES, sourceSet.getImplementationConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
             process(ModuleInfo.Directive.REQUIRES_STATIC, sourceSet.getCompileOnlyConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
-        }
-        project.getPlugins().withType(JavaLibraryPlugin.class, p -> {
-            for (SourceSet sourceSet : sourceSets) {
-                process(ModuleInfo.Directive.REQUIRES_TRANSITIVE, sourceSet.getApiConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
-                process(ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE, sourceSet.getCompileOnlyApiConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
-            }
         });
+        project.getPlugins().withType(JavaLibraryPlugin.class, p -> sourceSets.all(sourceSet ->  {
+            process(ModuleInfo.Directive.REQUIRES_TRANSITIVE, sourceSet.getApiConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
+            process(ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE, sourceSet.getCompileOnlyApiConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
+        }));
 
         setupReportTasks(project, javaModuleDependenciesExtension);
     }
 
     private void setupReportTasks(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
-        project.getTasks().register("analyzeModulePath", AnalyzeModulePathReportTask.class);
-        project.getTasks().register("recommendModuleVersions", RecommendModuleVersionsReportTask.class);
+        project.getTasks().register("analyzeModulePath", AnalyzeModulePathReportTask.class, t -> {
+            t.setGroup(HELP_GROUP);
+            t.setDescription("TODO");
+        });
+        project.getTasks().register("recommendModuleVersions", RecommendModuleVersionsReportTask.class, t -> {
+            t.setGroup(HELP_GROUP);
+
+            t.setDescription("TODO");
+        });
     }
 
     private void process(ModuleInfo.Directive moduleDirective, String gradleConfiguration, SourceSet sourceSet, Project project, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
@@ -82,48 +86,48 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                 if (!this.moduleInfo.containsKey(folder)) {
                     this.moduleInfo.put(folder, new ModuleInfo(moduleInfoContent.get()));
                 }
-                for (String moduleName : this.moduleInfo.get(folder).get(moduleDirective)) {
-                    declareDependency(moduleName, moduleInfoFile, project, configuration, javaModuleDependenciesExtension);
+                ModuleInfo moduleInfo = this.moduleInfo.get(folder);
+                String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName());
+                for (String moduleName : moduleInfo.get(moduleDirective)) {
+                    declareDependency(moduleName, ownModuleNamesPrefix, moduleInfoFile, project, configuration, javaModuleDependenciesExtension);
                 }
             }
         }
     }
 
-    private void declareDependency(String moduleName, Provider<RegularFile> moduleInfoFile, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependencies) {
+    private void declareDependency(String moduleName, String ownModuleNamesPrefix, Provider<RegularFile> moduleInfoFile, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependencies) {
         if (JDKInfo.MODULES.contains(moduleName)) {
             // The module is part of the JDK, no dependency required
             return;
         }
 
-        String ownModuleNamesPrefix = javaModuleDependencies.getOwnModuleNamesPrefix().forUseAtConfigurationTime().get();
-        String ga = javaModuleDependencies.ga(moduleName);
+        Map<String, Object> gav = javaModuleDependencies.gav(moduleName);
         String projectName = moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) : null;
 
-        if (projectName != null) {
+        if (gav != null) {
+            project.getDependencies().add(configuration.getName(), gav);
+            if (!gav.containsKey(GAV.VERSION)) {
+                warnVersionMissing(moduleName, gav, moduleInfoFile, project, javaModuleDependencies);
+            }
+        } else if (projectName != null) {
             project.getDependencies().add(
                     configuration.getName(),
                     project.project(":" + projectName)
             );
-        } else if (ga != null) {
-            Map<String, Object> gav = javaModuleDependencies.gav(moduleName);
-            project.getDependencies().add(configuration.getName(), gav);
-            if (!gav.containsKey("version")) {
-                warnVersionMissing(moduleName, ga, moduleInfoFile, project, javaModuleDependencies);
-            }
         } else {
             throw new RuntimeException("No mapping registered for module: " + moduleDebugInfo(moduleName, moduleInfoFile, project.getRootDir()) +
                     " - use 'javaModuleDependencies.moduleNameToGA.put()' to add mapping.");
         }
     }
 
-    private void warnVersionMissing(String moduleName, String ga, Provider<RegularFile> moduleInfoFile, Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
+    private void warnVersionMissing(String moduleName, Map<String, Object> ga, Provider<RegularFile> moduleInfoFile, Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
         if (warnForMissingCatalog) {
             project.getLogger().warn("[WARN] [Java Module Dependencies] Version catalog feature not enabled in settings.gradle(.kts) - add 'enableFeaturePreview(\"VERSION_CATALOGS\")'");
             warnForMissingCatalog = false;
         }
 
         if (javaModuleDependencies.getWarnForMissingVersions().forUseAtConfigurationTime().get()) {
-            project.getLogger().warn("[WARN] [Java Module Dependencies] No version defined in catalog - " + ga + " - "
+            project.getLogger().warn("[WARN] [Java Module Dependencies] No version defined in catalog - " + ga.get(GAV.GROUP) + ":" + ga.get(GAV.ARTIFACT) + " - "
                     + moduleDebugInfo(moduleName.replace('.', '_'), moduleInfoFile, project.getRootDir()));
         }
     }

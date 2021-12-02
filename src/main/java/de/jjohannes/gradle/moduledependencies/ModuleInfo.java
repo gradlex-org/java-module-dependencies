@@ -14,6 +14,7 @@ public class ModuleInfo {
         REQUIRES_STATIC_TRANSITIVE
     }
 
+    private String moduleName;
     private final List<String> requires = new ArrayList<>();
     private final List<String> requiresTransitive = new ArrayList<>();
     private final List<String> requiresStatic = new ArrayList<>();
@@ -23,6 +24,10 @@ public class ModuleInfo {
         for(String line: moduleInfoFileContent.split("\n")) {
             parse(line);
         }
+    }
+
+    public String getModuleName() {
+        return moduleName;
     }
 
     public List<String> get(Directive directive) {
@@ -41,8 +46,33 @@ public class ModuleInfo {
         return Collections.emptyList();
     }
 
+    public String moduleNamePrefix(String projectName, String sourceSetName) {
+        if (moduleName.equals(projectName)) {
+            return "";
+        }
+
+        String projectPlusSourceSetName = projectName + "." + sourceSetName;
+        if (moduleName.endsWith("." + projectPlusSourceSetName)) {
+            return moduleName.substring(0, moduleName.length() - projectPlusSourceSetName.length() - 1);
+        }
+        if (moduleName.endsWith("." + projectName)) {
+            return moduleName.substring(0, moduleName.length() - projectName.length() - 1);
+        }
+
+        throw new RuntimeException("The last part of the module name (" + moduleName + ") needs to match " +
+                "the project name (" + projectName + ") or " +
+                "the project+sourceSet name (" + projectPlusSourceSetName + ")");
+    }
+
     private void parse(String moduleLine) {
-        List<String> tokens = Arrays.asList(moduleLine.replace(";","").trim().split("\\s+"));
+        List<String> tokens = Arrays.asList(moduleLine.replace(";","").replace("{","").trim().split("\\s+"));
+        if ("//".equals(tokens.get(0))) {
+            return; // FIXME !!! Strip /**/ Comments
+        }
+
+        if (tokens.contains("module")) {
+            moduleName = tokens.get(tokens.size() - 1);
+        }
         if (tokens.size() > 1 && tokens.get(0).equals("requires")) {
             if (tokens.size() > 3 && tokens.contains("static") && tokens.contains("transitive")) {
                 requiresStaticTransitive.add(tokens.get(3));

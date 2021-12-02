@@ -1,6 +1,7 @@
 package de.jjohannes.gradle.moduledependencies.tasks;
 
 import de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExtension;
+import de.jjohannes.gradle.moduledependencies.ModuleInfo;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -15,17 +16,23 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.jvm.JavaModuleDetector;
 
 import javax.inject.Inject;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public abstract class AnalyzeModulePathReportTask extends DefaultTask {
 
+    private final String projectName;
     private final ConfigurationContainer configurations;
     private final SourceSetContainer sourceSets;
     private final JavaModuleDependenciesExtension javaModuleDependencies;
 
     @Inject
     public AnalyzeModulePathReportTask(Project project) {
+        this.projectName = project.getName();
         this.configurations = project.getConfigurations();
         this.sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         this.javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
@@ -35,15 +42,27 @@ public abstract class AnalyzeModulePathReportTask extends DefaultTask {
     protected abstract JavaModuleDetector getJavaModuleDetector();
 
     @TaskAction
-    public void report() {
+    public void report() throws IOException {
         Set<String> usedMappings = new TreeSet<>();
         Set<String> nonModules = new TreeSet<>();
         Set<String> missingMappings = new TreeSet<>();
         Set<String> wrongMappings = new TreeSet<>();
 
+        SourceSet main = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+        String ownModuleNamesPrefix = "";
+
+        for (File folder : main.getJava().getSrcDirs()) {
+            File file = new File(folder, "module-info.java");
+            if (file.exists()) {
+                String fileContent = Files.lines(file.toPath()).collect(Collectors.joining("\n"));
+                ownModuleNamesPrefix = new ModuleInfo(fileContent).moduleNamePrefix(projectName, main.getName());
+                break;
+            }
+        }
+
         for (SourceSet sourceSet : sourceSets) {
-            collect(configurations.getByName(sourceSet.getCompileClasspathConfigurationName()), usedMappings, nonModules, missingMappings, wrongMappings);
-            collect(configurations.getByName(sourceSet.getRuntimeClasspathConfigurationName()), usedMappings, nonModules, missingMappings, wrongMappings);
+            collect(configurations.getByName(sourceSet.getCompileClasspathConfigurationName()), usedMappings, nonModules, missingMappings, wrongMappings, ownModuleNamesPrefix);
+            collect(configurations.getByName(sourceSet.getRuntimeClasspathConfigurationName()), usedMappings, nonModules, missingMappings, wrongMappings, ownModuleNamesPrefix);
         }
 
         p("");
@@ -81,7 +100,7 @@ public abstract class AnalyzeModulePathReportTask extends DefaultTask {
         }
     }
 
-    private void collect(Configuration configuration, Set<String> usedMappings, Set<String> nonModules, Set<String> missingMappings, Set<String> wrongMappings) {
+    private void collect(Configuration configuration, Set<String> usedMappings, Set<String> nonModules, Set<String> missingMappings, Set<String> wrongMappings, String ownModuleNamesPrefix) {
         for (ResolvedArtifactResult result : configuration.getIncoming().getArtifacts()) {
             ComponentIdentifier id = result.getId().getComponentIdentifier();
 
@@ -93,7 +112,7 @@ public abstract class AnalyzeModulePathReportTask extends DefaultTask {
                 String projectName = ((ProjectComponentIdentifier) id).getProjectName();
                 ga = id.getDisplayName();
                 version = "";
-                moduleName = javaModuleDependencies.getOwnModuleNamesPrefix().get() + "." + projectName;
+                moduleName = ownModuleNamesPrefix + "." + projectName;
             } else if (id instanceof ModuleComponentIdentifier){
                 ModuleComponentIdentifier moduleVersion = (ModuleComponentIdentifier) id;
                 ga = moduleVersion.getGroup() + ":" + moduleVersion.getModule();

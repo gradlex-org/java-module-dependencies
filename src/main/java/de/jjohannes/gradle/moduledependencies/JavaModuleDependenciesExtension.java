@@ -23,8 +23,6 @@ public abstract class JavaModuleDependenciesExtension {
 
     public abstract MapProperty<String, String> getModuleNameToGA();
 
-    public abstract Property<String> getOwnModuleNamesPrefix();
-
     public abstract Property<Boolean> getWarnForMissingVersions();
 
     public abstract Property<String> getVersionCatalogName();
@@ -33,6 +31,10 @@ public abstract class JavaModuleDependenciesExtension {
         this.versionCatalogs = versionCatalogs;
     }
 
+    /**
+     *  Converts Module Name to GA coordinates that can be used in dependency declarations as String:
+     *  "group:name"
+     */
     public String ga(String moduleName) {
         Provider<String> customMapping = getModuleNameToGA().getting(moduleName);
         if (customMapping.isPresent()) {
@@ -43,13 +45,17 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     /**
+     *  Converts Module Name to GAV coordinates that can be used in dependency Declarations as Map:
+     *  [group: "...", name: "...", version: "..."]
      *
-     * @return GAV coordinsates that can be used in dependency Declarations as Map:
-     *         [group: "...", name:]
+     *  If no version is defined, the version entry will be missing.
      */
     public Map<String, Object> gav(String moduleName) {
         Map<String, Object> gav = new HashMap<>();
         String ga = ga(moduleName);
+        if (ga == null) {
+            return null;
+        }
 
         VersionConstraint version = null;
         if (versionCatalogs != null) {
@@ -59,10 +65,10 @@ public abstract class JavaModuleDependenciesExtension {
         }
 
         String[] gaSplit = ga.split(":");
-        gav.put("group", gaSplit[0]);
-        gav.put("name", gaSplit[1]);
+        gav.put(GAV.GROUP, gaSplit[0]);
+        gav.put(GAV.ARTIFACT, gaSplit[1]);
         if (version != null) {
-            gav.put("version", version);
+            gav.put(GAV.VERSION, version);
         }
 
         return gav;

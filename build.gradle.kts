@@ -8,7 +8,7 @@ group = "de.jjohannes.gradle"
 version = "0.4"
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(9))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(8))
 }
 
 dependencies {
