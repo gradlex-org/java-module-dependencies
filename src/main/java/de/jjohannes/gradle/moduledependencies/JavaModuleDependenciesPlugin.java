@@ -104,7 +104,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         Map<String, Object> gav = javaModuleDependencies.gav(moduleName);
         String projectName = ownModuleNamesPrefix == null ? null : moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) : null;
 
-        if (gav != null) {
+        if (!gav.isEmpty()) {
             project.getDependencies().add(configuration.getName(), gav);
             if (!gav.containsKey(GAV.VERSION)) {
                 warnVersionMissing(moduleName, gav, moduleInfoFile, project, javaModuleDependencies);

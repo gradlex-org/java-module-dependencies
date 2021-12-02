@@ -10,6 +10,7 @@ import org.gradle.api.provider.Provider;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -51,12 +52,11 @@ public abstract class JavaModuleDependenciesExtension {
      *
      *  If no version is defined, the version entry will be missing.
      */
-    @Nullable
     public Map<String, Object> gav(String moduleName) {
         Map<String, Object> gav = new HashMap<>();
         String ga = ga(moduleName);
         if (ga == null) {
-            return null;
+            return Collections.emptyMap();
         }
 
         VersionConstraint version = null;
