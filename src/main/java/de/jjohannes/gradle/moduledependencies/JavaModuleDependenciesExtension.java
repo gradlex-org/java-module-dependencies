@@ -7,6 +7,7 @@ import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -15,7 +16,7 @@ import java.util.Properties;
 
 @SuppressWarnings("UnstableApiUsage")
 public abstract class JavaModuleDependenciesExtension {
-    public static String JAVA_MODULE_DEPENDENCIES = "javaModuleDependencies";
+    public static final String JAVA_MODULE_DEPENDENCIES = "javaModuleDependencies";
 
     private final VersionCatalogsExtension versionCatalogs;
 
@@ -50,6 +51,7 @@ public abstract class JavaModuleDependenciesExtension {
      *
      *  If no version is defined, the version entry will be missing.
      */
+    @Nullable
     public Map<String, Object> gav(String moduleName) {
         Map<String, Object> gav = new HashMap<>();
         String ga = ga(moduleName);
@@ -74,6 +76,7 @@ public abstract class JavaModuleDependenciesExtension {
         return gav;
     }
 
+    @Nullable
     public String moduleName(String ga) {
         for(Map.Entry<String, String> mapping: getModuleNameToGA().get().entrySet()) {
             if (mapping.getValue().equals(ga)) {
