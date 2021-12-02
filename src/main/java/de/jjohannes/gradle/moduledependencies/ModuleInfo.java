@@ -1,5 +1,6 @@
 package de.jjohannes.gradle.moduledependencies;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,6 +47,7 @@ public class ModuleInfo {
         return Collections.emptyList();
     }
 
+    @Nullable
     public String moduleNamePrefix(String projectName, String sourceSetName) {
         if (moduleName.equals(projectName)) {
             return "";
@@ -58,10 +60,10 @@ public class ModuleInfo {
         if (moduleName.endsWith("." + projectName)) {
             return moduleName.substring(0, moduleName.length() - projectName.length() - 1);
         }
-
-        throw new RuntimeException("The last part of the module name (" + moduleName + ") needs to match " +
+        System.out.println("[WARN] [Java Module Dependencies] The last part of the module name (" + moduleName + ") needs to match " +
                 "the project name (" + projectName + ") or " +
                 "the project+sourceSet name (" + projectPlusSourceSetName + ")");
+        return null;
     }
 
     private void parse(String moduleLine) {

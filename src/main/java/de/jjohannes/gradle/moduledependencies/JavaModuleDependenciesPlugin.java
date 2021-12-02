@@ -16,6 +16,7 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.util.GradleVersion;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,12 +63,11 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
     private void setupReportTasks(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
         project.getTasks().register("analyzeModulePath", AnalyzeModulePathReportTask.class, t -> {
             t.setGroup(HELP_GROUP);
-            t.setDescription("TODO");
+            // t.setDescription("TODO");
         });
         project.getTasks().register("recommendModuleVersions", RecommendModuleVersionsReportTask.class, t -> {
             t.setGroup(HELP_GROUP);
-
-            t.setDescription("TODO");
+            // t.setDescription("TODO");
         });
     }
 
@@ -95,14 +95,14 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         }
     }
 
-    private void declareDependency(String moduleName, String ownModuleNamesPrefix, Provider<RegularFile> moduleInfoFile, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependencies) {
+    private void declareDependency(String moduleName, @Nullable String ownModuleNamesPrefix, Provider<RegularFile> moduleInfoFile, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependencies) {
         if (JDKInfo.MODULES.contains(moduleName)) {
             // The module is part of the JDK, no dependency required
             return;
         }
 
         Map<String, Object> gav = javaModuleDependencies.gav(moduleName);
-        String projectName = moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) : null;
+        String projectName = ownModuleNamesPrefix == null ? null : moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) : null;
 
         if (gav != null) {
             project.getDependencies().add(configuration.getName(), gav);
