@@ -6,6 +6,7 @@ group = "org.my"
 
 tasks.test {
     useJUnitPlatform()
+    jvmArgs("-Dorg.slf4j.simpleLogger.defaultLogLevel=error")
 }
 
 dependencies {

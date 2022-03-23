@@ -13,8 +13,6 @@
 > Task :app:compileTestJava
 > Task :app:processTestResources NO-SOURCE
 > Task :app:testClasses
-[Test worker] INFO org.gradle.api.internal.tasks.testing.worker.TestWorker - Gradle Test Executor 1 started executing tests.
-[Test worker] INFO org.gradle.api.internal.tasks.testing.worker.TestWorker - Gradle Test Executor 1 finished executing tests.
 > Task :app:test
 > Task :app:check
 > Task :app:build
