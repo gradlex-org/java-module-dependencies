@@ -69,9 +69,15 @@ public abstract class RecommendModuleVersionsReportTask extends DefaultTask {
         }
 
         components.all(c -> {
-            String version = c.getId().getVersion();
-            if (version.contains("beta") || version.contains("alpha")) {
-                c.setStatus("milestone");
+            String lcVersion = c.getId().getVersion().toLowerCase();
+            if (lcVersion.contains("alpha")
+                    || lcVersion.contains("-b")
+                    || lcVersion.contains("beta")
+                    || lcVersion.contains("cr")
+                    || lcVersion.contains("m")
+                    || lcVersion.contains("rc")) {
+
+                c.setStatus("integration");
             }
         });
 
