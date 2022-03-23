@@ -69,11 +69,11 @@ A `sourceSet.name` is typically the name of the folder where the sources are loc
 
 If you have a `prefixOfYourChoice`, all your modules **need to have the same prefix** in order for the plugin to establish dependencies between the projects.
 
-## Defining module versions
+## Define Module versions
 
 Versions are defined in `[version]` block of a dependencies [version catalog](https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog).
 - *Note 1:* Since `.` is not supported, you need to use `_` as delimiter in the module names.
-- *Note 2:* Version catalogs are a preview feature right now and you have to enable them via `enableFeaturePreview("VERSION_CATALOGS")` in _settings.gradle(.kts)_.
+- *Note 2:* Version catalogs are a preview feature in older Gradle 7.x versions, and you might have to enable them via `enableFeaturePreview("VERSION_CATALOGS")` in _settings.gradle(.kts)_.
 
 **gradle/libs.versions.toml**
 ```
@@ -85,12 +85,70 @@ org_slf4j = "1.7.32"
 org_junit_jupiter_api = "5.7.2"
 ```
 
+## Find the latest stable version of a Module
+
+The `recommendModuleVersions` help task prints the latest available versions of the Modules you require.
+You may copy/paste entries for **gradle/libs.versions.toml** from the task output:
+
+````
+$ ./gradlew :app:recommendModuleVersions -q
+
+Latest Stable Versions of Java Modules - use in [versions] section of 'gradle/libs.versions.toml'
+=================================================================================================
+com_fasterxml_jackson_annotation = "2.13.2"
+com_fasterxml_jackson_core = "2.13.2"
+com_fasterxml_jackson_databind = "2.13.2"
+org_apache_logging_log4j = "2.17.2"
+org_apache_xmlbeans = "5.0.3"
+org_junit_jupiter_api = "5.8.2"
+org_junit_jupiter_engine = "5.8.2"
+org_junit_platform_commons = "1.8.2"
+org_junit_platform_engine = "1.8.2"
+org_opentest4j = "1.2.0"
+org_slf4j = "1.7.36"
+org_slf4j_simple = "1.7.36"
+````
+
 ## Custom version management
 
 You may map a module name to the corresponding GA coordinates using `javaModuleDependencies.ga("my.module.name")`.
 You can for example use this to define dependency versions by other means (e.g. dependency constraints).
 If you want to do that, you can disable the warnings about missing versions and catalog by
 `javaModuleDependencies.warnForMissingVersions.set(false)`.
+
+## Analyze Module Pathes
+
+You can use the `analyzeModulePath` help task to analyse the Module Pathes of a project.
+It will show you which Modules are used and to which GAV coordinates they map.
+It will also print potential issues - like Jars that are not Modules
+(and are therefore put on the classpath)
+or wrong custom mappings from Module Names to GAs where the Jars are not Modules.
+
+```
+$ ./gradlew :app:analyzeModulePath -q
+
+All Java Modules required by this project
+=========================================
+com.fasterxml.jackson.annotation -> com.fasterxml.jackson.core:jackson-annotations (2.12.5)
+com.fasterxml.jackson.core -> com.fasterxml.jackson.core:jackson-core (2.12.5)
+com.fasterxml.jackson.databind -> com.fasterxml.jackson.core:jackson-databind (2.12.5)
+org.apache.logging.log4j -> org.apache.logging.log4j:log4j-api (2.14.0)
+org.apache.xmlbeans -> org.apache.xmlbeans:xmlbeans (5.0.1)
+org.apiguardian.api -> org.apiguardian:apiguardian-api (1.1.0)
+org.junit.jupiter.api -> org.junit.jupiter:junit-jupiter-api (5.7.2)
+org.junit.jupiter.engine -> org.junit.jupiter:junit-jupiter-engine (5.7.2)
+org.junit.platform.commons -> org.junit.platform:junit-platform-commons (1.7.2)
+org.junit.platform.engine -> org.junit.platform:junit-platform-engine (1.7.2)
+org.my.app -> project :app
+org.my.lib -> project :lib
+org.opentest4j -> org.opentest4j:opentest4j (1.2.0)
+org.slf4j -> org.slf4j:slf4j-api (1.7.28)
+org.slf4j.simple -> org.slf4j:slf4j-simple (1.7.28)
+
+Components that are NOT Java Modules
+====================================
+commons-cli:commons-cli (1.5.0)
+```
 
 ## Using Gradle's configuration cache
 
