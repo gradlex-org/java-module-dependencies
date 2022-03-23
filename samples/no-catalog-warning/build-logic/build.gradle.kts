@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-    implementation("de.jjohannes.gradle:java-module-dependencies:0.5")
+    implementation("de.jjohannes.gradle:java-module-dependencies:0.6")
 }

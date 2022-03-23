@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "de.jjohannes.gradle"
-version = "0.5"
+version = "0.6"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(8))
