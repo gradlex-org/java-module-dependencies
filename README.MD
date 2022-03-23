@@ -54,18 +54,20 @@ javaModuleDependencies {
 }
 ```
 
-## Modules in the build (module name = name + . + group)
+## Naming patterns for Modules in the build
 
-This plugin makes the following assumption about _Module Names_ of your own modules in the build to establish dependencies between them:
+This plugin makes the following assumption about _Module Names_ of your own Modules in the build to establish dependencies between them:
 
-- **Module Name** == `"${project.name}.${project.group}"`
+- **Module Name** == `"${prefixOfYourChoice}.${project.name}`
 
-A project name is determined by the `include(projectName)` statement in the settings file.
-The group is defined via the `group = ...` statement in the build files / convention plugin.
-This corresponds to how GA coordinates are typically mapped to module names.
+Or:
 
-If you do not follow this pattern, you can also use a prefix that differs from the group:
-`javaModuleDependencies.ownModuleNamesPrefix.set("org.my.module.name.prefix")`.
+- **Module Name** == `"${prefixOfYourChoice}.${project.name}.${sourceSet.name}"`
+
+A `project.name` is determined by the `include(projectName)` statement in the settings file.
+A `sourceSet.name` is typically the name of the folder where the sources are located - e.g _main_ or _test_.
+
+If you have a `prefixOfYourChoice`, all your modules **need to have the same prefix** in order for the plugin to establish dependencies between the projects.
 
 ## Defining module versions
 
