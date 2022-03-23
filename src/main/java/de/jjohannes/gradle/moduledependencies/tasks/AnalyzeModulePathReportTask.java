@@ -5,11 +5,12 @@ import de.jjohannes.gradle.moduledependencies.ModuleInfo;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
@@ -26,14 +27,15 @@ import java.util.stream.Collectors;
 public abstract class AnalyzeModulePathReportTask extends DefaultTask {
 
     private final String projectName;
-    private final ConfigurationContainer configurations;
     private final SourceSetContainer sourceSets;
     private final JavaModuleDependenciesExtension javaModuleDependencies;
+
+    @InputFiles
+    public abstract ListProperty<Configuration> getClasspathConfigurations() ;
 
     @Inject
     public AnalyzeModulePathReportTask(Project project) {
         this.projectName = project.getName();
-        this.configurations = project.getConfigurations();
         this.sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         this.javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
     }
@@ -60,9 +62,8 @@ public abstract class AnalyzeModulePathReportTask extends DefaultTask {
             }
         }
 
-        for (SourceSet sourceSet : sourceSets) {
-            collect(configurations.getByName(sourceSet.getCompileClasspathConfigurationName()), usedMappings, nonModules, missingMappings, wrongMappings, ownModuleNamesPrefix);
-            collect(configurations.getByName(sourceSet.getRuntimeClasspathConfigurationName()), usedMappings, nonModules, missingMappings, wrongMappings, ownModuleNamesPrefix);
+        for (Configuration classPath: getClasspathConfigurations().get()) {
+            collect(classPath, usedMappings, nonModules, missingMappings, wrongMappings, ownModuleNamesPrefix);
         }
 
         p("");

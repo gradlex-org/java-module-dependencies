@@ -63,13 +63,19 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
     }
 
     private void setupReportTasks(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
+        SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         project.getTasks().register("analyzeModulePath", AnalyzeModulePathReportTask.class, t -> {
             t.setGroup(HELP_GROUP);
-            // t.setDescription("TODO");
+            t.setDescription("Check consistency of the Module Path");
+
+            for (SourceSet sourceSet : sourceSets) {
+                t.getClasspathConfigurations().add(project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName()));
+                t.getClasspathConfigurations().add(project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName()));
+            }
         });
         project.getTasks().register("recommendModuleVersions", RecommendModuleVersionsReportTask.class, t -> {
             t.setGroup(HELP_GROUP);
-            // t.setDescription("TODO");
+            t.setDescription("Query repositories for latest stable versions of the used Java Modules");
         });
     }
 
