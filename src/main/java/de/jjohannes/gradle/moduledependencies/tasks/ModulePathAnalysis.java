@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-public abstract class AnalyzeModulePathReportTask extends DefaultTask {
+public abstract class ModulePathAnalysis extends DefaultTask {
 
     private final String projectName;
     private final SourceSetContainer sourceSets;
@@ -34,7 +34,7 @@ public abstract class AnalyzeModulePathReportTask extends DefaultTask {
     public abstract ListProperty<Configuration> getClasspathConfigurations() ;
 
     @Inject
-    public AnalyzeModulePathReportTask(Project project) {
+    public ModulePathAnalysis(Project project) {
         this.projectName = project.getName();
         this.sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         this.javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);

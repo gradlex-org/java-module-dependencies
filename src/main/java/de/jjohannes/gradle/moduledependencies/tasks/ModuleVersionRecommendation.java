@@ -24,7 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
-public abstract class RecommendModuleVersionsReportTask extends DefaultTask {
+public abstract class ModuleVersionRecommendation extends DefaultTask {
 
     private final ConfigurationContainer configurations;
     private final ComponentMetadataHandler components;
@@ -32,7 +32,7 @@ public abstract class RecommendModuleVersionsReportTask extends DefaultTask {
     private final JavaModuleDependenciesExtension javaModuleDependencies;
 
     @Inject
-    public RecommendModuleVersionsReportTask(Project project) {
+    public ModuleVersionRecommendation(Project project) {
         this.configurations = project.getConfigurations();
         this.components = project.getDependencies().getComponents();
         this.sourceSets = project.getExtensions().getByType(SourceSetContainer.class);

@@ -1,7 +1,7 @@
 package de.jjohannes.gradle.moduledependencies;
 
-import de.jjohannes.gradle.moduledependencies.tasks.RecommendModuleVersionsReportTask;
-import de.jjohannes.gradle.moduledependencies.tasks.AnalyzeModulePathReportTask;
+import de.jjohannes.gradle.moduledependencies.tasks.ModuleVersionRecommendation;
+import de.jjohannes.gradle.moduledependencies.tasks.ModulePathAnalysis;
 import org.gradle.api.GradleException;
 import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
@@ -64,7 +64,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
     private void setupReportTasks(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-        project.getTasks().register("analyzeModulePath", AnalyzeModulePathReportTask.class, t -> {
+        project.getTasks().register("analyzeModulePath", ModulePathAnalysis.class, t -> {
             t.setGroup(HELP_GROUP);
             t.setDescription("Check consistency of the Module Path");
 
@@ -73,7 +73,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                 t.getClasspathConfigurations().add(project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName()));
             }
         });
-        project.getTasks().register("recommendModuleVersions", RecommendModuleVersionsReportTask.class, t -> {
+        project.getTasks().register("recommendModuleVersions", ModuleVersionRecommendation.class, t -> {
             t.setGroup(HELP_GROUP);
             t.setDescription("Query repositories for latest stable versions of the used Java Modules");
         });
