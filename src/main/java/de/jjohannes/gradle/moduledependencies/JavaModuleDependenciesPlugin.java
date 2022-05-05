@@ -1,5 +1,6 @@
 package de.jjohannes.gradle.moduledependencies;
 
+import de.jjohannes.gradle.moduledependencies.bridges.ExtraJavaModuleInfoBridge;
 import de.jjohannes.gradle.moduledependencies.tasks.ModuleVersionRecommendation;
 import de.jjohannes.gradle.moduledependencies.tasks.ModulePathAnalysis;
 import org.gradle.api.GradleException;
@@ -29,6 +30,8 @@ import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
 @NonNullApi
 public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
+    private static final String EXTRA_JAVA_MODULE_INFO_PLUGIN_ID = "de.jjohannes.extra-java-module-info";
+
     private final Map<File, ModuleInfo> moduleInfo = new HashMap<>();
 
     @Override
@@ -54,7 +57,13 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             process(ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE, sourceSet.getCompileOnlyApiConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
         });
 
+        setupExtraJavaModulePluginBridge(project, javaModuleDependenciesExtension);
         setupReportTasks(project, javaModuleDependenciesExtension);
+    }
+
+    private void setupExtraJavaModulePluginBridge(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
+        project.getPlugins().withId(EXTRA_JAVA_MODULE_INFO_PLUGIN_ID,
+                e -> ExtraJavaModuleInfoBridge.autoRegisterPatchedModuleMappings(project, javaModuleDependencies));
     }
 
     private void setupReportTasks(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
