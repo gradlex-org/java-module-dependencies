@@ -1,5 +1,12 @@
+[WARN] [Java Module Dependencies] No mapping registered for module: commons.math3 (required in lib/src/main/java/module-info.java) - use 'javaModuleDependencies.moduleNameToGA.put("commons.math3", "group:artifact")' to add mapping.
+
+> Task :lib:compileJava FAILED
+    requires commons.math3;
+                    ^
+1 error
+
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Could not determine the dependencies of task ':lib:compileJava'.
-> No mapping registered for module: com.google.gson (required in lib/src/main/java/module-info.java) - use 'javaModuleDependencies.moduleNameToGA.put()' to add mapping.
+Execution failed for task ':lib:compileJava'.
+> Compilation failed; see the compiler error output for details.

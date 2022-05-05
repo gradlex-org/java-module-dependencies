@@ -11,3 +11,9 @@ import org.junit.runner.RunWith;
 public class SamplesTest {
 
 }
+
+// TODO Tests
+// - capabilities
+// - anayze: resource folders
+// - extra-module-info integration (+ Docs!)
+// - generate module-info (only document)

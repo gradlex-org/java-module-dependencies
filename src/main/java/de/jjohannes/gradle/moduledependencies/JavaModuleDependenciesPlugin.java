@@ -182,8 +182,9 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                 warnVersionMissing(moduleName, gav, moduleInfoFile, project, javaModuleDependencies);
             }
         } else {
-            throw new RuntimeException("No mapping registered for module: " + moduleDebugInfo(moduleName, moduleInfoFile, project.getRootDir()) +
-                    " - use 'javaModuleDependencies.moduleNameToGA.put()' to add mapping.");
+            project.getLogger().lifecycle(
+                    "[WARN] [Java Module Dependencies] No mapping registered for module: " + moduleDebugInfo(moduleName, moduleInfoFile, project.getRootDir()) +
+                    " - use 'javaModuleDependencies.moduleNameToGA.put(\"" + moduleName + "\", \"group:artifact\")' to add mapping.");
         }
     }
 

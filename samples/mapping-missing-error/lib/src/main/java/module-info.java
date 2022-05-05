@@ -1,3 +1,3 @@
 module org.my.app {
-    requires com.google.gson;
+    requires commons.math3;
 }
