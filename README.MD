@@ -1,16 +1,21 @@
 # Gradle Plugin: Java Module Dependencies 
 
 A Gradle 7+ plugin to make Gradle use dependencies from _module-info.java_ files automatically.
-If you have a project that fully uses Java Modules, you do **not** need to declare dependencies in the `dependencies {}` block anymore.
+If you have a project that fully uses Java Modules, you do **not** need to declare dependencies in the `dependencies { }` block anymore
+(except for _runtimeOnly_ dependencies).
 Gradle will use the information from your `module-info.java` directly.
 
-Furthermore, you can manage the versions of the module dependencies in a central place by employing the `[version]` block
-of Gradle's new [version catalog](https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog) feature.
-For this feature, you should use Gradle 7.4+.
+To manage the versions of Java Modules, the plugin conveniently integrates with
+[Platform Projects](https://docs.gradle.org/current/userguide/java_platform_plugin.html#sec:java_platform_usage) and 
+[Dependency Versions Constraints](https://docs.gradle.org/current/userguide/dependency_constraints.html#sec:adding-constraints-transitive-deps) in general
+as well as [Version Catalogs](https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog).
 
 # How to use?
 
-You can find a full example here: [samples/basic](samples/basic)
+Dor a quick start, you can find some samples here:
+* [samples/versions-in-platform](samples/versions-in-platform)
+* [samples/versions-in-catalog](samples/versions-in-catalog)
+* [samples/kotlin](samples/kotlin)
 
 For general information about how to structure Gradle builds and apply community plugins like this one to all subprojects
 you can check out my [Understanding Gradle video series](https://www.youtube.com/playlist?list=PLWQK2ZdV4Yl2k2OmC_gsjDpdIBTN0qqkE). 
@@ -39,9 +44,9 @@ plugins {
 
 ## Add Module Name mapping information (if needed)
 
-You may define additional mappings from _module name_ to _group:name (GA) coordinates_.
+You may define additional mappings from _Module Name_ to _group:name (GA) coordinates_.
 
-The plugin already knows about modules available on Maven Central. The information is stored in:
+The plugin already knows about Modules available on Maven Central. The information is stored in:
 
 - [modules.properties](src/main/resources/de/jjohannes/gradle/moduledependencies/modules.properties) - [please open a PR](https://github.com/jjohannes/extra-java-module-info/pulls) if you miss an entry
 - [unique_modules.properties](src/main/resources/de/jjohannes/gradle/moduledependencies/unique_modules.properties) - this information is extracted from [modules.properties](https://github.com/sormuras/modules/blob/main/com.github.sormuras.modules/com/github/sormuras/modules/modules.properties) by [@sormuras](https://github.com/sormuras)
@@ -53,8 +58,6 @@ You can define additional entries (or overwrite entries from the plugin) as foll
 javaModuleDependencies {
     // Make an automatic module known
     moduleNameToGA.put("org.apache.commons.lang3", "org.apache.commons:commons-lang3")
-    // Do not warn if a module version is not know
-    warnForMissingVersions.set(false)
 }
 ```
 
@@ -71,11 +74,51 @@ Or:
 A `project.name` is determined by the `include(projectName)` statement in the settings file.
 A `sourceSet.name` is typically the name of the folder where the sources are located - e.g _main_ or _test_.
 
-If you have a `prefixOfYourChoice`, all your modules **need to have the same prefix** in order for the plugin to establish dependencies between the projects.
+If you have a `prefixOfYourChoice`, all your Modules **need to have the same prefix** in order for the plugin to establish dependencies between the projects.
+
+## Define Module versions in a Platform project as Dependency Constraints
+
+Use Gradle's dependency constraints and/or platforms to define versions for the modules you depend on.
+Inside a `javaModuleDependencies { }` block, you can use the `gav("module.name", "1.0")` notation to define a version by Module Name instead of coordinates.
+For libraries that consist of multiple components and have a BOM for version management, you might prefer to include the BOM, which you need to do by coordinates, because a BOM does not have a Module Name.
+
+```
+plugins {
+    id("java-platform")
+    id("de.jjohannes.java-module-dependencies")
+}
+
+// Define versions for Modules via the Module Name
+dependencies.constraints {
+    javaModuleDependencies {
+        api(gav("org.apache.xmlbeans", "5.0.1"))
+        api(gav("org.slf4j", "1.7.28"))
+        api(gav("org.slf4j.simple", "1.7.28"))
+    }
+}
+
+// Use BOMs for Modules that are part of a library of multiple Modules
+javaPlatform.allowDependencies()
+dependencies {
+    api(platform("com.fasterxml.jackson:jackson-bom:2.13.2"))
+    api(platform("org.junit:junit-bom:5.8.2"))
+}
+```
+
+Note: If you need to declare additional dependencies, e.g. as `runtimeOnly` without version, or want to use Gradle's rich versions, you can also use the `ga()` shortcut to map a Module Name to the corresponding GA coordinates.
+For example:
+
+```
+dependencies {
+    javaModuleDependencies {
+        testRuntimeOnly(ga("org.junit.jupiter.engine"))
+    }
+}
+```
 
 ## Define Module versions in a version catalog (Gradle 7.4+)
 
-Versions are defined in `[version]` block of a dependencies [version catalog](https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog).
+Alternatively, versions can be defined in the `[version]` block of a [version catalog](https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog).
 - *Note:* Since `.` is not supported, you need to use `_` as delimiter in the module names.
 
 **gradle/libs.versions.toml**
@@ -87,6 +130,10 @@ org_slf4j = "1.7.32"
 
 org_junit_jupiter_api = "5.7.2"
 ```
+
+- _If_ you use a catalog, the plugin will warn if a version it looks for is missing.
+  You can turn these warnings off using `warnForMissingVersions.set(false)`.
+- _If_ you use a catalog with a custom name (not `libs`), you can tell the plugin using `getVersionCatalogName.set("customName")`.
 
 ## Find the latest stable version of a Module
 
@@ -112,16 +159,9 @@ org_slf4j = "1.7.36"
 org_slf4j_simple = "1.7.36"
 ````
 
-## Custom version management
+## Analyze Module Paths
 
-You may map a module name to the corresponding GA coordinates using `javaModuleDependencies.ga("my.module.name")`.
-You can for example use this to define dependency versions by other means (e.g. dependency constraints).
-If you want to do that, you can disable the warnings about missing versions and catalog by
-`javaModuleDependencies.warnForMissingVersions.set(false)`.
-
-## Analyze Module Pathes
-
-You can use the `analyzeModulePath` help task to analyse the Module Pathes of a project.
+You can use the `analyzeModulePath` help task to analyse the Module Paths of a project.
 It will show you which Modules are used and to which GAV coordinates they map.
 It will also print potential issues - like Jars that are not Modules
 (and are therefore put on the classpath)
