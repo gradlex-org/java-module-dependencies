@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExtension.JAVA_MODULE_DEPENDENCIES;
@@ -159,16 +159,23 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             return;
         }
 
-        Set<String> allProjectNames = project.getRootProject().getSubprojects().stream().map(Project::getName).collect(Collectors.toSet());
+        Map<String, String> allProjectNamesAndGroups = project.getRootProject().getSubprojects().stream().collect(
+                Collectors.toMap(Project::getName, e -> (String) project.getGroup()));
 
         Map<String, Object> gav = javaModuleDependencies.gav(moduleName);
-        String projectName = ownModuleNamesPrefix == null ? null : moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) : null;
+        String moduleNameSuffix = ownModuleNamesPrefix == null ? null : moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) : null;
 
-        if (projectName != null && allProjectNames.contains(projectName)) {
-            project.getDependencies().add(
-                    configuration.getName(),
-                    project.project(":" + projectName)
-            );
+        Optional<String> existingProjectName = allProjectNamesAndGroups.keySet().stream().filter(p -> moduleNameSuffix != null && moduleNameSuffix.startsWith(p + ".")).findFirst();
+
+        if (allProjectNamesAndGroups.containsKey(moduleNameSuffix)) {
+            project.getDependencies().add(configuration.getName(), project.project(":" + moduleNameSuffix));
+        } else if (existingProjectName.isPresent()) {
+            // no exact match -> add capability to point at Module in other source set
+            ProjectDependency projectDependency = (ProjectDependency)
+                    project.getDependencies().add(configuration.getName(), project.project(":" + existingProjectName.get()));
+            assert projectDependency != null;
+            projectDependency.capabilities(c -> c.requireCapabilities(
+                    allProjectNamesAndGroups.get(existingProjectName.get()) + ":" + moduleNameSuffix.replace(".", "-")));
         } else if (!gav.isEmpty()) {
             project.getDependencies().add(configuration.getName(), gav);
             if (!gav.containsKey(GAV.VERSION)) {
