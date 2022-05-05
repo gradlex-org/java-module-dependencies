@@ -21,7 +21,7 @@ public abstract class JavaModuleDependenciesExtension {
 
     private final VersionCatalogsExtension versionCatalogs;
 
-    private Properties globalModuleNameToGA;
+    private Map<String, String> globalModuleNameToGA;
 
     public abstract MapProperty<String, String> getModuleNameToGA();
 
@@ -42,7 +42,7 @@ public abstract class JavaModuleDependenciesExtension {
         if (customMapping.isPresent()) {
             return customMapping.forUseAtConfigurationTime().get();
         } else {
-            return (String) getGlobalModuleNameToGA().get(moduleName);
+            return getGlobalModuleNameToGA().get(moduleName);
         }
     }
 
@@ -83,24 +83,43 @@ public abstract class JavaModuleDependenciesExtension {
                 return mapping.getKey();
             }
         }
-        for(Map.Entry<Object, Object> mapping: getGlobalModuleNameToGA().entrySet()) {
+        for(Map.Entry<String, String> mapping: getGlobalModuleNameToGA().entrySet()) {
             if (mapping.getValue().equals(ga)) {
-                return (String) mapping.getKey();
+                return mapping.getKey();
             }
         }
         return null;
     }
 
-    private Properties getGlobalModuleNameToGA() {
+    public Map<String, String> getGlobalModuleNameToGA() {
         if (this.globalModuleNameToGA != null) {
             return this.globalModuleNameToGA;
         }
-        this.globalModuleNameToGA = new Properties();
-        try (InputStream coordinatesFile = ModuleInfo.class.getResourceAsStream("modules.properties")) {
-            this.globalModuleNameToGA.load(coordinatesFile);
+        Properties properties = new Properties() {
+            @Override
+            public synchronized Object put(Object key, Object value) {
+                if (get(key) != null) {
+                    throw new IllegalArgumentException(key + " already present.");
+                }
+                return super.put(key, value);
+            }
+        };
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        Map<String, String> propertiesAsMap = (Map) properties;
+
+        try (InputStream coordinatesFile = ModuleInfo.class.getResourceAsStream("unique_modules.properties")) {
+            properties.load(coordinatesFile);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        try (InputStream coordinatesFile = ModuleInfo.class.getResourceAsStream("modules.properties")) {
+            properties.load(coordinatesFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        this.globalModuleNameToGA = propertiesAsMap;
         return this.globalModuleNameToGA;
     }
 }

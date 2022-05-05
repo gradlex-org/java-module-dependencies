@@ -39,10 +39,13 @@ plugins {
 ## Add Module Name mapping information (if needed)
 
 You may define additional mappings from _module name_ to _group:name (GA) coordinates_.
-The plugin already knows about all the _real_ modules available on Maven Central.
-That [information](src/main/resources/de/jjohannes/gradle/moduledependencies/modules.properties)
-is extracted from [modules.properties](https://github.com/sormuras/modules/blob/4eddb1225ee534e108075df1f1eed4b6f7ba1c5c/com.github.sormuras.modules/com/github/sormuras/modules/modules.properties)
-by [@sormuras](https://github.com/sormuras).
+
+The plugin already knows about modules available on Maven Central. The information is stored in:
+
+- [modules.properties](src/main/resources/de/jjohannes/gradle/moduledependencies/modules.properties) - [please open a PR](https://github.com/jjohannes/extra-java-module-info/pulls) if you miss an entry
+- [unique_modules.properties](src/main/resources/de/jjohannes/gradle/moduledependencies/unique_modules.properties) - this information is extracted from [modules.properties](https://github.com/sormuras/modules/blob/main/com.github.sormuras.modules/com/github/sormuras/modules/modules.properties) by [@sormuras](https://github.com/sormuras)
+
+You can define additional entries (or overwrite entries from the plugin) as follows:
 
 ```
 // optional configuration if required
