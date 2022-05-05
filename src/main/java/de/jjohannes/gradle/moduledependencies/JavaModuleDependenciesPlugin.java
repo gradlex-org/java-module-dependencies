@@ -9,7 +9,6 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
 import org.gradle.api.file.RegularFile;
-import org.gradle.api.plugins.JavaLibraryPlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
@@ -51,11 +50,9 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         sourceSets.all(sourceSet ->  {
             process(ModuleInfo.Directive.REQUIRES, sourceSet.getImplementationConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
             process(ModuleInfo.Directive.REQUIRES_STATIC, sourceSet.getCompileOnlyConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
-        });
-        project.getPlugins().withType(JavaLibraryPlugin.class, p -> sourceSets.all(sourceSet ->  {
             process(ModuleInfo.Directive.REQUIRES_TRANSITIVE, sourceSet.getApiConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
             process(ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE, sourceSet.getCompileOnlyApiConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
-        }));
+        });
 
         setupReportTasks(project, javaModuleDependenciesExtension);
     }
@@ -81,6 +78,12 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         Configuration conf = project.getConfigurations().findByName(gradleConfiguration);
         if (conf != null) {
             conf.withDependencies(d -> findAndReadModuleInfo(moduleDirective, sourceSet, project, conf, javaModuleDependenciesExtension));
+        } else {
+            project.getConfigurations().whenObjectAdded(lateAddedConf -> {
+                if (gradleConfiguration.equals(lateAddedConf.getName())) {
+                    lateAddedConf.withDependencies(d -> findAndReadModuleInfo(moduleDirective, sourceSet, project, lateAddedConf, javaModuleDependenciesExtension));
+                }
+            });
         }
     }
 
