@@ -10,6 +10,8 @@ To manage the versions of Java Modules, the plugin conveniently integrates with
 [Dependency Versions Constraints](https://docs.gradle.org/current/userguide/dependency_constraints.html#sec:adding-constraints-transitive-deps) in general
 as well as [Version Catalogs](https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog).
 
+There is a [CHANGELOG.md](CHANGELOG.md).
+
 # How to use?
 
 Dor a quick start, you can find some samples here:
@@ -186,7 +188,6 @@ org_slf4j = "1.7.36"
 org_slf4j_simple = "1.7.36"
 ```
 
-
 ## Analyze Module Paths
 
 You can use the `analyzeModulePath` help task to analyse the Module Paths of a project.
@@ -225,6 +226,31 @@ Notes / Options:
   - This may be ok if you use the Classpath (aka ALL-UNNAMED) in addition to the Module Path (automatic modules can see ALL-UNNAMED)
   - Remove the dependencies or upgrade to higher versions
   - Patch legacy Jars to Modules: https://github.com/jjohannes/extra-java-module-info
+```
+
+## Migrate existing Java projects to Java Modules
+
+The plugin provides a `generateAllModuleInfoFiles` task for each project that applies it.
+You can use that to generate an initial `module-info.java` from the dependencies declared in Gradle.
+This is not a sophisticated migration tool, but useful, in combination with `analyzeModulePath`, to explore what it would take to migrate an existing project to Modules.
+
+
+## Integration with the Extra Java Module Info plugin
+
+This plugin integrates with the [Extra Java Module Info](https://github.com/jjohannes/extra-java-module-info) plugin if both are applied.
+Module Name mappings for Jars that were patched with extra module info will be automatically registered.
+
+```
+plugins {
+    id("de.jjohannes.extra-java-module-info")
+    id("de.jjohannes.java-module-dependencies")
+}
+
+extraJavaModuleInfo {
+    automaticModule("org.apache.commons:commons-math3", "commons.math3")
+    // Module Dependencies plugin automatically knows that 
+    // 'commons.math3' now maps to 'org.apache.commons:commons-math3'
+}
 ```
 
 ## Using Gradle's configuration cache (Gradle 7.4+)
