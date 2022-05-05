@@ -138,9 +138,36 @@ org_junit_jupiter_api = "5.7.2"
 ## Find the latest stable version of a Module
 
 The `recommendModuleVersions` help task prints the latest available versions of the Modules you require.
-You may copy/paste entries for **gradle/libs.versions.toml** from the task output:
 
-````
+You may copy/paste the version constraints for your _platform project_ or _convention plugin_ from the task output:
+
+```
+$ ./gradlew :app:recommendModuleVersions -q
+
+Latest Stable Versions of Java Modules - use in your platform project's build.gradle(.kts)
+==========================================================================================
+dependencies.constraints {
+    javaModuleDependencies {
+        api(gav("com.fasterxml.jackson.annotation", "2.13.2"))
+        api(gav("com.fasterxml.jackson.core", "2.13.2"))
+        api(gav("com.fasterxml.jackson.databind", "2.13.2.2"))
+        api(gav("org.apache.logging.log4j", "2.17.2"))
+        api(gav("org.apache.xmlbeans", "5.0.3"))
+        api(gav("org.junit.jupiter.api", "5.8.2"))
+        api(gav("org.junit.jupiter.engine", "5.8.2"))
+        api(gav("org.junit.platform.commons", "1.8.2"))
+        api(gav("org.junit.platform.engine", "1.8.2"))
+        api(gav("org.junit.platform.launcher", "1.8.2"))
+        api(gav("org.opentest4j", "1.2.0"))
+        api(gav("org.slf4j", "1.7.36"))
+        api(gav("org.slf4j.simple", "1.7.36"))
+    }
+}
+```
+
+Or entries for **gradle/libs.versions.toml** (in projects that use a version catalog):
+
+```
 $ ./gradlew :app:recommendModuleVersions -q
 
 Latest Stable Versions of Java Modules - use in [versions] section of 'gradle/libs.versions.toml'
@@ -157,7 +184,8 @@ org_junit_platform_engine = "1.8.2"
 org_opentest4j = "1.2.0"
 org_slf4j = "1.7.36"
 org_slf4j_simple = "1.7.36"
-````
+```
+
 
 ## Analyze Module Paths
 

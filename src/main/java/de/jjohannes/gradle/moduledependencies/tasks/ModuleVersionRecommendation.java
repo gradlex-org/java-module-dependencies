@@ -15,6 +15,8 @@ import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
@@ -31,6 +33,12 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
     private final SourceSetContainer sourceSets;
     private final JavaModuleDependenciesExtension javaModuleDependencies;
 
+    @Input
+    public abstract Property<Boolean> getPrintForPlatform();
+
+    @Input
+    public abstract Property<Boolean> getPrintForCatalog();
+
     @Inject
     public ModuleVersionRecommendation(Project project) {
         this.configurations = project.getConfigurations();
@@ -41,7 +49,8 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
 
     @TaskAction
     public void report() {
-        Set<String> moduleVersions = new TreeSet<>();
+        Set<String> moduleVersionsPlatform = new TreeSet<>();
+        Set<String> moduleVersionsCatalog = new TreeSet<>();
         AttributeContainer rtClasspathAttributes = configurations.getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME).getAttributes();
         Configuration latestVersionsClasspath = configurations.create("latestVersionsClasspath", c -> {
             c.setCanBeConsumed(false);
@@ -81,24 +90,42 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
             }
         });
 
-        for (ResolvedComponentResult result: latestVersionsClasspath.getIncoming().getResolutionResult().getAllComponents()) {
+        for (ResolvedComponentResult result : latestVersionsClasspath.getIncoming().getResolutionResult().getAllComponents()) {
             ModuleVersionIdentifier moduleVersion = result.getModuleVersion();
             if (moduleVersion != null && !(result.getId() instanceof ProjectComponentIdentifier)) {
                 String ga = moduleVersion.getGroup() + ":" + moduleVersion.getName();
                 String version = moduleVersion.getVersion();
                 String moduleName = javaModuleDependencies.moduleName(ga);
                 if (moduleName != null) {
-                    moduleVersions.add(moduleName.replace('.', '_') + " = \"" + version +"\"");
+                    moduleVersionsPlatform.add("        api(gav(\"" + moduleName + "\", \"" + version + "\"))");
+                    moduleVersionsCatalog.add(moduleName.replace('.', '_') + " = \"" + version + "\"");
                 }
             }
         }
 
-        p("");
-        p("Latest Stable Versions of Java Modules - use in [versions] section of 'gradle/libs.versions.toml'");
-        p("=================================================================================================");
-        for (String entry : moduleVersions) {
-            p(entry);
+        if (getPrintForPlatform().get()) {
+            p("");
+            p("Latest Stable Versions of Java Modules - use in your platform project's build.gradle(.kts)");
+            p("==========================================================================================");
+            p("dependencies.constraints {");
+            p("    javaModuleDependencies {");
+            for (String entry : moduleVersionsPlatform) {
+                p(entry);
+            }
+            p("    }");
+            p("}");
         }
+
+        if (getPrintForCatalog().get()) {
+            p("");
+            p("Latest Stable Versions of Java Modules - use in [versions] section of 'gradle/libs.versions.toml'");
+            p("=================================================================================================");
+            for (String entry : moduleVersionsCatalog) {
+                p(entry);
+            }
+        }
+
+        p("");
     }
 
     private void p(String toPrint) {
