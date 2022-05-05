@@ -198,27 +198,33 @@ or wrong custom mappings from Module Names to GAs where the Jars are not Modules
 ```
 $ ./gradlew :app:analyzeModulePath -q
 
-All Java Modules required by this project
-=========================================
-com.fasterxml.jackson.annotation -> com.fasterxml.jackson.core:jackson-annotations (2.12.5)
-com.fasterxml.jackson.core -> com.fasterxml.jackson.core:jackson-core (2.12.5)
-com.fasterxml.jackson.databind -> com.fasterxml.jackson.core:jackson-databind (2.12.5)
+[INFO] All Java Modules required by this project
+================================================
+com.fasterxml.jackson.annotation -> com.fasterxml.jackson.core:jackson-annotations (2.13.2)
+com.fasterxml.jackson.core -> com.fasterxml.jackson.core:jackson-core (2.13.2)
+com.fasterxml.jackson.databind -> com.fasterxml.jackson.core:jackson-databind (2.13.2)
 org.apache.logging.log4j -> org.apache.logging.log4j:log4j-api (2.14.0)
 org.apache.xmlbeans -> org.apache.xmlbeans:xmlbeans (5.0.1)
-org.apiguardian.api -> org.apiguardian:apiguardian-api (1.1.0)
-org.junit.jupiter.api -> org.junit.jupiter:junit-jupiter-api (5.7.2)
-org.junit.jupiter.engine -> org.junit.jupiter:junit-jupiter-engine (5.7.2)
-org.junit.platform.commons -> org.junit.platform:junit-platform-commons (1.7.2)
-org.junit.platform.engine -> org.junit.platform:junit-platform-engine (1.7.2)
+org.apiguardian.api -> org.apiguardian:apiguardian-api (1.1.2)
+org.junit.jupiter.api -> org.junit.jupiter:junit-jupiter-api (5.8.2)
+org.junit.jupiter.engine -> org.junit.jupiter:junit-jupiter-engine (5.8.2)
+org.junit.platform.commons -> org.junit.platform:junit-platform-commons (1.8.2)
+org.junit.platform.engine -> org.junit.platform:junit-platform-engine (1.8.2)
+org.junit.platform.launcher -> org.junit.platform:junit-platform-launcher (1.8.2)
 org.my.app -> project :app
 org.my.lib -> project :lib
 org.opentest4j -> org.opentest4j:opentest4j (1.2.0)
 org.slf4j -> org.slf4j:slf4j-api (1.7.28)
 org.slf4j.simple -> org.slf4j:slf4j-simple (1.7.28)
 
-Components that are NOT Java Modules
-====================================
+[WARN] Components that are NOT Java Modules
+===========================================
 commons-cli:commons-cli (1.5.0)
+
+Notes / Options:
+  - This may be ok if you use the Classpath (aka ALL-UNNAMED) in addition to the Module Path (automatic modules can see ALL-UNNAMED)
+  - Remove the dependencies or upgrade to higher versions
+  - Patch legacy Jars to Modules: https://github.com/jjohannes/extra-java-module-info
 ```
 
 ## Using Gradle's configuration cache (Gradle 7.4+)

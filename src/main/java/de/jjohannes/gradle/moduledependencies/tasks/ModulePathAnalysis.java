@@ -94,7 +94,7 @@ public abstract class ModulePathAnalysis extends DefaultTask {
         if (!nonModules.isEmpty()) {
             p("");
             p("[WARN] Components that are NOT Java Modules");
-            p("====================================");
+            p("===========================================");
             for (String entry : nonModules) {
                 p(entry);
             }
@@ -123,7 +123,7 @@ public abstract class ModulePathAnalysis extends DefaultTask {
         if (!missingMappings.isEmpty()) {
             p("");
             p("[WARN] Missing Mappings");
-            p("========================================");
+            p("=======================");
             p("");
             p("javaModuleDependencies {");
             for (String entry : missingMappings) {
@@ -135,6 +135,7 @@ public abstract class ModulePathAnalysis extends DefaultTask {
             p("  - Add mappings in your convention plugins - you may copy&paste the above output");
             p("  - Provide a PR to add missing mappings for well-known Modules to the plugin: https://github.com/jjohannes/java-module-dependencies/pulls");
         }
+        p("");
     }
 
     private void collect(Configuration configuration, Set<String> usedMappings, Set<String> nonModules, Set<String> missingMappings, Set<String> wrongMappings, String ownModuleNamesPrefix) throws IOException {
