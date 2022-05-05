@@ -1,17 +1,15 @@
 plugins {
-    id("java-gradle-plugin")
-    id("maven-publish")
-    id("com.gradle.plugin-publish") version "0.16.0"
+    id("de.jjohannes.gradle-plugin")
 }
 
 group = "de.jjohannes.gradle"
 version = "0.6"
 
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(8))
-}
-
 dependencies {
+    implementation("org.ow2.asm:asm:8.0.1")
+
+    compileOnly("de.jjohannes.gradle:extra-java-module-info:0.12")
+
     testImplementation("org.gradle.exemplar:samples-check:1.0.0")
 }
 
@@ -30,8 +28,4 @@ pluginBundle {
     website = "https://github.com/jjohannes/java-module-dependencies"
     vcsUrl = "https://github.com/jjohannes/java-module-dependencies.git"
     tags = listOf("java", "modularity", "jigsaw", "jpms", "dependencies", "versions")
-}
-
-tasks.test {
-    inputs.dir(layout.projectDirectory.dir("samples"))
 }
