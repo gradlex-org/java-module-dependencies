@@ -6,10 +6,13 @@ plugins {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(8))
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 tasks.test {
+    useJUnitPlatform()
+    maxParallelForks = 4
     inputs.dir(layout.projectDirectory.dir("samples"))
 }
 

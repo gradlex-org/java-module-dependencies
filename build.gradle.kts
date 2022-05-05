@@ -1,5 +1,6 @@
 plugins {
     id("de.jjohannes.gradle-plugin")
+    id("groovy")
 }
 
 group = "de.jjohannes.gradle"
@@ -10,7 +11,9 @@ dependencies {
 
     compileOnly("de.jjohannes.gradle:extra-java-module-info:0.12")
 
+    testImplementation("org.spockframework:spock-core:2.1-groovy-3.0")
     testImplementation("org.gradle.exemplar:samples-check:1.0.0")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
 }
 
 gradlePlugin {

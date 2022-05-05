@@ -6,5 +6,3 @@ dependencyResolutionManagement {
 }
 
 include("app", "lib")
-
-enableFeaturePreview("VERSION_CATALOGS")

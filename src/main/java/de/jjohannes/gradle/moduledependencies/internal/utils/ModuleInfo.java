@@ -28,8 +28,9 @@ public class ModuleInfo {
     private final List<String> requiresStaticTransitive = new ArrayList<>();
 
     public ModuleInfo(String moduleInfoFileContent) {
+        boolean insideComment = false;
         for(String line: moduleInfoFileContent.split("\n")) {
-            parse(line);
+            insideComment = parse(line, insideComment);
         }
     }
 
@@ -62,17 +63,20 @@ public class ModuleInfo {
         if (moduleName.endsWith("." + projectName)) {
             return moduleName.substring(0, moduleName.length() - projectName.length() - 1);
         }
-        // TODO log this warning?
-        // "[WARN] [Java Module Dependencies] The last part of the module name (" + moduleName + ") needs to match " +
-        // "the project name (" + projectName + ") or " +
-        // "the project+sourceSet name (" + projectPlusSourceSetName + ")");
         return null;
     }
 
-    private void parse(String moduleLine) {
+    /**
+     * @return true, if we are inside a multi-line comment after this line
+     */
+    private boolean parse(String moduleLine, boolean insideComment) {
+        if (insideComment) {
+            return !moduleLine.contains("*/");
+        }
+
         List<String> tokens = Arrays.asList(moduleLine.replace(";","").replace("{","").trim().split("\\s+"));
         if ("//".equals(tokens.get(0))) {
-            return; // FIXME !!! Strip /**/ Comments
+            return false;
         }
 
         if (tokens.contains("module")) {
@@ -89,5 +93,6 @@ public class ModuleInfo {
                 requires.add(tokens.get(1));
             }
         }
+        return moduleLine.contains("/*");
     }
 }

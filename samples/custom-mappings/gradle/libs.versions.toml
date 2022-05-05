@@ -1,4 +1,0 @@
-[versions]
-org_apache_xmlbeans = "5.0.1"
-com_fasterxml_jackson_databind = "2.12.5"
-org_apache_commons_lang3 = "3.11"
