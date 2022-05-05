@@ -6,13 +6,19 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static de.jjohannes.gradle.moduledependencies.utils.ModuleNamingUtil.sourceSetToModuleName;
+
 public class ModuleInfo {
 
     public enum Directive {
         REQUIRES,
         REQUIRES_TRANSITIVE,
         REQUIRES_STATIC,
-        REQUIRES_STATIC_TRANSITIVE
+        REQUIRES_STATIC_TRANSITIVE;
+
+        public String literal() {
+            return toString().toLowerCase().replace("_", " ");
+        }
     }
 
     private String moduleName;
@@ -53,7 +59,7 @@ public class ModuleInfo {
             return "";
         }
 
-        String projectPlusSourceSetName = projectName + "." + sourceSetName;
+        String projectPlusSourceSetName = sourceSetToModuleName(projectName, sourceSetName);
         if (moduleName.endsWith("." + projectPlusSourceSetName)) {
             return moduleName.substring(0, moduleName.length() - projectPlusSourceSetName.length() - 1);
         }

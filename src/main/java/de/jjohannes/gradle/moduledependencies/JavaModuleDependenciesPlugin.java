@@ -1,19 +1,24 @@
 package de.jjohannes.gradle.moduledependencies;
 
 import de.jjohannes.gradle.moduledependencies.bridges.ExtraJavaModuleInfoBridge;
+import de.jjohannes.gradle.moduledependencies.tasks.ModuleInfoGeneration;
 import de.jjohannes.gradle.moduledependencies.tasks.ModuleVersionRecommendation;
 import de.jjohannes.gradle.moduledependencies.tasks.ModulePathAnalysis;
 import org.gradle.api.GradleException;
 import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.util.GradleVersion;
 
 import javax.annotation.Nullable;
@@ -24,6 +29,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExtension.JAVA_MODULE_DEPENDENCIES;
+import static de.jjohannes.gradle.moduledependencies.utils.DependencyDeclarationsUtil.declaredDependencies;
+import static de.jjohannes.gradle.moduledependencies.utils.ModuleNamingUtil.sourceSetToModuleName;
 import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
 
 @SuppressWarnings({"unused"})
@@ -59,6 +66,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
         setupExtraJavaModulePluginBridge(project, javaModuleDependenciesExtension);
         setupReportTasks(project, javaModuleDependenciesExtension);
+        setupMigrationTasks(project, javaModuleDependenciesExtension);
     }
 
     private void setupExtraJavaModulePluginBridge(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
@@ -80,6 +88,38 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         project.getTasks().register("recommendModuleVersions", ModuleVersionRecommendation.class, t -> {
             t.setGroup(HELP_GROUP);
             t.setDescription("Query repositories for latest stable versions of the used Java Modules");
+        });
+    }
+
+    private void setupMigrationTasks(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
+        SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
+        ConfigurationContainer configurations = project.getConfigurations();
+
+        TaskProvider<Task> generateAllModuleInfoFiles = project.getTasks().register("generateAllModuleInfoFiles", t -> {
+            t.setGroup("java modules");
+            t.setDescription("Generate 'module-info.java' files in all source sets");
+        });
+
+        sourceSets.all(sourceSet -> {
+            TaskProvider<ModuleInfoGeneration> generateModuleInfo = project.getTasks().register(sourceSet.getTaskName("generate", "ModuleInfoFile"), ModuleInfoGeneration.class, t -> {
+                t.setGroup("java modules");
+                t.setDescription("Generate 'module-info.java' in '" + sourceSet.getName() + "' source set");
+
+                t.getModuleNameToGA().putAll(javaModuleDependencies.getGlobalModuleNameToGA());
+                t.getModuleNameToGA().putAll(javaModuleDependencies.getModuleNameToGA());
+
+                t.getModuleName().convention(project.provider(() -> project.getGroup() + "." + sourceSetToModuleName(project.getName(), sourceSet.getName())));
+
+                t.getApiDependencies().convention(declaredDependencies(project, sourceSet.getApiConfigurationName()));
+                t.getImplementationDependencies().convention(declaredDependencies(project, sourceSet.getImplementationConfigurationName()));
+                t.getCompileOnlyApiDependencies().convention(declaredDependencies(project, sourceSet.getCompileOnlyApiConfigurationName()));
+                t.getCompileOnlyDependencies().convention(declaredDependencies(project, sourceSet.getCompileOnlyConfigurationName()));
+
+                t.getModuleInfoFile().convention(project.getLayout().file(project.provider(() ->
+                        new File(sourceSet.getJava().getSrcDirs().iterator().next(), "module-info.java"))));
+            });
+
+            generateAllModuleInfoFiles.configure(t -> t.dependsOn(generateModuleInfo));
         });
     }
 
