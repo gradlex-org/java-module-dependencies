@@ -1,6 +1,6 @@
 # Gradle Plugin: Java Module Dependencies 
 
-A Gradle 7+ plugin to make Gradle use dependencies from _module-info.java_ files automatically.
+A Gradle 7.4+ plugin to make Gradle use dependencies from _module-info.java_ files automatically.
 If you have a project that fully uses Java Modules, you do **not** need to declare dependencies in the `dependencies { }` block anymore
 (except for _runtimeOnly_ dependencies).
 Gradle will use the information from your `module-info.java` directly.
@@ -118,7 +118,7 @@ dependencies {
 }
 ```
 
-## Define Module versions in a version catalog (Gradle 7.4+)
+## Define Module versions in a version catalog
 
 Alternatively, versions can be defined in the `[version]` block of a [version catalog](https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog).
 - *Note:* Since `.` is not supported, you need to use `_` as delimiter in the module names.
@@ -253,7 +253,7 @@ extraJavaModuleInfo {
 }
 ```
 
-## Using Gradle's configuration cache (Gradle 7.4+)
+## Using Gradle's configuration cache
 
 This plugin reads all your `module-info.java` files during build configuration.
 This is, because they provide the additional dependency information for setting up the build correctly.

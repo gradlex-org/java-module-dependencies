@@ -44,8 +44,8 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        if (GradleVersion.current().compareTo(GradleVersion.version("7.0")) < 0) {
-            throw new GradleException("This plugin requires Gradle 7.0+");
+        if (GradleVersion.current().compareTo(GradleVersion.version("7.4")) < 0) {
+            throw new GradleException("This plugin requires Gradle 7.4+");
         }
 
         VersionCatalogsExtension versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
