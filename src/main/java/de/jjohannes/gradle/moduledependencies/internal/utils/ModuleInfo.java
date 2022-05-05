@@ -1,4 +1,4 @@
-package de.jjohannes.gradle.moduledependencies;
+package de.jjohannes.gradle.moduledependencies.internal.utils;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static de.jjohannes.gradle.moduledependencies.utils.ModuleNamingUtil.sourceSetToModuleName;
+import static de.jjohannes.gradle.moduledependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
 
 public class ModuleInfo {
 
@@ -31,10 +31,6 @@ public class ModuleInfo {
         for(String line: moduleInfoFileContent.split("\n")) {
             parse(line);
         }
-    }
-
-    public String getModuleName() {
-        return moduleName;
     }
 
     public List<String> get(Directive directive) {

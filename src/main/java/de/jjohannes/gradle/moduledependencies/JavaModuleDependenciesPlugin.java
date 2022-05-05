@@ -1,6 +1,7 @@
 package de.jjohannes.gradle.moduledependencies;
 
-import de.jjohannes.gradle.moduledependencies.bridges.ExtraJavaModuleInfoBridge;
+import de.jjohannes.gradle.moduledependencies.internal.bridges.ExtraJavaModuleInfoBridge;
+import de.jjohannes.gradle.moduledependencies.internal.utils.ModuleInfo;
 import de.jjohannes.gradle.moduledependencies.tasks.ModuleInfoGeneration;
 import de.jjohannes.gradle.moduledependencies.tasks.ModuleVersionRecommendation;
 import de.jjohannes.gradle.moduledependencies.tasks.ModulePathAnalysis;
@@ -29,11 +30,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExtension.JAVA_MODULE_DEPENDENCIES;
-import static de.jjohannes.gradle.moduledependencies.utils.DependencyDeclarationsUtil.declaredDependencies;
-import static de.jjohannes.gradle.moduledependencies.utils.ModuleNamingUtil.sourceSetToModuleName;
+import static de.jjohannes.gradle.moduledependencies.internal.utils.DependencyDeclarationsUtil.declaredDependencies;
+import static de.jjohannes.gradle.moduledependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
 import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
 
-@SuppressWarnings({"unused"})
+@SuppressWarnings("unused")
 @NonNullApi
 public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
@@ -47,26 +48,24 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             throw new GradleException("This plugin requires Gradle 7.0+");
         }
 
-        project.getPlugins().apply(JavaPlugin.class);
-
         VersionCatalogsExtension versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
-
-        JavaModuleDependenciesExtension javaModuleDependenciesExtension = project.getExtensions().create(
+        JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().create(
                 JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class, versionCatalogs);
-        javaModuleDependenciesExtension.getWarnForMissingVersions().convention(versionCatalogs != null);
-        javaModuleDependenciesExtension.getVersionCatalogName().convention("libs");
 
+        project.getPlugins().withType(JavaPlugin.class, javaPlugin -> setupForJavaProject(project, javaModuleDependencies));
+    }
+
+    private void setupForJavaProject(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         sourceSets.all(sourceSet ->  {
-            process(ModuleInfo.Directive.REQUIRES, sourceSet.getImplementationConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
-            process(ModuleInfo.Directive.REQUIRES_STATIC, sourceSet.getCompileOnlyConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
-            process(ModuleInfo.Directive.REQUIRES_TRANSITIVE, sourceSet.getApiConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
-            process(ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE, sourceSet.getCompileOnlyApiConfigurationName(), sourceSet, project, javaModuleDependenciesExtension);
+            process(ModuleInfo.Directive.REQUIRES, sourceSet.getImplementationConfigurationName(), sourceSet, project, javaModuleDependencies);
+            process(ModuleInfo.Directive.REQUIRES_STATIC, sourceSet.getCompileOnlyConfigurationName(), sourceSet, project, javaModuleDependencies);
+            process(ModuleInfo.Directive.REQUIRES_TRANSITIVE, sourceSet.getApiConfigurationName(), sourceSet, project, javaModuleDependencies);
+            process(ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE, sourceSet.getCompileOnlyApiConfigurationName(), sourceSet, project, javaModuleDependencies);
         });
-
-        setupExtraJavaModulePluginBridge(project, javaModuleDependenciesExtension);
-        setupReportTasks(project, javaModuleDependenciesExtension);
-        setupMigrationTasks(project, javaModuleDependenciesExtension);
+        setupExtraJavaModulePluginBridge(project, javaModuleDependencies);
+        setupReportTasks(project, javaModuleDependencies);
+        setupMigrationTasks(project, javaModuleDependencies);
     }
 
     private void setupExtraJavaModulePluginBridge(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
@@ -105,7 +104,6 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                 t.setGroup("java modules");
                 t.setDescription("Generate 'module-info.java' in '" + sourceSet.getName() + "' source set");
 
-                t.getModuleNameToGA().putAll(javaModuleDependencies.getGlobalModuleNameToGA());
                 t.getModuleNameToGA().putAll(javaModuleDependencies.getModuleNameToGA());
 
                 t.getModuleName().convention(project.provider(() -> project.getGroup() + "." + sourceSetToModuleName(project.getName(), sourceSet.getName())));
@@ -162,7 +160,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         Map<String, String> allProjectNamesAndGroups = project.getRootProject().getSubprojects().stream().collect(
                 Collectors.toMap(Project::getName, e -> (String) project.getGroup()));
 
-        Map<String, Object> gav = javaModuleDependencies.gav(moduleName);
+        Provider<Map<String, Object>> gav = javaModuleDependencies.gav(moduleName);
         String moduleNameSuffix = ownModuleNamesPrefix == null ? null : moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) : null;
 
         Optional<String> existingProjectName = allProjectNamesAndGroups.keySet().stream().filter(p -> moduleNameSuffix != null && moduleNameSuffix.startsWith(p + ".")).findFirst();
@@ -176,10 +174,10 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             assert projectDependency != null;
             projectDependency.capabilities(c -> c.requireCapabilities(
                     allProjectNamesAndGroups.get(existingProjectName.get()) + ":" + moduleNameSuffix.replace(".", "-")));
-        } else if (!gav.isEmpty()) {
-            project.getDependencies().add(configuration.getName(), gav);
-            if (!gav.containsKey(GAV.VERSION)) {
-                warnVersionMissing(moduleName, gav, moduleInfoFile, project, javaModuleDependencies);
+        } else if (gav.isPresent()) {
+            project.getDependencies().addProvider(configuration.getName(), gav);
+            if (!gav.get().containsKey(GAV.VERSION)) {
+                warnVersionMissing(moduleName, gav.get(), moduleInfoFile, project, javaModuleDependencies);
             }
         } else {
             project.getLogger().lifecycle(

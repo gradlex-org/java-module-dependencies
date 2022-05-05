@@ -8,19 +8,16 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Optional;
+
+import static java.util.Optional.empty;
 
 public abstract class JavaModuleDependenciesExtension {
-    public static final String JAVA_MODULE_DEPENDENCIES = "javaModuleDependencies";
+    static final String JAVA_MODULE_DEPENDENCIES = "javaModuleDependencies";
 
     private final VersionCatalogsExtension versionCatalogs;
-
-    private Map<String, String> globalModuleNameToGA;
 
     public abstract MapProperty<String, String> getModuleNameToGA();
 
@@ -30,49 +27,50 @@ public abstract class JavaModuleDependenciesExtension {
 
     public JavaModuleDependenciesExtension(VersionCatalogsExtension versionCatalogs) {
         this.versionCatalogs = versionCatalogs;
+        getWarnForMissingVersions().convention(versionCatalogs != null);
+        getVersionCatalogName().convention("libs");
+        getModuleNameToGA().putAll(SharedMappings.mappings);
     }
 
     /**
-     *  Converts Module Name to GA coordinates that can be used in dependency declarations as String:
-     *  "group:name"
+     * Converts 'Module Name' to GA coordinates that can be used in
+     * dependency declarations as String: "group:name"
      */
-    public String ga(String moduleName) {
-        Provider<String> customMapping = getModuleNameToGA().getting(moduleName);
-        if (customMapping.isPresent()) {
-            return customMapping.get();
-        } else {
-            return getGlobalModuleNameToGA().get(moduleName);
-        }
+    public Provider<String> ga(String moduleName) {
+        return getModuleNameToGA().getting(moduleName);
     }
 
     /**
-     *  Converts Module Name to GAV coordinates that can be used in dependency Declarations as Map:
-     *  [group: "...", name: "...", version: "..."]
-     *
-     *  If no version is defined, the version entry will be missing.
+     * Converts 'Module Name' and 'Version' to GA coordinates that can be used in
+     * dependency declarations as String: "group:name:version"
      */
-    public Map<String, Object> gav(String moduleName) {
-        Map<String, Object> gav = new HashMap<>();
-        String ga = ga(moduleName);
-        if (ga == null) {
-            return Collections.emptyMap();
-        }
+    public Provider<String> gav(String moduleName, String version) {
+        return getModuleNameToGA().getting(moduleName).map(s -> s + ":" + version);
+    }
 
-        VersionConstraint version = null;
+    /**
+     * Converts 'Module Name' and the matching 'Version' from the Version Catalog to
+     * GAV coordinates that can be used in dependency Declarations as Map:
+     * [group: "...", name: "...", version: "..."]
+     */
+    public Provider<Map<String, Object>> gav(String moduleName) {
+        Provider<String> ga = ga(moduleName);
+
+        VersionCatalog catalog = null;
         if (versionCatalogs != null) {
             String catalogName = getVersionCatalogName().get();
-            VersionCatalog catalog = versionCatalogs.named(catalogName);
-            version = catalog.findVersion(moduleName.replace('_', '.')).orElse(null);
+            catalog = versionCatalogs.named(catalogName);
         }
+        Optional<VersionConstraint> version = catalog == null ? empty() : catalog.findVersion(moduleName.replace('_', '.'));
 
-        String[] gaSplit = ga.split(":");
-        gav.put(GAV.GROUP, gaSplit[0]);
-        gav.put(GAV.ARTIFACT, gaSplit[1]);
-        if (version != null) {
-            gav.put(GAV.VERSION, version);
-        }
-
-        return gav;
+        return ga.map(s -> {
+            Map<String, Object> gav = new HashMap<>();
+            String[] gaSplit = s.split(":");
+            gav.put(GAV.GROUP, gaSplit[0]);
+            gav.put(GAV.ARTIFACT, gaSplit[1]);
+            version.ifPresent(versionConstraint -> gav.put(GAV.VERSION, versionConstraint));
+            return gav;
+        });
     }
 
     @Nullable
@@ -82,43 +80,6 @@ public abstract class JavaModuleDependenciesExtension {
                 return mapping.getKey();
             }
         }
-        for(Map.Entry<String, String> mapping: getGlobalModuleNameToGA().entrySet()) {
-            if (mapping.getValue().equals(ga)) {
-                return mapping.getKey();
-            }
-        }
         return null;
-    }
-
-    public Map<String, String> getGlobalModuleNameToGA() {
-        if (this.globalModuleNameToGA != null) {
-            return this.globalModuleNameToGA;
-        }
-        Properties properties = new Properties() {
-            @Override
-            public synchronized Object put(Object key, Object value) {
-                if (get(key) != null) {
-                    throw new IllegalArgumentException(key + " already present.");
-                }
-                return super.put(key, value);
-            }
-        };
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        Map<String, String> propertiesAsMap = (Map) properties;
-
-        try (InputStream coordinatesFile = ModuleInfo.class.getResourceAsStream("unique_modules.properties")) {
-            properties.load(coordinatesFile);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        try (InputStream coordinatesFile = ModuleInfo.class.getResourceAsStream("modules.properties")) {
-            properties.load(coordinatesFile);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        this.globalModuleNameToGA = propertiesAsMap;
-        return this.globalModuleNameToGA;
     }
 }

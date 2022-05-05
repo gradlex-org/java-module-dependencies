@@ -1,6 +1,6 @@
 package de.jjohannes.gradle.moduledependencies.tasks;
 
-import de.jjohannes.gradle.moduledependencies.ModuleInfo;
+import de.jjohannes.gradle.moduledependencies.internal.utils.ModuleInfo;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
@@ -18,7 +18,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static de.jjohannes.gradle.moduledependencies.ModuleInfo.Directive.*;
+import static de.jjohannes.gradle.moduledependencies.internal.utils.ModuleInfo.Directive.*;
 
 public abstract class ModuleInfoGeneration extends DefaultTask {
 

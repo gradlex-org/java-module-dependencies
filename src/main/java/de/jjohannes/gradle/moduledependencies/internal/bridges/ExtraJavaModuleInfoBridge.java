@@ -1,4 +1,4 @@
-package de.jjohannes.gradle.moduledependencies.bridges;
+package de.jjohannes.gradle.moduledependencies.internal.bridges;
 
 import de.jjohannes.gradle.javamodules.ExtraModuleInfoPluginExtension;
 import de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExtension;

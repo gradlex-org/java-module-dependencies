@@ -1,7 +1,7 @@
 package de.jjohannes.gradle.moduledependencies.tasks;
 
 import de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExtension;
-import de.jjohannes.gradle.moduledependencies.ModuleInfo;
+import de.jjohannes.gradle.moduledependencies.internal.utils.ModuleInfo;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;

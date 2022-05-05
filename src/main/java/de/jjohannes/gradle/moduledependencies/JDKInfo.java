@@ -3,7 +3,7 @@ package de.jjohannes.gradle.moduledependencies;
 import java.util.Arrays;
 import java.util.List;
 
-public interface JDKInfo {
+interface JDKInfo {
     List<String> MODULES = Arrays.asList(
             "java.base",
             "java.compiler",
