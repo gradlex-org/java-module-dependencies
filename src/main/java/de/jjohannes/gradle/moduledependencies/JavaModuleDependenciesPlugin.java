@@ -26,23 +26,21 @@ import java.util.stream.Collectors;
 import static de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExtension.JAVA_MODULE_DEPENDENCIES;
 import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
 
-@SuppressWarnings({"unused", "UnstableApiUsage"})
+@SuppressWarnings({"unused"})
 @NonNullApi
 public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
     private final Map<File, ModuleInfo> moduleInfo = new HashMap<>();
-    private boolean warnForMissingCatalog;
 
     @Override
     public void apply(Project project) {
-        if (GradleVersion.current().compareTo(GradleVersion.version("7.2")) < 0) {
-            throw new GradleException("This plugin requires Gradle 7.2+");
+        if (GradleVersion.current().compareTo(GradleVersion.version("7.0")) < 0) {
+            throw new GradleException("This plugin requires Gradle 7.0+");
         }
 
         project.getPlugins().apply(JavaPlugin.class);
 
         VersionCatalogsExtension versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
-        warnForMissingCatalog = versionCatalogs == null;
 
         JavaModuleDependenciesExtension javaModuleDependenciesExtension = project.getExtensions().create(
                 JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class, versionCatalogs);
@@ -89,7 +87,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
     private void findAndReadModuleInfo(ModuleInfo.Directive moduleDirective, SourceSet sourceSet, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
         for (File folder : sourceSet.getJava().getSrcDirs()) {
             Provider<RegularFile> moduleInfoFile = project.getLayout().file(project.provider(() -> new File(folder, "module-info.java")));
-            Provider<String> moduleInfoContent = project.getProviders().fileContents(moduleInfoFile).getAsText().forUseAtConfigurationTime();
+            Provider<String> moduleInfoContent = project.getProviders().fileContents(moduleInfoFile).getAsText();
             if (moduleInfoContent.isPresent()) {
                 if (!this.moduleInfo.containsKey(folder)) {
                     this.moduleInfo.put(folder, new ModuleInfo(moduleInfoContent.get()));
@@ -131,12 +129,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
     }
 
     private void warnVersionMissing(String moduleName, Map<String, Object> ga, Provider<RegularFile> moduleInfoFile, Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
-        if (warnForMissingCatalog) {
-            project.getLogger().warn("[WARN] [Java Module Dependencies] Version catalog feature not enabled in settings.gradle(.kts) - add 'enableFeaturePreview(\"VERSION_CATALOGS\")'");
-            warnForMissingCatalog = false;
-        }
-
-        if (javaModuleDependencies.getWarnForMissingVersions().forUseAtConfigurationTime().get()) {
+        if (javaModuleDependencies.getWarnForMissingVersions().get()) {
             project.getLogger().warn("[WARN] [Java Module Dependencies] No version defined in catalog - " + ga.get(GAV.GROUP) + ":" + ga.get(GAV.ARTIFACT) + " - "
                     + moduleDebugInfo(moduleName.replace('.', '_'), moduleInfoFile, project.getRootDir()));
         }
@@ -145,7 +138,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
     private String moduleDebugInfo(String moduleName, Provider<RegularFile> moduleInfoFile, File rootDir) {
         return moduleName
                 + " (required in "
-                + moduleInfoFile.forUseAtConfigurationTime().get().getAsFile().getAbsolutePath().substring(rootDir.getAbsolutePath().length() + 1)
+                + moduleInfoFile.get().getAsFile().getAbsolutePath().substring(rootDir.getAbsolutePath().length() + 1)
                 + ")";
     }
 

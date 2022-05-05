@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-@SuppressWarnings("UnstableApiUsage")
 public abstract class JavaModuleDependenciesExtension {
     public static final String JAVA_MODULE_DEPENDENCIES = "javaModuleDependencies";
 
@@ -40,7 +39,7 @@ public abstract class JavaModuleDependenciesExtension {
     public String ga(String moduleName) {
         Provider<String> customMapping = getModuleNameToGA().getting(moduleName);
         if (customMapping.isPresent()) {
-            return customMapping.forUseAtConfigurationTime().get();
+            return customMapping.get();
         } else {
             return getGlobalModuleNameToGA().get(moduleName);
         }
@@ -61,7 +60,7 @@ public abstract class JavaModuleDependenciesExtension {
 
         VersionConstraint version = null;
         if (versionCatalogs != null) {
-            String catalogName = getVersionCatalogName().forUseAtConfigurationTime().get();
+            String catalogName = getVersionCatalogName().get();
             VersionCatalog catalog = versionCatalogs.named(catalogName);
             version = catalog.findVersion(moduleName.replace('_', '.')).orElse(null);
         }

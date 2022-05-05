@@ -1,11 +1,12 @@
 # Gradle Plugin: Java Module Dependencies 
 
-A Gradle 7.4+ plugin to make Gradle use dependencies from _module-info.java_ files automatically.
+A Gradle 7+ plugin to make Gradle use dependencies from _module-info.java_ files automatically.
 If you have a project that fully uses Java Modules, you do **not** need to declare dependencies in the `dependencies {}` block anymore.
 Gradle will use the information from your `module-info.java` directly.
 
-Furthermore, you manage the versions of the module dependencies in a central place by employing the `[version]` block
+Furthermore, you can manage the versions of the module dependencies in a central place by employing the `[version]` block
 of Gradle's new [version catalog](https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog) feature.
+For this feature, you should use Gradle 7.4+.
 
 # How to use?
 
@@ -72,7 +73,7 @@ A `sourceSet.name` is typically the name of the folder where the sources are loc
 
 If you have a `prefixOfYourChoice`, all your modules **need to have the same prefix** in order for the plugin to establish dependencies between the projects.
 
-## Define Module versions
+## Define Module versions in a version catalog (Gradle 7.4+)
 
 Versions are defined in `[version]` block of a dependencies [version catalog](https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog).
 - *Note:* Since `.` is not supported, you need to use `_` as delimiter in the module names.
@@ -152,7 +153,7 @@ Components that are NOT Java Modules
 commons-cli:commons-cli (1.5.0)
 ```
 
-## Using Gradle's configuration cache
+## Using Gradle's configuration cache (Gradle 7.4+)
 
 This plugin reads all your `module-info.java` files during build configuration.
 This is, because they provide the additional dependency information for setting up the build correctly.
