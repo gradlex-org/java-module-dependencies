@@ -2,17 +2,17 @@ package de.jjohannes.gradle.moduledependencies.gradlebuild.tasks
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ExternalModuleDependency
-import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.internal.project.ProjectInternal
-import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.util.Properties
 
 abstract class UniqueModulesPropertiesUpdate : DefaultTask() {
 
-    @get:OutputFile
-    abstract val uniqueModulesProperties: RegularFileProperty
+    @get:OutputDirectory
+    abstract val uniqueModulesProperties: DirectoryProperty
 
     @TaskAction
     fun convert() {
@@ -24,7 +24,7 @@ abstract class UniqueModulesPropertiesUpdate : DefaultTask() {
             val name = split[split.size - 3]
             "${entry.key}=$group:$name\n"
         }.joinToString("")
-        uniqueModulesProperties.get().asFile.writeText(modulesToCoordinates)
+        File(uniqueModulesProperties.get().asFile, "de/jjohannes/gradle/moduledependencies/unique_modules.properties").writeText(modulesToCoordinates)
     }
 
     private fun getModulesPropertiesFromRepository(): File {

@@ -17,10 +17,7 @@ tasks.test {
 }
 
 val updateUniqueModulesProperties = tasks.register<UniqueModulesPropertiesUpdate>("updateUniqueModulesProperties") {
-    uniqueModulesProperties.set(layout.projectDirectory.file(
-        "src/main/resources/de/jjohannes/gradle/moduledependencies/unique_modules.properties"))
+    uniqueModulesProperties.set(layout.projectDirectory.dir("src/main/resources"))
 }
 
-tasks.processResources {
-    dependsOn(updateUniqueModulesProperties)
-}
+sourceSets.main.get().resources.setSrcDirs(listOf(updateUniqueModulesProperties))
