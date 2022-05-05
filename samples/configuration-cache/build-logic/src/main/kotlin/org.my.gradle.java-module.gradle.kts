@@ -1,4 +1,5 @@
 plugins {
+    id("java")
     id("de.jjohannes.java-module-dependencies")
 }
 
@@ -10,5 +11,7 @@ tasks.test {
 }
 
 dependencies {
-    testRuntimeOnly(javaModuleDependencies.gav("org.junit.jupiter.engine"))
+    javaModuleDependencies {
+        testRuntimeOnly(gav("org.junit.jupiter.engine"))
+    }
 }
