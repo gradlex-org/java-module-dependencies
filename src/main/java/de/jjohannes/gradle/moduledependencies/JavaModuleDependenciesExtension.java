@@ -59,7 +59,7 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     /**
-     * Converts 'Module Name' and 'Version' to GA coordinates that can be used in
+     * Converts 'Module Name' and 'Version' to GAV coordinates that can be used in
      * dependency declarations as String: "group:name:version"
      *
      * @param moduleName The Module Name

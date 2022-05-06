@@ -52,6 +52,8 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().create(
                 JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class, versionCatalogs);
 
+        setupExtraJavaModulePluginBridge(project, javaModuleDependencies);
+
         project.getPlugins().withType(JavaPlugin.class, javaPlugin -> setupForJavaProject(project, javaModuleDependencies));
     }
 
@@ -63,7 +65,6 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             process(ModuleInfo.Directive.REQUIRES_TRANSITIVE, sourceSet.getApiConfigurationName(), sourceSet, project, javaModuleDependencies);
             process(ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE, sourceSet.getCompileOnlyApiConfigurationName(), sourceSet, project, javaModuleDependencies);
         });
-        setupExtraJavaModulePluginBridge(project, javaModuleDependencies);
         setupReportTasks(project, javaModuleDependencies);
         setupMigrationTasks(project, javaModuleDependencies);
     }
