@@ -10,11 +10,31 @@ To manage the versions of Java Modules, the plugin conveniently integrates with
 [Dependency Versions Constraints](https://docs.gradle.org/current/userguide/dependency_constraints.html#sec:adding-constraints-transitive-deps) in general
 as well as [Version Catalogs](https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog).
 
+This plugin is maintained by me, [Jendrik Johannes](https://github.com/jjohannes).
+I offer consulting and training for Gradle and/or the Java Module System - please [reach out](mailto:jendrik.johannes@gmail.com) if you are interested.
+There is also my [YouTube channel](https://www.youtube.com/playlist?list=PLWQK2ZdV4Yl2k2OmC_gsjDpdIBTN0qqkE) on Gradle topics.
+
+If you have a suggestion or a question, please [open an issue](https://github.com/jjohannes/java-module-dependencies/issues/new).
+
 There is a [CHANGELOG.md](CHANGELOG.md).
+
+# Java Modules with Gradle
+
+If you plan to build Java Modules with Gradle, you should consider using these plugins on top of Gradle core:
+
+- [`id("de.jjohannes.java-module-dependencies")`](https://github.com/jjohannes/java-module-dependencies)  
+  Avoid duplicated dependency definitions and get your Module Path under control
+- [`id("de.jjohannes.java-module-testing")`](https://github.com/jjohannes/java-module-testing)  
+  Proper test setup for Java Modules
+- [`id("de.jjohannes.extra-java-module-info")`](https://github.com/jjohannes/extra-java-module-info)  
+  Only if your (existing) project cannot avoid using non-module legacy Jars
+
+[Here is a sample](https://github.com/jjohannes/java-module-testing/tree/main/samples/use-all-java-module-plugins)
+that shows all plugins in combination.
 
 # How to use?
 
-Dor a quick start, you can find some samples here:
+For a quick start, you can find some samples here:
 * [samples/versions-in-platform](samples/versions-in-platform)
 * [samples/versions-in-catalog](samples/versions-in-catalog)
 * [samples/kotlin](samples/kotlin)
