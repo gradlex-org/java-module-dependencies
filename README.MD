@@ -10,6 +10,9 @@ To manage the versions of Java Modules, the plugin conveniently integrates with
 [Dependency Versions Constraints](https://docs.gradle.org/current/userguide/dependency_constraints.html#sec:adding-constraints-transitive-deps) in general
 as well as [Version Catalogs](https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog).
 
+Here is an overview of what the plugin does in a Twitter thread:
+[<img src="https://onepiecesoftware.github.io/img/tweets/1524322184923164672.png">](https://twitter.com/jeoj/status/1524322184923164672)
+
 This plugin is maintained by me, [Jendrik Johannes](https://github.com/jjohannes).
 I offer consulting and training for Gradle and/or the Java Module System - please [reach out](mailto:jendrik.johannes@gmail.com) if you are interested.
 There is also my [YouTube channel](https://www.youtube.com/playlist?list=PLWQK2ZdV4Yl2k2OmC_gsjDpdIBTN0qqkE) on Gradle topics.
@@ -31,6 +34,9 @@ If you plan to build Java Modules with Gradle, you should consider using these p
 
 [Here is a sample](https://github.com/jjohannes/java-module-testing/tree/main/samples/use-all-java-module-plugins)
 that shows all plugins in combination.
+
+[Full Java Module System Project Setup](https://github.com/jjohannes/gradle-project-setup-howto/tree/java_module_system) is a full-fledged Java Module System project setup using these plugins.  
+[<img src="https://onepiecesoftware.github.io/img/videos/15-3.png" width="260">](https://www.youtube.com/watch?v=uRieSnovlVc&list=PLWQK2ZdV4Yl2k2OmC_gsjDpdIBTN0qqkE)
 
 # How to use?
 
