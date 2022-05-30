@@ -13,7 +13,9 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ProjectDependency;
+import org.gradle.api.artifacts.VersionCatalog;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
+import org.gradle.api.artifacts.VersionConstraint;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
@@ -32,6 +34,7 @@ import java.util.stream.Collectors;
 import static de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesExtension.JAVA_MODULE_DEPENDENCIES;
 import static de.jjohannes.gradle.moduledependencies.internal.utils.DependencyDeclarationsUtil.declaredDependencies;
 import static de.jjohannes.gradle.moduledependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
+import static java.util.Optional.empty;
 import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
 
 @SuppressWarnings("unused")
@@ -185,9 +188,38 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                 warnVersionMissing(moduleName, gav.get(), moduleInfoFile, project, javaModuleDependencies);
             }
         } else {
-            project.getLogger().lifecycle(
-                    "[WARN] [Java Module Dependencies] No mapping registered for module: " + moduleDebugInfo(moduleName, moduleInfoFile, project.getRootDir()) +
-                    " - use 'javaModuleDependencies.moduleNameToGA.put(\"" + moduleName + "\", \"group:artifact\")' to add mapping.");
+            Optional<Map.Entry<String, String>> prefixToGroupMapping =
+                    javaModuleDependencies.getModuleNamePrefixToGroup().get().entrySet().stream()
+                    .filter(e -> moduleName.startsWith(e.getKey())).findFirst();
+            if (prefixToGroupMapping.isPresent()) {
+                String prefix = prefixToGroupMapping.get().getKey();
+
+                String group = prefixToGroupMapping.get().getValue();
+                String artifactName = moduleName.substring(prefix.length());
+
+                VersionCatalog catalog = null;
+                VersionCatalogsExtension versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
+                if (versionCatalogs != null) {
+                    String catalogName = javaModuleDependencies.getVersionCatalogName().get();
+                    catalog = versionCatalogs.named(catalogName);
+                }
+                Optional<VersionConstraint> version = catalog == null ? empty() : catalog.findVersion(prefix.replace('_', '.'));
+
+                Map<String, Object> gavFromPrefixMapping = new HashMap<>();
+                gavFromPrefixMapping.put(GAV.GROUP, group);
+                gavFromPrefixMapping.put(GAV.ARTIFACT, artifactName);
+                version.ifPresent(versionConstraint -> gavFromPrefixMapping.put(GAV.VERSION, versionConstraint));
+
+                project.getDependencies().add(configuration.getName(), gavFromPrefixMapping);
+
+                if (!gavFromPrefixMapping.containsKey(GAV.VERSION)) {
+                    warnVersionMissing(prefix, gavFromPrefixMapping, moduleInfoFile, project, javaModuleDependencies);
+                }
+            } else {
+                project.getLogger().lifecycle(
+                        "[WARN] [Java Module Dependencies] No mapping registered for module: " + moduleDebugInfo(moduleName, moduleInfoFile, project.getRootDir()) +
+                                " - use 'javaModuleDependencies.moduleNameToGA.put(\"" + moduleName + "\", \"group:artifact\")' to add mapping.");
+            }
         }
     }
 

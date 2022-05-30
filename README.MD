@@ -89,6 +89,9 @@ javaModuleDependencies {
 }
 ```
 
+There is also the option to register a mapping for all Modules that share a common _name prefix_ and _group_.
+For example: `moduleNamePrefixToGroup.put("com.example.product.module.", "com.example.product")`.
+
 ## Naming patterns for Modules in the build
 
 This plugin makes the following assumption about _Module Names_ of your own Modules in the build to establish dependencies between them:

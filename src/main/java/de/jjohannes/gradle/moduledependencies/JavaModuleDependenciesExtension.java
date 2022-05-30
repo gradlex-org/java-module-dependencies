@@ -31,6 +31,18 @@ public abstract class JavaModuleDependenciesExtension {
     public abstract MapProperty<String, String> getModuleNameToGA();
 
     /**
+     * If your Module Names all start with a common prefix (e.g. 'com.example.product.module.') followed by a
+     * name that corresponds to the artifact name and all have the group (e.g. 'com.example.product'), you can
+     * register a mapping for all these Modules. and with that allow Gradle to map them correctly even if you
+     * publish some of your Modules or use included builds.
+     *
+     * moduleNamePrefixToGroup.put("com.example.product.module.", "com.example.product")
+     *
+     * @return the mappings from 'Module Name Prefix' to 'group'
+     */
+    public abstract MapProperty<String, String> getModuleNamePrefixToGroup();
+
+    /**
      * @return If a Version Catalog is used: print a WARN for missing versions (default is 'true')
      */
     public abstract Property<Boolean> getWarnForMissingVersions();
