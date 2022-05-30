@@ -15,8 +15,8 @@ tasks.test {
     inputs.dir(layout.projectDirectory.dir("samples"))
 }
 
-val updateUniqueModulesProperties = tasks.register<UniqueModulesPropertiesUpdate>("updateUniqueModulesProperties") {
-    uniqueModulesProperties.set(layout.projectDirectory.dir("src/main/resources"))
-}
+val updateUniqueModulesProperties = tasks.register<UniqueModulesPropertiesUpdate>("updateUniqueModulesProperties")
 
-sourceSets.main.get().resources.setSrcDirs(listOf(updateUniqueModulesProperties))
+tasks.assemble {
+    dependsOn(updateUniqueModulesProperties)
+}
