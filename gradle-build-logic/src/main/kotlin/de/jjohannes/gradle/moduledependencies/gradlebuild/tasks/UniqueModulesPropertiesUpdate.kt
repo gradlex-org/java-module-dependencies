@@ -24,7 +24,7 @@ abstract class UniqueModulesPropertiesUpdate : DefaultTask() {
             val name = split[split.size - 3]
             "${entry.key}=$group:$name\n"
         }.joinToString("")
-        File(uniqueModulesProperties.get().asFile, "de/jjohannes/gradle/moduledependencies/unique_modules.properties").writeText(modulesToCoordinates)
+        File(uniqueModulesProperties.get().asFile, "de/jjohannes/gradle/moduledependencies/unique_modules.properties").writeText(modulesToCoordinates.trim())
     }
 
     private fun getModulesPropertiesFromRepository(): File {

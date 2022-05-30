@@ -4,12 +4,12 @@ plugins {
 }
 
 group = "de.jjohannes.gradle"
-version = "0.8"
+version = "0.10"
 
 dependencies {
     implementation("org.ow2.asm:asm:8.0.1")
 
-    compileOnly("de.jjohannes.gradle:extra-java-module-info:0.12")
+    compileOnly("de.jjohannes.gradle:extra-java-module-info:0.13")
 
     testImplementation("org.spockframework:spock-core:2.1-groovy-3.0")
     testImplementation("org.gradle.exemplar:samples-check:1.0.0")

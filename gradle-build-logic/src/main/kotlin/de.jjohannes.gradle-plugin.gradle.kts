@@ -1,7 +1,6 @@
 import de.jjohannes.gradle.moduledependencies.gradlebuild.tasks.UniqueModulesPropertiesUpdate
 
 plugins {
-    id("java-gradle-plugin")
     id("com.gradle.plugin-publish")
 }
 
