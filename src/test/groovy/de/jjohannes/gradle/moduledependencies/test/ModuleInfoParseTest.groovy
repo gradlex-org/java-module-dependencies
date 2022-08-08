@@ -20,6 +20,23 @@ class ModuleInfoParseTest extends Specification {
         ''')
 
         expect:
+        moduleInfo.moduleNamePrefix("thing", "main") == "some"
+        moduleInfo.get(REQUIRES) == []
+        moduleInfo.get(REQUIRES_TRANSITIVE) == ["foo.bar.la"]
+        moduleInfo.get(REQUIRES_STATIC) == []
+        moduleInfo.get(REQUIRES_STATIC_TRANSITIVE) == []
+    }
+
+    def "ignores single line comments late in line"() {
+        given:
+        def moduleInfo = new ModuleInfo('''
+            module some.thing { // module some.thing.else
+                requires transitive foo.bar.la;
+            }
+        ''')
+
+        expect:
+        moduleInfo.moduleNamePrefix("thing", "main") == "some"
         moduleInfo.get(REQUIRES) == []
         moduleInfo.get(REQUIRES_TRANSITIVE) == ["foo.bar.la"]
         moduleInfo.get(REQUIRES_STATIC) == []

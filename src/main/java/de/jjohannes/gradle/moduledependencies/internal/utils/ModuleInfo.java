@@ -75,8 +75,9 @@ public class ModuleInfo {
         }
 
         List<String> tokens = Arrays.asList(moduleLine.replace(";","").replace("{","").trim().split("\\s+"));
-        if ("//".equals(tokens.get(0))) {
-            return false;
+        int singleLineCommentStartIndex = tokens.indexOf("//");
+        if (singleLineCommentStartIndex >= 0) {
+            tokens = tokens.subList(0, singleLineCommentStartIndex);
         }
 
         if (tokens.contains("module")) {
