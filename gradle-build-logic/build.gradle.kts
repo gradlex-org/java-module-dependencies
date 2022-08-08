@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-    implementation("com.gradle.publish:plugin-publish-plugin:1.0.0-rc-2")
+    implementation("com.gradle.publish:plugin-publish-plugin:1.0.0")
 }
