@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "de.jjohannes.gradle"
-version = "0.10"
+version = "0.11"
 
 dependencies {
     implementation("org.ow2.asm:asm:8.0.1")
