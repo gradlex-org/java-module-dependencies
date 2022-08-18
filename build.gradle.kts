@@ -1,21 +1,23 @@
 plugins {
-    id("gradlexbuild.module-mappings")
+    // id("gradlexbuild.module-mappings")
     id("groovy")
     id("org.gradlex.internal.plugin-publish-conventions") version "0.4"
 }
 
-group = "org.gradlex"
-version = "1.0"
+group = "de.jjohannes.gradle"
+version = "0.12"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-dependencies {
-    implementation("org.ow2.asm:asm:8.0.1")
+signing {
+    isRequired = false
+}
 
-    compileOnly("org.gradlex:extra-java-module-info:1.0")
+dependencies {
+    implementation("org.gradlex:${project.name}:1.0")
 
     testImplementation("org.spockframework:spock-core:2.1-groovy-3.0")
     testImplementation("org.gradle.exemplar:samples-check:1.0.0")
@@ -23,10 +25,10 @@ dependencies {
 }
 
 pluginPublishConventions {
-    id("${project.group}.${project.name}")
-    implementationClass("org.gradlex.javamodule.dependencies.JavaModuleDependenciesPlugin")
+    id("de.jjohannes.${project.name}")
+    implementationClass("de.jjohannes.gradle.moduledependencies.JavaModuleDependenciesPlugin")
     displayName("Java Module Dependencies Gradle Plugin")
-    description("A plugin that makes Gradle respect the dependencies defined in 'module-info.java' files.")
+    description("!!! Plugin ID changed to 'org.gradlex.${project.name}' !!!")
     tags("gradlex", "java", "modularity", "jigsaw", "jpms", "dependencies", "versions")
     gitHub("https://github.com/gradlex-org/java-module-dependencies")
     developer {

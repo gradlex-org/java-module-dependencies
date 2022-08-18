@@ -32,7 +32,7 @@ class GradleBuild {
         '''
         appBuildFile << '''
             plugins {
-                id("org.gradlex.java-module-dependencies")
+                id("de.jjohannes.java-module-dependencies")
                 id("application")
             }
             application {
@@ -48,7 +48,7 @@ class GradleBuild {
         '''
         libBuildFile << '''
             plugins {
-                id("org.gradlex.java-module-dependencies")
+                id("de.jjohannes.java-module-dependencies")
                 id("java-library")
                 id("java-test-fixtures")
             }
