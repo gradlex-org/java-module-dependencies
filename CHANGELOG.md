@@ -1,7 +1,10 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.0
+* Moved project to [GradleX](https://gradlex.org) - new plugin ID: `org.gradlex.java-module-dependencies`
+
 ## Versions 0.11
-* [#18](https://github.com/jjohannes/java-module-dependencies/issues/18) Fix bug with single line comments in module-info.java 
+* [#18](https://github.com/gradlex-org/java-module-dependencies/issues/18) Fix bug with single line comments in module-info.java 
 * More mappings for Modules on Maven Central
 
 ## Versions 0.10

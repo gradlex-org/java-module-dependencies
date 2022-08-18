@@ -1,5 +1,5 @@
 plugins {
-    id("de.jjohannes.java-module-dependencies")
+    id("org.gradlex.java-module-dependencies")
     id("org.jetbrains.kotlin.jvm")
 }
 

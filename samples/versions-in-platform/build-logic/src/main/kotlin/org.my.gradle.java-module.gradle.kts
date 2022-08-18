@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("de.jjohannes.java-module-dependencies")
+    id("org.gradlex.java-module-dependencies")
 }
 
 group = "org.my"

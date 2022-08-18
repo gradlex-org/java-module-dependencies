@@ -1,4 +1,7 @@
-# Gradle Plugin: Java Module Dependencies 
+# Java Module Dependencies Gradle plugin
+
+[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fgradlex-org%2Fjava-module-dependencies%2Fbadge%3Fref%3Dmain&style=flat)](https://actions-badge.atrox.dev/gradlex-org/java-module-dependencies/goto?ref=main)
+[![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v?label=Plugin%20Portal&metadataUrl=https%3A%2F%2Fplugins.gradle.org%2Fm2%2Forg%2Fgradlex%2Fjava-module-dependencies%2Forg.gradlex.java-module-dependencies.gradle.plugin%2Fmaven-metadata.xml)](https://plugins.gradle.org/plugin/org.gradlex.java-module-dependencies)
 
 A Gradle 7.4+ plugin to make Gradle use dependencies from _module-info.java_ files automatically.
 If you have a project that fully uses Java Modules, you do **not** need to declare dependencies in the `dependencies { }` block anymore
@@ -13,11 +16,11 @@ as well as [Version Catalogs](https://docs.gradle.org/current/userguide/platform
 Here is an overview of what the plugin does in a Twitter thread:
 [<img src="https://onepiecesoftware.github.io/img/tweets/1524322184923164672.png">](https://twitter.com/jeoj/status/1524322184923164672)
 
-This plugin is maintained by me, [Jendrik Johannes](https://github.com/jjohannes).
+This [GradleX](https://gradlex.org) plugin is maintained by me, [Jendrik Johannes](https://github.com/jjohannes).
 I offer consulting and training for Gradle and/or the Java Module System - please [reach out](mailto:jendrik.johannes@gmail.com) if you are interested.
 There is also my [YouTube channel](https://www.youtube.com/playlist?list=PLWQK2ZdV4Yl2k2OmC_gsjDpdIBTN0qqkE) on Gradle topics.
 
-If you have a suggestion or a question, please [open an issue](https://github.com/jjohannes/java-module-dependencies/issues/new).
+If you have a suggestion or a question, please [open an issue](https://github.com/gradlex-org/java-module-dependencies/issues/new).
 
 There is a [CHANGELOG.md](CHANGELOG.md).
 
@@ -25,14 +28,14 @@ There is a [CHANGELOG.md](CHANGELOG.md).
 
 If you plan to build Java Modules with Gradle, you should consider using these plugins on top of Gradle core:
 
-- [`id("de.jjohannes.java-module-dependencies")`](https://github.com/jjohannes/java-module-dependencies)  
+- [`id("org.gradlex.java-module-dependencies")`](https://github.com/gradlex-org/java-module-dependencies)  
   Avoid duplicated dependency definitions and get your Module Path under control
-- [`id("de.jjohannes.java-module-testing")`](https://github.com/jjohannes/java-module-testing)  
+- [`id("org.gradlex.java-module-testing")`](https://github.com/gradlex-org/java-module-testing)  
   Proper test setup for Java Modules
-- [`id("de.jjohannes.extra-java-module-info")`](https://github.com/jjohannes/extra-java-module-info)  
+- [`id("org.gradlex.extra-java-module-info")`](https://github.com/gradlex-org/extra-java-module-info)  
   Only if your (existing) project cannot avoid using non-module legacy Jars
 
-[Here is a sample](https://github.com/jjohannes/java-module-testing/tree/main/samples/use-all-java-module-plugins)
+[Here is a sample](https://github.com/gradlex-org/java-module-testing/tree/main/samples/use-all-java-module-plugins)
 that shows all plugins in combination.
 
 [Full Java Module System Project Setup](https://github.com/jjohannes/gradle-project-setup-howto/tree/java_module_system) is a full-fledged Java Module System project setup using these plugins.  
@@ -51,11 +54,11 @@ you can check out my [Understanding Gradle video series](https://www.youtube.com
 ## Plugin dependency
 
 Add this to the build file of your convention plugin's build
-(e.g. `build-logic/build.gradle(.kts)` or `buildSrc/build.gradle(.kts)`).
+(e.g. `gradle/plugins/build.gradle(.kts)` or `buildSrc/build.gradle(.kts)`).
 
 ```
 dependencies {
-    implementation("de.jjohannes.gradle:java-module-dependencies:0.11")
+    implementation("org.gradlex:java-module-dependencies:1.0")
 }
 ```
 
@@ -66,7 +69,7 @@ In your convention plugin, apply the plugin.
 ```
 plugins {
     ...
-    id("de.jjohannes.java-module-dependencies")
+    id("org.gradlex.java-module-dependencies")
 }
 ```
 
@@ -76,8 +79,8 @@ You may define additional mappings from _Module Name_ to _group:name (GA) coordi
 
 The plugin already knows about Modules available on Maven Central. The information is stored in:
 
-- [modules.properties](src/main/resources/de/jjohannes/gradle/moduledependencies/modules.properties) - [please open a PR](https://github.com/jjohannes/extra-java-module-info/pulls) if you miss an entry
-- [unique_modules.properties](src/main/resources/de/jjohannes/gradle/moduledependencies/unique_modules.properties) - this information is extracted from [modules.properties](https://github.com/sormuras/modules/blob/main/com.github.sormuras.modules/com/github/sormuras/modules/modules.properties) by [@sormuras](https://github.com/sormuras)
+- [modules.properties](src/main/resources/org/gradlex/javamodule/dependencies/modules.properties) - [please open a PR](https://github.com/gradlex-org/extra-java-module-info/pulls) if you miss an entry
+- [unique_modules.properties](src/main/resources/org/gradlex/javamodule/dependencies/unique_modules.properties) - this information is extracted from [modules.properties](https://github.com/sormuras/modules/blob/main/com.github.sormuras.modules/com/github/sormuras/modules/modules.properties) by [@sormuras](https://github.com/sormuras)
 
 You can define additional entries (or overwrite entries from the plugin) as follows:
 
@@ -116,7 +119,7 @@ For libraries that consist of multiple components and have a BOM for version man
 ```
 plugins {
     id("java-platform")
-    id("de.jjohannes.java-module-dependencies")
+    id("org.gradlex.java-module-dependencies")
 }
 
 // Define versions for Modules via the Module Name
@@ -254,7 +257,7 @@ commons-cli:commons-cli (1.5.0)
 Notes / Options:
   - This may be ok if you use the Classpath (aka ALL-UNNAMED) in addition to the Module Path (automatic modules can see ALL-UNNAMED)
   - Remove the dependencies or upgrade to higher versions
-  - Patch legacy Jars to Modules: https://github.com/jjohannes/extra-java-module-info
+  - Patch legacy Jars to Modules: https://github.com/gradlex-org/extra-java-module-info
 ```
 
 ## Migrate existing Java projects to Java Modules
@@ -266,13 +269,13 @@ This is not a sophisticated migration tool, but useful, in combination with `ana
 
 ## Integration with the Extra Java Module Info plugin
 
-This plugin integrates with the [Extra Java Module Info](https://github.com/jjohannes/extra-java-module-info) plugin if both are applied.
+This plugin integrates with the [Extra Java Module Info](https://github.com/gradlex-org/extra-java-module-info) plugin if both are applied.
 Module Name mappings for Jars that were patched with extra module info will be automatically registered.
 
 ```
 plugins {
-    id("de.jjohannes.extra-java-module-info")
-    id("de.jjohannes.java-module-dependencies")
+    id("org.gradlex.extra-java-module-info")
+    id("org.gradlex.java-module-dependencies")
 }
 
 extraJavaModuleInfo {
@@ -296,3 +299,7 @@ feature of Gradle, the result of the configuration phase is cached, avoiding par
 org.gradle.unsafe.configuration-cache=true
 ```
 
+# Disclaimer
+
+Gradle and the Gradle logo are trademarks of Gradle, Inc.
+The GradleX project is not endorsed by, affiliated with, or associated with Gradle or Gradle, Inc. in any way.
