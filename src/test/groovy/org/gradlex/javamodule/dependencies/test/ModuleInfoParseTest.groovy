@@ -61,4 +61,23 @@ class ModuleInfoParseTest extends Specification {
         moduleInfo.get(REQUIRES_STATIC_TRANSITIVE) == []
     }
 
+    def "ignores multi line comments between keywords"() {
+        given:
+        def moduleInfo = new ModuleInfo('''
+            module some.thing {
+                /*odd comment*/ requires transitive foo.bar.la;
+                requires/* weird comment*/ static foo.bar.lo;
+                requires /*something to say*/foo.bar.li; /*
+                    requires only.a.comment
+                */
+            }
+        ''')
+
+        expect:
+        moduleInfo.get(REQUIRES) == ["foo.bar.li"]
+        moduleInfo.get(REQUIRES_TRANSITIVE) == ["foo.bar.la"]
+        moduleInfo.get(REQUIRES_STATIC) == ["foo.bar.lo"]
+        moduleInfo.get(REQUIRES_STATIC_TRANSITIVE) == []
+    }
+
 }

@@ -90,7 +90,11 @@ public class ModuleInfo {
             return !moduleLine.contains("*/");
         }
 
-        List<String> tokens = Arrays.asList(moduleLine.replace(";","").replace("{","").trim().split("\\s+"));
+        List<String> tokens = Arrays.asList(moduleLine
+                .replace(";","")
+                .replace("{","")
+                .replaceAll("/\\*.*?\\*/"," ")
+                .trim().split("\\s+"));
         int singleLineCommentStartIndex = tokens.indexOf("//");
         if (singleLineCommentStartIndex >= 0) {
             tokens = tokens.subList(0, singleLineCommentStartIndex);
@@ -110,6 +114,6 @@ public class ModuleInfo {
                 requires.add(tokens.get(1));
             }
         }
-        return moduleLine.contains("/*");
+        return moduleLine.lastIndexOf("/*") > moduleLine.lastIndexOf("*/");
     }
 }
