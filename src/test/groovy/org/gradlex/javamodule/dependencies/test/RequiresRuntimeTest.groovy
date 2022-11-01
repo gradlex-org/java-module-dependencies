@@ -77,4 +77,42 @@ class RequiresRuntimeTest extends Specification {
         then:
         result.output.contains("[main] INFO org.gradlex.test.app.Main - Running application...")
     }
+
+    def "runtime only dependencies are not visible at compile time"() {
+        given:
+        appBuildFile << '''
+            dependencies.constraints {
+                javaModuleDependencies {
+                    implementation(gav("org.slf4j", "2.0.3"))
+                }
+            }
+        '''
+        appModuleInfoFile << '''
+            module org.gradlex.test.app {
+                requires /*runtime*/ org.slf4j;
+                
+                exports org.gradlex.test.app;
+            }
+        '''
+        file("app/src/main/java/org/gradlex/test/app/Main.java") << """
+            package org.gradlex.test.app;
+            
+            import org.slf4j.Logger;
+            import org.slf4j.LoggerFactory;
+            
+            public class Main {
+                private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
+                
+                public static void main(String[] args) {
+                    LOGGER.info("Running application...");
+                }
+            }
+        """
+
+        when:
+        def result = fail()
+
+        then:
+        result.output.contains("error: package org.slf4j does not exist")
+    }
 }

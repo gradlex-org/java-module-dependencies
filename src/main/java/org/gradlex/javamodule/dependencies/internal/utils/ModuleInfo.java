@@ -17,6 +17,7 @@
 package org.gradlex.javamodule.dependencies.internal.utils;
 
 import javax.annotation.Nullable;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,14 +42,19 @@ public class ModuleInfo {
 
     public static final String RUNTIME_KEYWORD = "/*runtime*/";
 
-    private String moduleName;
+    public static final ModuleInfo EMPTY = new ModuleInfo("", new File(""));
+
+    private String moduleName = "";
     private final List<String> requires = new ArrayList<>();
     private final List<String> requiresTransitive = new ArrayList<>();
     private final List<String> requiresStatic = new ArrayList<>();
     private final List<String> requiresStaticTransitive = new ArrayList<>();
     private final List<String> requiresRuntime = new ArrayList<>();
 
-    public ModuleInfo(String moduleInfoFileContent) {
+    private final File filePath;
+
+    public ModuleInfo(String moduleInfoFileContent, File filePath) {
+        this.filePath = filePath;
         boolean insideComment = false;
         for(String line: moduleInfoFileContent.split("\n")) {
             insideComment = parse(line, insideComment);
@@ -88,6 +94,10 @@ public class ModuleInfo {
             return moduleName.substring(0, moduleName.length() - projectName.length() - 1);
         }
         return null;
+    }
+
+    public File getFilePath() {
+        return filePath;
     }
 
     /**

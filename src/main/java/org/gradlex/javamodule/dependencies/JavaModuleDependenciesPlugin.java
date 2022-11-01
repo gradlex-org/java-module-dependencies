@@ -16,11 +16,6 @@
 
 package org.gradlex.javamodule.dependencies;
 
-import org.gradlex.javamodule.dependencies.internal.bridges.ExtraJavaModuleInfoBridge;
-import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
-import org.gradlex.javamodule.dependencies.tasks.ModuleInfoGeneration;
-import org.gradlex.javamodule.dependencies.tasks.ModuleVersionRecommendation;
-import org.gradlex.javamodule.dependencies.tasks.ModulePathAnalysis;
 import org.gradle.api.GradleException;
 import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
@@ -38,11 +33,19 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.util.GradleVersion;
+import org.gradlex.javamodule.dependencies.internal.bridges.ExtraJavaModuleInfoBridge;
+import org.gradlex.javamodule.dependencies.internal.compile.AddSyntheticModulesToCompileClasspathAction;
+import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
+import org.gradlex.javamodule.dependencies.tasks.ModuleInfoGeneration;
+import org.gradlex.javamodule.dependencies.tasks.ModulePathAnalysis;
+import org.gradlex.javamodule.dependencies.tasks.ModuleVersionRecommendation;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -84,6 +87,15 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             process(ModuleInfo.Directive.REQUIRES_TRANSITIVE, sourceSet.getApiConfigurationName(), sourceSet, project, javaModuleDependencies);
             process(ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE, sourceSet.getCompileOnlyApiConfigurationName(), sourceSet, project, javaModuleDependencies);
             process(ModuleInfo.Directive.REQUIRES_RUNTIME, sourceSet.getRuntimeOnlyConfigurationName(), sourceSet, project, javaModuleDependencies);
+
+            project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class, javaCompile -> {
+                ModuleInfo moduleInfo = findModuleInfoInSourceSet(sourceSet, project);
+                List<String> requiresRuntime = moduleInfo.get(ModuleInfo.Directive.REQUIRES_RUNTIME);
+                if (!requiresRuntime.isEmpty()) {
+                    javaCompile.doFirst(project.getObjects().newInstance(AddSyntheticModulesToCompileClasspathAction.class,
+                            project.getLayout().getBuildDirectory().dir("tmp").get().getAsFile(), requiresRuntime));
+                }
+            });
         });
         setupReportTasks(project, javaModuleDependencies);
         setupMigrationTasks(project, javaModuleDependencies);
@@ -150,34 +162,43 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
     private void process(ModuleInfo.Directive moduleDirective, String gradleConfiguration, SourceSet sourceSet, Project project, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
         Configuration conf = project.getConfigurations().findByName(gradleConfiguration);
         if (conf != null) {
-            conf.withDependencies(d -> findAndReadModuleInfo(moduleDirective, sourceSet, project, conf, javaModuleDependenciesExtension));
+            conf.withDependencies(d -> readModuleInfo(moduleDirective, sourceSet, project, conf, javaModuleDependenciesExtension));
         } else {
             project.getConfigurations().whenObjectAdded(lateAddedConf -> {
                 if (gradleConfiguration.equals(lateAddedConf.getName())) {
-                    lateAddedConf.withDependencies(d -> findAndReadModuleInfo(moduleDirective, sourceSet, project, lateAddedConf, javaModuleDependenciesExtension));
+                    lateAddedConf.withDependencies(d -> readModuleInfo(moduleDirective, sourceSet, project, lateAddedConf, javaModuleDependenciesExtension));
                 }
             });
         }
     }
 
-    private void findAndReadModuleInfo(ModuleInfo.Directive moduleDirective, SourceSet sourceSet, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
+    private void readModuleInfo(ModuleInfo.Directive moduleDirective, SourceSet sourceSet, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
+        ModuleInfo moduleInfo = findModuleInfoInSourceSet(sourceSet, project);
+        String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName());
+        for (String moduleName : moduleInfo.get(moduleDirective)) {
+            declareDependency(moduleName, ownModuleNamesPrefix, moduleInfo.getFilePath(), project, configuration, javaModuleDependenciesExtension);
+        }
+    }
+
+    /**
+     * Returns the module-info.java for the given SourceSet. If the SourceSet has multiple source folders with multiple
+     * module-info files (which is usually a broken setup) the first file found is returned.
+     */
+    private ModuleInfo findModuleInfoInSourceSet(SourceSet sourceSet, Project project) {
         for (File folder : sourceSet.getJava().getSrcDirs()) {
             Provider<RegularFile> moduleInfoFile = project.getLayout().file(project.provider(() -> new File(folder, "module-info.java")));
             Provider<String> moduleInfoContent = project.getProviders().fileContents(moduleInfoFile).getAsText();
             if (moduleInfoContent.isPresent()) {
-                if (!this.moduleInfo.containsKey(folder)) {
-                    this.moduleInfo.put(folder, new ModuleInfo(moduleInfoContent.get()));
+                if (!moduleInfo.containsKey(folder)) {
+                    moduleInfo.put(folder, new ModuleInfo(moduleInfoContent.get(), moduleInfoFile.get().getAsFile()));
                 }
-                ModuleInfo moduleInfo = this.moduleInfo.get(folder);
-                String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName());
-                for (String moduleName : moduleInfo.get(moduleDirective)) {
-                    declareDependency(moduleName, ownModuleNamesPrefix, moduleInfoFile, project, configuration, javaModuleDependenciesExtension);
-                }
+                return moduleInfo.get(folder);
             }
         }
+        return ModuleInfo.EMPTY;
     }
 
-    private void declareDependency(String moduleName, @Nullable String ownModuleNamesPrefix, Provider<RegularFile> moduleInfoFile, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependencies) {
+    private void declareDependency(String moduleName, @Nullable String ownModuleNamesPrefix, File moduleInfoFile, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependencies) {
         if (JDKInfo.MODULES.contains(moduleName)) {
             // The module is part of the JDK, no dependency required
             return;
@@ -241,17 +262,17 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         }
     }
 
-    private void warnVersionMissing(String moduleName, Map<String, Object> ga, Provider<RegularFile> moduleInfoFile, Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
+    private void warnVersionMissing(String moduleName, Map<String, Object> ga, File moduleInfoFile, Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
         if (javaModuleDependencies.getWarnForMissingVersions().get()) {
             project.getLogger().warn("[WARN] [Java Module Dependencies] No version defined in catalog - " + ga.get(GAV.GROUP) + ":" + ga.get(GAV.ARTIFACT) + " - "
                     + moduleDebugInfo(moduleName.replace('.', '_'), moduleInfoFile, project.getRootDir()));
         }
     }
 
-    private String moduleDebugInfo(String moduleName, Provider<RegularFile> moduleInfoFile, File rootDir) {
+    private String moduleDebugInfo(String moduleName, File moduleInfoFile, File rootDir) {
         return moduleName
                 + " (required in "
-                + moduleInfoFile.get().getAsFile().getAbsolutePath().substring(rootDir.getAbsolutePath().length() + 1)
+                + moduleInfoFile.getAbsolutePath().substring(rootDir.getAbsolutePath().length() + 1)
                 + ")";
     }
 

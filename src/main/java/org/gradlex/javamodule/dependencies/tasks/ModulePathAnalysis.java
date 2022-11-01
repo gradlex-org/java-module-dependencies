@@ -90,7 +90,7 @@ public abstract class ModulePathAnalysis extends DefaultTask {
             if (file.exists()) {
                 try(Stream<String> lines = Files.lines(file.toPath())) {
                     String fileContent = lines.collect(Collectors.joining("\n"));
-                    ownModuleNamesPrefix = new ModuleInfo(fileContent).moduleNamePrefix(projectName, main.getName());
+                    ownModuleNamesPrefix = new ModuleInfo(fileContent, file).moduleNamePrefix(projectName, main.getName());
                 }
                 break;
             }
