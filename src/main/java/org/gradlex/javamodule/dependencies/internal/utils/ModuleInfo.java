@@ -30,18 +30,23 @@ public class ModuleInfo {
         REQUIRES,
         REQUIRES_TRANSITIVE,
         REQUIRES_STATIC,
-        REQUIRES_STATIC_TRANSITIVE;
+        REQUIRES_STATIC_TRANSITIVE,
+        REQUIRES_RUNTIME;
 
         public String literal() {
-            return toString().toLowerCase().replace("_", " ");
+            return toString().toLowerCase().replace("_", " ")
+                    .replace("runtime", RUNTIME_KEYWORD);
         }
     }
+
+    public static final String RUNTIME_KEYWORD = "/*runtime*/";
 
     private String moduleName;
     private final List<String> requires = new ArrayList<>();
     private final List<String> requiresTransitive = new ArrayList<>();
     private final List<String> requiresStatic = new ArrayList<>();
     private final List<String> requiresStaticTransitive = new ArrayList<>();
+    private final List<String> requiresRuntime = new ArrayList<>();
 
     public ModuleInfo(String moduleInfoFileContent) {
         boolean insideComment = false;
@@ -62,6 +67,9 @@ public class ModuleInfo {
         }
         if (directive == Directive.REQUIRES_STATIC_TRANSITIVE) {
             return requiresStaticTransitive;
+        }
+        if (directive == Directive.REQUIRES_RUNTIME) {
+            return requiresRuntime;
         }
         return Collections.emptyList();
     }
@@ -91,9 +99,10 @@ public class ModuleInfo {
         }
 
         List<String> tokens = Arrays.asList(moduleLine
-                .replace(";","")
-                .replace("{","")
-                .replaceAll("/\\*.*?\\*/"," ")
+                .replace(";", "")
+                .replace("{", "")
+                .replace(RUNTIME_KEYWORD, "runtime")
+                .replaceAll("/\\*.*?\\*/", " ")
                 .trim().split("\\s+"));
         int singleLineCommentStartIndex = tokens.indexOf("//");
         if (singleLineCommentStartIndex >= 0) {
@@ -110,6 +119,8 @@ public class ModuleInfo {
                 requiresTransitive.add(tokens.get(2));
             } else if (tokens.size() > 2 && tokens.contains("static")) {
                 requiresStatic.add(tokens.get(2));
+            } else if (tokens.size() > 2 && tokens.contains("runtime")) {
+                requiresRuntime.add(tokens.get(2));
             } else {
                 requires.add(tokens.get(1));
             }

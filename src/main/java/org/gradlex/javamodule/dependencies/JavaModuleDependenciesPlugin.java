@@ -83,6 +83,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             process(ModuleInfo.Directive.REQUIRES_STATIC, sourceSet.getCompileOnlyConfigurationName(), sourceSet, project, javaModuleDependencies);
             process(ModuleInfo.Directive.REQUIRES_TRANSITIVE, sourceSet.getApiConfigurationName(), sourceSet, project, javaModuleDependencies);
             process(ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE, sourceSet.getCompileOnlyApiConfigurationName(), sourceSet, project, javaModuleDependencies);
+            process(ModuleInfo.Directive.REQUIRES_RUNTIME, sourceSet.getRuntimeOnlyConfigurationName(), sourceSet, project, javaModuleDependencies);
         });
         setupReportTasks(project, javaModuleDependencies);
         setupMigrationTasks(project, javaModuleDependencies);
@@ -136,6 +137,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                 t.getImplementationDependencies().convention(declaredDependencies(project, sourceSet.getImplementationConfigurationName()));
                 t.getCompileOnlyApiDependencies().convention(declaredDependencies(project, sourceSet.getCompileOnlyApiConfigurationName()));
                 t.getCompileOnlyDependencies().convention(declaredDependencies(project, sourceSet.getCompileOnlyConfigurationName()));
+                t.getRuntimeOnlyDependencies().convention(declaredDependencies(project, sourceSet.getRuntimeOnlyConfigurationName()));
 
                 t.getModuleInfoFile().convention(project.getLayout().file(project.provider(() ->
                         new File(sourceSet.getJava().getSrcDirs().iterator().next(), "module-info.java"))));

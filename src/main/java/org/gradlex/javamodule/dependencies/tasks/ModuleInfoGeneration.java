@@ -54,6 +54,9 @@ public abstract class ModuleInfoGeneration extends DefaultTask {
     public abstract ListProperty<String> getCompileOnlyDependencies();
 
     @Input
+    public abstract ListProperty<String> getRuntimeOnlyDependencies();
+
+    @Input
     public abstract MapProperty<String, String> getModuleNameToGA();
 
     @OutputFile
@@ -84,6 +87,10 @@ public abstract class ModuleInfoGeneration extends DefaultTask {
         }
         if (!getCompileOnlyDependencies().get().isEmpty()) {
             content.addAll(dependenciesToModuleDirectives(getCompileOnlyDependencies().get(), REQUIRES_STATIC));
+            content.add("");
+        }
+        if (!getRuntimeOnlyDependencies().get().isEmpty()) {
+            content.addAll(dependenciesToModuleDirectives(getRuntimeOnlyDependencies().get(), REQUIRES_RUNTIME));
             content.add("");
         }
         content.add("}");

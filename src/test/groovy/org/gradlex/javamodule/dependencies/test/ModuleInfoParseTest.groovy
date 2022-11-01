@@ -4,6 +4,7 @@ import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo
 import spock.lang.Specification
 
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_RUNTIME
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_TRANSITIVE
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_STATIC
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE
@@ -25,6 +26,7 @@ class ModuleInfoParseTest extends Specification {
         moduleInfo.get(REQUIRES_TRANSITIVE) == ["foo.bar.la"]
         moduleInfo.get(REQUIRES_STATIC) == []
         moduleInfo.get(REQUIRES_STATIC_TRANSITIVE) == []
+        moduleInfo.get(REQUIRES_RUNTIME) == []
     }
 
     def "ignores single line comments late in line"() {
@@ -41,6 +43,7 @@ class ModuleInfoParseTest extends Specification {
         moduleInfo.get(REQUIRES_TRANSITIVE) == ["foo.bar.la"]
         moduleInfo.get(REQUIRES_STATIC) == []
         moduleInfo.get(REQUIRES_STATIC_TRANSITIVE) == []
+        moduleInfo.get(REQUIRES_RUNTIME) == []
     }
 
     def "ignores multi line comments"() {
@@ -59,6 +62,7 @@ class ModuleInfoParseTest extends Specification {
         moduleInfo.get(REQUIRES_TRANSITIVE) == []
         moduleInfo.get(REQUIRES_STATIC) == ["foo.bar.la"]
         moduleInfo.get(REQUIRES_STATIC_TRANSITIVE) == []
+        moduleInfo.get(REQUIRES_RUNTIME) == []
     }
 
     def "ignores multi line comments between keywords"() {
@@ -78,6 +82,23 @@ class ModuleInfoParseTest extends Specification {
         moduleInfo.get(REQUIRES_TRANSITIVE) == ["foo.bar.la"]
         moduleInfo.get(REQUIRES_STATIC) == ["foo.bar.lo"]
         moduleInfo.get(REQUIRES_STATIC_TRANSITIVE) == []
+        moduleInfo.get(REQUIRES_RUNTIME) == []
+    }
+
+    def "supports runtime dependencies through special keyword"() {
+        given:
+        def moduleInfo = new ModuleInfo('''
+            module some.thing {
+                requires /*runtime*/ foo.bar.lo;
+            }
+        ''')
+
+        expect:
+        moduleInfo.get(REQUIRES) == []
+        moduleInfo.get(REQUIRES_TRANSITIVE) == []
+        moduleInfo.get(REQUIRES_STATIC) == []
+        moduleInfo.get(REQUIRES_STATIC_TRANSITIVE) == []
+        moduleInfo.get(REQUIRES_RUNTIME) == ["foo.bar.lo"]
     }
 
 }
