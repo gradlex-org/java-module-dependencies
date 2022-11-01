@@ -4,8 +4,7 @@
 [![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v?label=Plugin%20Portal&metadataUrl=https%3A%2F%2Fplugins.gradle.org%2Fm2%2Forg%2Fgradlex%2Fjava-module-dependencies%2Forg.gradlex.java-module-dependencies.gradle.plugin%2Fmaven-metadata.xml)](https://plugins.gradle.org/plugin/org.gradlex.java-module-dependencies)
 
 A Gradle 7.4+ plugin to make Gradle use dependencies from _module-info.java_ files automatically.
-If you have a project that fully uses Java Modules, you do **not** need to declare dependencies in the `dependencies { }` block anymore
-(except for _runtimeOnly_ dependencies).
+If you have a project that fully uses Java Modules, you do **not** need to declare dependencies in the `dependencies { }` block anymore.
 Gradle will use the information from your `module-info.java` directly.
 
 To manage the versions of Java Modules, the plugin conveniently integrates with
@@ -73,6 +72,21 @@ plugins {
 }
 ```
 
+## Effect of the plugin
+
+Once the plugin is applied, dependencies are automatically determined based on the `requires` directives in your `module-info.java` files. For example:
+
+```
+module org.example.mymodule {
+    requires com.fasterxml.jackson.core;   // -> implementation("com.fasterxml.jackson.core:jackson-core")
+    requires transitive org.slf4j;         // -> api("org.slf4j:slf4j-api")
+    requires static jakarta.servlet;       // -> compileOnly("jakarta.servlet:jakarta.servlet-api")
+    requires /*runtime*/ org.slf4j.simple; // -> runtimeOnly("org.slf4j:slf4j-simple")
+}
+```
+
+Note that `requires /*runtime*/` is a directive specifically supported by this plugin to allow the specification of _runtime only_ dependencies.
+
 ## Add Module Name mapping information (if needed)
 
 You may define additional mappings from _Module Name_ to _group:name (GA) coordinates_.
@@ -139,7 +153,7 @@ dependencies {
 }
 ```
 
-Note: If you need to declare additional dependencies, e.g. as `runtimeOnly` without version, or want to use Gradle's rich versions, you can also use the `ga()` shortcut to map a Module Name to the corresponding GA coordinates.
+Note: If you need to declare additional dependencies without version, or want to use Gradle's rich versions, you can also use the `ga()` shortcut to map a Module Name to the corresponding GA coordinates.
 For example:
 
 ```
