@@ -192,7 +192,11 @@ public abstract class ModulePathAnalysis extends DefaultTask {
             boolean isModuleForReal = getJavaModuleDetector().isModule(true, resultFile);
 
             if (moduleName != null && isModuleForReal) {
-                usedMappings.add(moduleName + " -> " + ga + version);
+                if (isRealModule(resultFile)) {
+                    usedMappings.add(moduleName + " -> " + ga + version);
+                } else {
+                    usedMappings.add("[AUTO] " + moduleName + " -> " + ga + version);
+                }
             }
             if (moduleName == null && !isModuleForReal) {
                 nonModules.add(ga + version);
@@ -227,6 +231,24 @@ public abstract class ModulePathAnalysis extends DefaultTask {
         }
         return null;
     }
+
+    private boolean isRealModule(File jarFile) throws IOException {
+        try (JarInputStream jarStream =  new JarInputStream(Files.newInputStream(jarFile.toPath()))) {
+            boolean isMultiReleaseJar = containsMultiReleaseJarEntry(jarStream);
+            ZipEntry next = jarStream.getNextEntry();
+            while (next != null) {
+                if (MODULE_INFO_CLASS_FILE.equals(next.getName())) {
+                    return true;
+                }
+                if (isMultiReleaseJar && MODULE_INFO_CLASS_MRJAR_PATH.matcher(next.getName()).matches()) {
+                    return true;
+                }
+                next = jarStream.getNextEntry();
+            }
+        }
+        return false;
+    }
+
 
     private String getAutomaticModuleName(Manifest manifest) {
         if (manifest == null) {
