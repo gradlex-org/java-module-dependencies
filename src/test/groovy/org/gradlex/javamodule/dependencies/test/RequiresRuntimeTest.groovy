@@ -1,5 +1,6 @@
 package org.gradlex.javamodule.dependencies.test
 
+import org.gradle.testkit.runner.TaskOutcome
 import org.gradlex.javamodule.dependencies.test.fixture.GradleBuild
 import spock.lang.Specification
 
@@ -114,5 +115,41 @@ class RequiresRuntimeTest extends Specification {
 
         then:
         result.output.contains("error: package org.slf4j does not exist")
+    }
+
+    def "generates javadoc with runtime only dependencies in module-info"() {
+        given:
+        appBuildFile << '''
+            java.withJavadocJar()
+            dependencies.constraints {
+                javaModuleDependencies {
+                    implementation(gav("org.slf4j", "2.0.3"))
+                    implementation(gav("org.slf4j.simple", "2.0.3"))
+                }
+            }
+            // TODO ideally, this should not be necessary
+            tasks.javadoc {
+                classpath = sourceSets.main.get().runtimeClasspath
+            }
+        '''
+        appModuleInfoFile << '''
+            module org.gradlex.test.app {
+                requires org.slf4j;
+                requires /*runtime*/ org.slf4j.simple;
+                
+                exports org.gradlex.test.app;
+            }
+        '''
+        file("app/src/main/java/org/gradlex/test/app/Main.java") << """
+            package org.gradlex.test.app;
+            
+            public class Main {}
+        """
+
+        when:
+        def result = build()
+
+        then:
+        result.task(':app:javadoc').outcome == TaskOutcome.SUCCESS
     }
 }
