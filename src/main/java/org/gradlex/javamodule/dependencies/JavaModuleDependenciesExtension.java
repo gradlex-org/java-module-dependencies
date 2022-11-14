@@ -16,15 +16,29 @@
 
 package org.gradlex.javamodule.dependencies;
 
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.VersionCatalog;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
 import org.gradle.api.artifacts.VersionConstraint;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.ProjectLayout;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.api.tasks.javadoc.Javadoc;
+import org.gradlex.javamodule.dependencies.internal.compile.AddSyntheticModulesToCompileClasspathAction;
+import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
+import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -40,6 +54,7 @@ public abstract class JavaModuleDependenciesExtension {
     static final String JAVA_MODULE_DEPENDENCIES = "javaModuleDependencies";
 
     private final VersionCatalogsExtension versionCatalogs;
+    private final ModuleInfoCache moduleInfoCache;
 
     /**
      * @return the mappings from Module Name to GA coordinates; can be modified
@@ -70,6 +85,7 @@ public abstract class JavaModuleDependenciesExtension {
 
     public JavaModuleDependenciesExtension(VersionCatalogsExtension versionCatalogs) {
         this.versionCatalogs = versionCatalogs;
+        this.moduleInfoCache = getObjects().newInstance(ModuleInfoCache.class);
         getWarnForMissingVersions().convention(versionCatalogs != null);
         getVersionCatalogName().convention("libs");
         getModuleNameToGA().putAll(SharedMappings.mappings);
@@ -141,5 +157,49 @@ public abstract class JavaModuleDependenciesExtension {
             }
         }
         return null;
+    }
+
+    /**
+     * Adds support for compiling module-info.java in the given source set with the given task,
+     * if 'requires runtime' dependencies are used.
+     *
+     * @param task      The task that compiles code from the given source set
+     * @param sourceSet The source set that contains the module-info.java
+     */
+    public FileCollection addRequiresRuntimeSupport(JavaCompile task, SourceSet sourceSet) {
+        return doAddRequiresRuntimeSupport(task, sourceSet);
+    }
+
+    /**
+     * Adds support for generating Javadoc for the module-info.java in the given source set with the given task,
+     * if 'requires runtime' dependencies are used.
+     *
+     * @param task      The task that generates Javadoc from the given source set
+     * @param sourceSet The source set that contains the module-info.java
+     */
+    public FileCollection addRequiresRuntimeSupport(Javadoc task, SourceSet sourceSet) {
+        return doAddRequiresRuntimeSupport(task, sourceSet);
+    }
+
+    FileCollection doAddRequiresRuntimeSupport(Task task, SourceSet sourceSet) {
+        List<String> requiresRuntime = getModuleInfoCache().get(sourceSet).get(ModuleInfo.Directive.REQUIRES_RUNTIME);
+        ConfigurableFileCollection syntheticModuleInfoFolders = getObjects().fileCollection();
+        if (!requiresRuntime.isEmpty()) {
+            Provider<Directory> tmpDir = getLayout().getBuildDirectory().dir("tmp/java-module-dependencies/" + task.getName());
+            requiresRuntime.forEach(moduleName -> syntheticModuleInfoFolders.from(tmpDir.map(dir -> dir.dir(moduleName))));
+            task.doFirst(getObjects().newInstance(AddSyntheticModulesToCompileClasspathAction.class, syntheticModuleInfoFolders));
+            return syntheticModuleInfoFolders;
+        }
+        return syntheticModuleInfoFolders;
+    }
+
+    @Inject
+    protected abstract ObjectFactory getObjects();
+
+    @Inject
+    protected abstract ProjectLayout getLayout();
+
+    ModuleInfoCache getModuleInfoCache() {
+        return moduleInfoCache;
     }
 }

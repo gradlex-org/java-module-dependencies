@@ -21,7 +21,7 @@ import org.gradle.api.tasks.SourceSet;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public class ModuleNamingUtil {
+public abstract class ModuleNamingUtil {
 
     public static String sourceSetToModuleName(String projectName, String sourceSetName) {
         if (sourceSetName.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {

@@ -19,41 +19,32 @@ package org.gradlex.javamodule.dependencies.internal.compile;
 import org.gradle.api.Action;
 import org.gradle.api.NonNullApi;
 import org.gradle.api.Task;
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoClassCreator;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.util.List;
 
 @NonNullApi
 public abstract class AddSyntheticModulesToCompileClasspathAction implements Action<Task> {
 
-    private final File tmpFolder;
-    private final List<String> moduleDependencies;
-    private final ObjectFactory objects;
+    private final FileCollection syntheticModuleInfoFolders;
 
     @Inject
-    public AddSyntheticModulesToCompileClasspathAction(File tmpFolder, List<String> moduleDependencies, ObjectFactory objects) {
-        this.tmpFolder = tmpFolder;
-        this.moduleDependencies = moduleDependencies;
-        this.objects = objects;
+    public AddSyntheticModulesToCompileClasspathAction(FileCollection syntheticModuleInfoFolders) {
+        this.syntheticModuleInfoFolders = syntheticModuleInfoFolders;
     }
 
     @Override
     public void execute(Task task) {
-        if (moduleDependencies.isEmpty()) {
+        if (syntheticModuleInfoFolders.isEmpty()) {
             return;
         }
 
-        ConfigurableFileCollection syntheticModuleInfoFolders = objects.fileCollection();
-        for (String moduleName : moduleDependencies) {
-            File dir = new File(tmpFolder, moduleName + "-synthetic");
-            ModuleInfoClassCreator.createEmpty(moduleName, dir);
-            syntheticModuleInfoFolders.from(dir);
+        for (File moduleFolder : syntheticModuleInfoFolders) {
+            ModuleInfoClassCreator.createEmpty(moduleFolder);
         }
 
         if (task instanceof JavaCompile) {

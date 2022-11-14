@@ -27,15 +27,15 @@ import static org.objectweb.asm.Opcodes.ACC_MANDATED;
 import static org.objectweb.asm.Opcodes.ACC_MODULE;
 import static org.objectweb.asm.Opcodes.ACC_SYNTHETIC;
 
-public class ModuleInfoClassCreator {
+public abstract class ModuleInfoClassCreator {
 
-    public static void createEmpty(String moduleName, File targetFolder) {
+    public static void createEmpty(File targetFolder) {
         //noinspection ResultOfMethodCallIgnored
         targetFolder.mkdirs();
 
         ClassWriter cw = new ClassWriter(0);
         cw.visit(53, ACC_MODULE, "module-info", null, null, null);
-        ModuleVisitor moduleVisitor = cw.visitModule(moduleName, ACC_SYNTHETIC, null);
+        ModuleVisitor moduleVisitor = cw.visitModule(targetFolder.getName(), ACC_SYNTHETIC, null);
         moduleVisitor.visitRequire("java.base", ACC_MANDATED, null);
         cw.visitEnd();
         try (FileOutputStream s = new FileOutputStream(new File(targetFolder, "module-info.class"))) {

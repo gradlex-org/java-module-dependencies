@@ -27,7 +27,6 @@ import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.VersionCatalog;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
 import org.gradle.api.artifacts.VersionConstraint;
-import org.gradle.api.file.RegularFile;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
@@ -35,7 +34,6 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.util.GradleVersion;
 import org.gradlex.javamodule.dependencies.internal.bridges.ExtraJavaModuleInfoBridge;
-import org.gradlex.javamodule.dependencies.internal.compile.AddSyntheticModulesToCompileClasspathAction;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.tasks.ModuleInfoGeneration;
 import org.gradlex.javamodule.dependencies.tasks.ModulePathAnalysis;
@@ -44,7 +42,6 @@ import org.gradlex.javamodule.dependencies.tasks.ModuleVersionRecommendation;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -62,8 +59,6 @@ import static org.gradlex.javamodule.dependencies.internal.utils.TaskConfigurati
 public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
     private static final String EXTRA_JAVA_MODULE_INFO_PLUGIN_ID = "org.gradlex.extra-java-module-info";
-
-    private final Map<File, ModuleInfo> moduleInfo = new HashMap<>();
 
     @Override
     public void apply(Project project) {
@@ -91,12 +86,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
             project.getTasks().configureEach(task -> {
                 if (isJavaCompileTask(task, sourceSet) || isJavadocTask(task, sourceSet)) {
-                    List<String> requiresRuntime =
-                            findModuleInfoInSourceSet(sourceSet, project).get(ModuleInfo.Directive.REQUIRES_RUNTIME);
-                    if (!requiresRuntime.isEmpty()) {
-                        task.doFirst(project.getObjects().newInstance(AddSyntheticModulesToCompileClasspathAction.class,
-                                project.getLayout().getBuildDirectory().dir("tmp/java-module-dependencies/" + task.getName()).get().getAsFile(), requiresRuntime));
-                    }
+                    javaModuleDependencies.doAddRequiresRuntimeSupport(task, sourceSet);
                 }
             });
         });
@@ -176,29 +166,11 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
     }
 
     private void readModuleInfo(ModuleInfo.Directive moduleDirective, SourceSet sourceSet, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
-        ModuleInfo moduleInfo = findModuleInfoInSourceSet(sourceSet, project);
+        ModuleInfo moduleInfo = javaModuleDependenciesExtension.getModuleInfoCache().get(sourceSet);
         String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName());
         for (String moduleName : moduleInfo.get(moduleDirective)) {
             declareDependency(moduleName, ownModuleNamesPrefix, moduleInfo.getFilePath(), project, configuration, javaModuleDependenciesExtension);
         }
-    }
-
-    /**
-     * Returns the module-info.java for the given SourceSet. If the SourceSet has multiple source folders with multiple
-     * module-info files (which is usually a broken setup) the first file found is returned.
-     */
-    private ModuleInfo findModuleInfoInSourceSet(SourceSet sourceSet, Project project) {
-        for (File folder : sourceSet.getJava().getSrcDirs()) {
-            Provider<RegularFile> moduleInfoFile = project.getLayout().file(project.provider(() -> new File(folder, "module-info.java")));
-            Provider<String> moduleInfoContent = project.getProviders().fileContents(moduleInfoFile).getAsText();
-            if (moduleInfoContent.isPresent()) {
-                if (!moduleInfo.containsKey(folder)) {
-                    moduleInfo.put(folder, new ModuleInfo(moduleInfoContent.get(), moduleInfoFile.get().getAsFile()));
-                }
-                return moduleInfo.get(folder);
-            }
-        }
-        return ModuleInfo.EMPTY;
     }
 
     private void declareDependency(String moduleName, @Nullable String ownModuleNamesPrefix, File moduleInfoFile, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependencies) {

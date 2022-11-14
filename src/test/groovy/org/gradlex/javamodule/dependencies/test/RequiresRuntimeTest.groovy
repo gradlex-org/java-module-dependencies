@@ -148,4 +148,47 @@ class RequiresRuntimeTest extends Specification {
         then:
         result.task(':app:javadoc').outcome == TaskOutcome.SUCCESS
     }
+
+    def "can configure additional compile tasks to work with runtime only dependencies"() {
+        // This is typically needed for whitebox testing
+        given:
+        appBuildFile << '''
+            tasks.compileTestJava {
+                classpath += sourceSets.main.get().output
+                
+                val syntheticModules = javaModuleDependencies.addRequiresRuntimeSupport(this, sourceSets.main.get())
+                
+                options.compilerArgs.add("--module-path")
+                options.compilerArgs.add(classpath.files.joinToString(":") + ":" + syntheticModules.files.joinToString(":"))
+                options.compilerArgs.add("--patch-module")
+                options.compilerArgs.add("org.gradlex.test.app=" + sourceSets.test.get().java.sourceDirectories.first())
+                
+            }
+            
+            
+            dependencies.constraints {
+                javaModuleDependencies {
+                    implementation(gav("org.slf4j", "2.0.3"))
+                    implementation(gav("org.slf4j.simple", "2.0.3"))
+                }
+            }
+        '''
+        appModuleInfoFile << '''
+            module org.gradlex.test.app {
+                requires org.slf4j;
+                requires /*runtime*/ org.slf4j.simple;
+            }
+        '''
+        file("app/src/test/java/org/gradlex/test/app/MainTest.java") << """
+            package org.gradlex.test.app;
+            
+            public class MainTest {}
+        """
+
+        when:
+        def result = build()
+
+        then:
+        result.task(":app:compileTestJava").outcome == TaskOutcome.SUCCESS
+    }
 }

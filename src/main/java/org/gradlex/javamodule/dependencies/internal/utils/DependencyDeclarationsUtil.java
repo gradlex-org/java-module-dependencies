@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 import static org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE;
 import static org.gradle.api.attributes.Category.LIBRARY;
 
-public class DependencyDeclarationsUtil {
+public abstract class DependencyDeclarationsUtil {
 
     public static Provider<List<String>> declaredDependencies(Project project, String configuration) {
         ConfigurationContainer configurations = project.getConfigurations();
