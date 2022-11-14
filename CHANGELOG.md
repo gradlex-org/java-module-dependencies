@@ -1,5 +1,8 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.2
+* [#20](https://github.com/gradlex-org/java-module-dependencies/issues/20) Improve support for `requires /*runtime*/`
+
 ## Version 1.1
 * [#19](https://github.com/gradlex-org/java-module-dependencies/issues/19) Support for `requires /*runtime*/`
 

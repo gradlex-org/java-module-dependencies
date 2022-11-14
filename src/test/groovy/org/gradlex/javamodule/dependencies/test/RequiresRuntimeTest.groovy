@@ -165,7 +165,6 @@ class RequiresRuntimeTest extends Specification {
                 
             }
             
-            
             dependencies.constraints {
                 javaModuleDependencies {
                     implementation(gav("org.slf4j", "2.0.3"))
