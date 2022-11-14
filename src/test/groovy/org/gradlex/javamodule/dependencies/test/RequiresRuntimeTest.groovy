@@ -127,10 +127,6 @@ class RequiresRuntimeTest extends Specification {
                     implementation(gav("org.slf4j.simple", "2.0.3"))
                 }
             }
-            // TODO ideally, this should not be necessary
-            tasks.javadoc {
-                classpath = sourceSets.main.get().runtimeClasspath
-            }
         '''
         appModuleInfoFile << '''
             module org.gradlex.test.app {

@@ -33,7 +33,6 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.util.GradleVersion;
 import org.gradlex.javamodule.dependencies.internal.bridges.ExtraJavaModuleInfoBridge;
 import org.gradlex.javamodule.dependencies.internal.compile.AddSyntheticModulesToCompileClasspathAction;
@@ -55,6 +54,8 @@ import static org.gradlex.javamodule.dependencies.internal.utils.DependencyDecla
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
 import static java.util.Optional.empty;
 import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
+import static org.gradlex.javamodule.dependencies.internal.utils.TaskConfigurationUtil.isJavaCompileTask;
+import static org.gradlex.javamodule.dependencies.internal.utils.TaskConfigurationUtil.isJavadocTask;
 
 @SuppressWarnings("unused")
 @NonNullApi
@@ -88,12 +89,14 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             process(ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE, sourceSet.getCompileOnlyApiConfigurationName(), sourceSet, project, javaModuleDependencies);
             process(ModuleInfo.Directive.REQUIRES_RUNTIME, sourceSet.getRuntimeOnlyConfigurationName(), sourceSet, project, javaModuleDependencies);
 
-            project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class, javaCompile -> {
-                ModuleInfo moduleInfo = findModuleInfoInSourceSet(sourceSet, project);
-                List<String> requiresRuntime = moduleInfo.get(ModuleInfo.Directive.REQUIRES_RUNTIME);
-                if (!requiresRuntime.isEmpty()) {
-                    javaCompile.doFirst(project.getObjects().newInstance(AddSyntheticModulesToCompileClasspathAction.class,
-                            project.getLayout().getBuildDirectory().dir("tmp").get().getAsFile(), requiresRuntime));
+            project.getTasks().configureEach(task -> {
+                if (isJavaCompileTask(task, sourceSet) || isJavadocTask(task, sourceSet)) {
+                    List<String> requiresRuntime =
+                            findModuleInfoInSourceSet(sourceSet, project).get(ModuleInfo.Directive.REQUIRES_RUNTIME);
+                    if (!requiresRuntime.isEmpty()) {
+                        task.doFirst(project.getObjects().newInstance(AddSyntheticModulesToCompileClasspathAction.class,
+                                project.getLayout().getBuildDirectory().dir("tmp/java-module-dependencies/" + task.getName()).get().getAsFile(), requiresRuntime));
+                    }
                 }
             });
         });

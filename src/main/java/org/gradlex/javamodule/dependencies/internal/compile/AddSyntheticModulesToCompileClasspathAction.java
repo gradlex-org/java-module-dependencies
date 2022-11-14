@@ -22,6 +22,7 @@ import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoClassCreator;
 
 import javax.inject.Inject;
@@ -48,15 +49,20 @@ public abstract class AddSyntheticModulesToCompileClasspathAction implements Act
             return;
         }
 
-        JavaCompile javaCompile = (JavaCompile) task;
-
         ConfigurableFileCollection syntheticModuleInfoFolders = objects.fileCollection();
         for (String moduleName : moduleDependencies) {
-            File dir = new File(tmpFolder, "java-module-dependencies/" + moduleName + "-synthetic");
+            File dir = new File(tmpFolder, moduleName + "-synthetic");
             ModuleInfoClassCreator.createEmpty(moduleName, dir);
             syntheticModuleInfoFolders.from(dir);
         }
 
-        javaCompile.setClasspath(javaCompile.getClasspath().plus(syntheticModuleInfoFolders));
+        if (task instanceof JavaCompile) {
+            JavaCompile javaCompile = (JavaCompile) task;
+            javaCompile.setClasspath(javaCompile.getClasspath().plus(syntheticModuleInfoFolders));
+        }
+        if (task instanceof Javadoc) {
+            Javadoc javadoc = (Javadoc) task;
+            javadoc.setClasspath(javadoc.getClasspath().plus(syntheticModuleInfoFolders));
+        }
     }
 }
