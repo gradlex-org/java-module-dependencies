@@ -165,6 +165,7 @@ public abstract class JavaModuleDependenciesExtension {
      *
      * @param task      The task that compiles code from the given source set
      * @param sourceSet The source set that contains the module-info.java
+     * @return collection of folders containing synthetic module-info.class files
      */
     public FileCollection addRequiresRuntimeSupport(JavaCompile task, SourceSet sourceSet) {
         return doAddRequiresRuntimeSupport(task, sourceSet);
@@ -176,6 +177,7 @@ public abstract class JavaModuleDependenciesExtension {
      *
      * @param task      The task that generates Javadoc from the given source set
      * @param sourceSet The source set that contains the module-info.java
+     * @return collection of folders containing synthetic module-info.class files
      */
     public FileCollection addRequiresRuntimeSupport(Javadoc task, SourceSet sourceSet) {
         return doAddRequiresRuntimeSupport(task, sourceSet);

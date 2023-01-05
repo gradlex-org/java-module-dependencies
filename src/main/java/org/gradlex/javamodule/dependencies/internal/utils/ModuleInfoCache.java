@@ -40,6 +40,9 @@ public abstract class ModuleInfoCache {
     /**
      * Returns the module-info.java for the given SourceSet. If the SourceSet has multiple source folders with multiple
      * module-info files (which is usually a broken setup) the first file found is returned.
+     *
+     * @param sourceSet the SourceSet representing a module
+     * @return parsed module-info.java for the given SourceSet
      */
     public ModuleInfo get(SourceSet sourceSet) {
         for (File folder : sourceSet.getJava().getSrcDirs()) {
