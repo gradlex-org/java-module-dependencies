@@ -1,7 +1,7 @@
 plugins {
     id("gradlexbuild.module-mappings")
     id("groovy")
-    id("org.gradlex.internal.plugin-publish-conventions") version "0.4"
+    id("org.gradlex.internal.plugin-publish-conventions") version "0.5"
 }
 
 group = "org.gradlex"
@@ -15,7 +15,7 @@ java {
 dependencies {
     implementation("org.ow2.asm:asm:8.0.1")
 
-    compileOnly("org.gradlex:extra-java-module-info:1.0")
+    compileOnly("org.gradlex:extra-java-module-info:1.2")
 
     testImplementation("org.spockframework:spock-core:2.1-groovy-3.0")
     testImplementation("org.gradle.exemplar:samples-check:1.0.0")
