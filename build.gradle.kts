@@ -15,7 +15,7 @@ java {
 dependencies {
     implementation("org.ow2.asm:asm:8.0.1")
 
-    compileOnly("org.gradlex:extra-java-module-info:1.2")
+    compileOnly("org.gradlex:extra-java-module-info:1.4")
 
     testImplementation("org.spockframework:spock-core:2.1-groovy-3.0")
     testImplementation("org.gradle.exemplar:samples-check:1.0.0")
@@ -34,6 +34,11 @@ pluginPublishConventions {
         name.set("Jendrik Johannes")
         email.set("jendrik@gradlex.org")
     }
+}
+
+// TODO This needs to be included in org.gradlex.internal.plugin-publish-conventions
+signing {
+    useInMemoryPgpKeys(providers.environmentVariable("SIGNING_KEY").orNull, providers.environmentVariable("SIGNING_PASSPHRASE").orNull)
 }
 
 tasks.test {
