@@ -18,6 +18,7 @@ package org.gradlex.javamodule.dependencies.internal.utils;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,7 +26,7 @@ import java.util.List;
 
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
 
-public class ModuleInfo {
+public class ModuleInfo implements Serializable {
 
     public enum Directive {
         REQUIRES,

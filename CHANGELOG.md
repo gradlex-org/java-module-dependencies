@@ -1,5 +1,9 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.3
+* [#22](https://github.com/gradlex-org/java-module-dependencies/issues/22) Add task to check ordering (alphabetical) of requires directives
+* [#23](https://github.com/gradlex-org/java-module-dependencies/issues/23) Consider 'moduleNamePrefixToGroup' entries in: ga(), gav(), moduleName()
+
 ## Version 1.2
 * [#20](https://github.com/gradlex-org/java-module-dependencies/issues/20) Improve support for `requires /*runtime*/`
 

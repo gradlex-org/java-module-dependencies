@@ -234,6 +234,10 @@ org_slf4j = "1.7.36"
 org_slf4j_simple = "1.7.36"
 ```
 
+## Check module-info.java files
+
+You can use the `checkAllModuleInfo` check task to fail the build if require directives are not defined in alphabetical order in your `module-info.java` files.
+
 ## Analyze Module Paths
 
 You can use the `analyzeModulePath` help task to analyse the Module Paths of a project.

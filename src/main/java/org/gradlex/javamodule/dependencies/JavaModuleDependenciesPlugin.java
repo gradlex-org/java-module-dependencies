@@ -33,6 +33,7 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.util.GradleVersion;
 import org.gradlex.javamodule.dependencies.internal.bridges.ExtraJavaModuleInfoBridge;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
+import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck;
 import org.gradlex.javamodule.dependencies.tasks.ModuleInfoGeneration;
 import org.gradlex.javamodule.dependencies.tasks.ModulePathAnalysis;
 import org.gradlex.javamodule.dependencies.tasks.ModuleVersionRecommendation;
@@ -44,6 +45,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
+import static org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP;
 import static org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension.JAVA_MODULE_DEPENDENCIES;
 import static org.gradlex.javamodule.dependencies.internal.utils.DependencyDeclarationsUtil.declaredDependencies;
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
@@ -86,6 +88,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                 }
             });
         });
+        setupOrderingCheckTasks(project, javaModuleDependencies);
         setupReportTasks(project, javaModuleDependencies);
         setupMigrationTasks(project, javaModuleDependencies);
     }
@@ -145,6 +148,32 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             });
 
             generateAllModuleInfoFiles.configure(t -> t.dependsOn(generateModuleInfo));
+        });
+    }
+
+    private void setupOrderingCheckTasks(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
+        SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
+        ConfigurationContainer configurations = project.getConfigurations();
+
+        TaskProvider<Task> checkAllModuleInfo = project.getTasks().register("checkAllModuleInfo", t -> {
+            t.setGroup(VERIFICATION_GROUP);
+            t.setDescription("Check order of directives in 'module-info.java' files");
+        });
+
+        sourceSets.all(sourceSet -> {
+            TaskProvider<ModuleDirectivesOrderingCheck> checkModuleInfo = project.getTasks().register(sourceSet.getTaskName("check", "ModuleInfo"), ModuleDirectivesOrderingCheck.class, t -> {
+                t.setGroup("java modules");
+                t.setDescription("Check order of directives in 'module-info.java' in '" + sourceSet.getName() + "' source set");
+
+                ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get(sourceSet);
+
+                t.getModuleInfoPath().convention(project.getLayout().getProjectDirectory().getAsFile().getParentFile().toPath().relativize(
+                        sourceSet.getJava().getSrcDirs().iterator().next().toPath()).resolve("module-info.java").toString());
+                t.getModuleNamePrefix().convention(moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName()));
+                t.getModuleInfo().convention(moduleInfo);
+            });
+
+            checkAllModuleInfo.configure(t -> t.dependsOn(checkModuleInfo));
         });
     }
 
