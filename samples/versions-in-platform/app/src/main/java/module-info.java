@@ -4,5 +4,7 @@ module org.my.app {
 
     requires static org.apache.xmlbeans;
 
+    requires /*runtime*/ org.slf4j.simple;
+
     exports org.my.app;
 }

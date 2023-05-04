@@ -8,9 +8,3 @@ application {
     mainClass.set("org.my.app.App")
     mainModule.set("org.my.app")
 }
-
-dependencies {
-    javaModuleDependencies {
-        runtimeOnly(gav("org.slf4j.simple"))
-    }
-}
