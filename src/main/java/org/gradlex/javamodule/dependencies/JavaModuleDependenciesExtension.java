@@ -28,6 +28,7 @@ import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -35,7 +36,6 @@ import org.gradlex.javamodule.dependencies.internal.compile.AddSyntheticModulesT
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
@@ -99,7 +99,33 @@ public abstract class JavaModuleDependenciesExtension {
      * @return Dependency notation
      */
     public Provider<String> ga(String moduleName) {
-        return getModuleNameToGA().getting(moduleName);
+        return getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
+    }
+
+    /**
+     * Converts 'Module Name' to GA coordinates that can be used in
+     * dependency declarations as String: "group:name"
+     *
+     * @param moduleName The Module Name
+     * @return Dependency notation
+     */
+    public Provider<String> ga(Provider<String> moduleName) {
+        return moduleName.flatMap(n -> getModuleNameToGA().getting(n)).orElse(mapByPrefix(moduleName));
+    }
+
+    private Provider<String> mapByPrefix(Provider<String> moduleName) {
+        return getModuleNamePrefixToGroup().map(
+                m -> {
+                    Optional<Map.Entry<String, String>> prefixToGroup = m.entrySet().stream()
+                            .filter(e -> moduleName.get().startsWith(e.getKey())).findFirst();
+                    if (prefixToGroup.isPresent()) {
+                        String group = prefixToGroup.get().getValue();
+                        String artifact = moduleName.get().substring(prefixToGroup.get().getKey().length());
+                        return group + ":" + artifact;
+                    }
+                    return null;
+                }
+        );
     }
 
     /**
@@ -111,7 +137,19 @@ public abstract class JavaModuleDependenciesExtension {
      * @return Dependency notation
      */
     public Provider<String> gav(String moduleName, String version) {
-        return getModuleNameToGA().getting(moduleName).map(s -> s + ":" + version);
+        return ga(moduleName).map(s -> s + ":" + version);
+    }
+
+    /**
+     * Converts 'Module Name' and 'Version' to GAV coordinates that can be used in
+     * dependency declarations as String: "group:name:version"
+     *
+     * @param moduleName The Module Name
+     * @param version The (required) version
+     * @return Dependency notation
+     */
+    public Provider<String> gav(Provider<String> moduleName, Provider<String> version) {
+        return ga(moduleName).map(s -> s + ":" + version.get());
     }
 
     /**
@@ -124,39 +162,64 @@ public abstract class JavaModuleDependenciesExtension {
      * @return Dependency notation
      */
     public Provider<Map<String, Object>> gav(String moduleName) {
-        Provider<String> ga = ga(moduleName);
+        return ga(moduleName).map(ga -> findGav(ga, moduleName));
+    }
 
-        VersionCatalog catalog = null;
-        if (versionCatalogs != null) {
-            String catalogName = getVersionCatalogName().get();
-            catalog = versionCatalogs.named(catalogName);
-        }
+    /**
+     * If a Version Catalog is used:
+     * Converts 'Module Name' and the matching 'Version' from the Version Catalog to
+     * GAV coordinates that can be used in dependency Declarations as Map:
+     * [group: "...", name: "...", version: "..."]
+     *
+     * @param moduleName The Module Name
+     * @return Dependency notation
+     */
+    public Provider<Map<String, Object>> gav(Provider<String> moduleName) {
+        return ga(moduleName).map(ga -> findGav(ga, moduleName.get()));
+    }
+
+    private Map<String, Object> findGav(String ga, String moduleName) {
+        VersionCatalog catalog = versionCatalogs == null ? null : versionCatalogs.named(getVersionCatalogName().get());
         Optional<VersionConstraint> version = catalog == null ? empty() : catalog.findVersion(moduleName.replace('_', '.'));
-
-        return ga.map(s -> {
-            Map<String, Object> gav = new HashMap<>();
-            String[] gaSplit = s.split(":");
-            gav.put(GAV.GROUP, gaSplit[0]);
-            gav.put(GAV.ARTIFACT, gaSplit[1]);
-            version.ifPresent(versionConstraint -> gav.put(GAV.VERSION, versionConstraint));
-            return gav;
-        });
+        Map<String, Object> gav = new HashMap<>();
+        String[] gaSplit = ga.split(":");
+        gav.put(GAV.GROUP, gaSplit[0]);
+        gav.put(GAV.ARTIFACT, gaSplit[1]);
+        version.ifPresent(versionConstraint -> gav.put(GAV.VERSION, versionConstraint));
+        return gav;
     }
 
     /**
      * Finds the Module Name for given coordinates
      *
      * @param ga The GA coordinates
-     * @return the first name found or 'null'
+     * @return the first name found or unset
      */
-    @Nullable
-    public String moduleName(String ga) {
-        for(Map.Entry<String, String> mapping: getModuleNameToGA().get().entrySet()) {
-            if (mapping.getValue().equals(ga)) {
-                return mapping.getKey();
+    public Provider<String> moduleName(String ga) {
+        return moduleName(getProviders().provider(() -> ga));
+    }
+
+    /**
+     * Finds the Module Name for given coordinates
+     *
+     * @param ga The GA coordinates
+     * @return the first name found or unset
+     */
+    public Provider<String> moduleName(Provider<String> ga) {
+        return ga.map(groupArtifact -> {
+            Optional<String> found = getModuleNameToGA().get().entrySet().stream().filter(
+                    e -> e.getValue().equals(groupArtifact)).map(Map.Entry::getKey).findFirst();
+            if (found.isPresent()) {
+                return found.get();
+            } else {
+                String[] split = groupArtifact.split(":");
+                String group = split[0];
+                String artifact = split[1];
+                Optional<String> modulePrefix = getModuleNamePrefixToGroup().get().entrySet().stream().filter(
+                        e -> e.getValue().equals(group)).map(Map.Entry::getKey).findFirst();
+                return modulePrefix.map(s -> s + artifact).orElse(null);
             }
-        }
-        return null;
+        });
     }
 
     /**
@@ -197,6 +260,10 @@ public abstract class JavaModuleDependenciesExtension {
 
     @Inject
     protected abstract ObjectFactory getObjects();
+
+
+    @Inject
+    protected abstract ProviderFactory getProviders();
 
     @Inject
     protected abstract ProjectLayout getLayout();

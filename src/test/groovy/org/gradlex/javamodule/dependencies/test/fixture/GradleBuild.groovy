@@ -29,6 +29,7 @@ class GradleBuild {
             dependencyResolutionManagement { repositories.mavenCentral() }
             rootProject.name = "test-project"
             include("lib", "app")
+            includeBuild(".")
         '''
         appBuildFile << '''
             plugins {

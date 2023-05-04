@@ -24,9 +24,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ProjectDependency;
-import org.gradle.api.artifacts.VersionCatalog;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
-import org.gradle.api.artifacts.VersionConstraint;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
@@ -41,16 +39,14 @@ import org.gradlex.javamodule.dependencies.tasks.ModuleVersionRecommendation;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
 import static org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension.JAVA_MODULE_DEPENDENCIES;
 import static org.gradlex.javamodule.dependencies.internal.utils.DependencyDeclarationsUtil.declaredDependencies;
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
-import static java.util.Optional.empty;
-import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
 import static org.gradlex.javamodule.dependencies.internal.utils.TaskConfigurationUtil.isJavaCompileTask;
 import static org.gradlex.javamodule.dependencies.internal.utils.TaskConfigurationUtil.isJavadocTask;
 
@@ -77,7 +73,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
     private void setupForJavaProject(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-        sourceSets.all(sourceSet ->  {
+        sourceSets.all(sourceSet -> {
             process(ModuleInfo.Directive.REQUIRES, sourceSet.getImplementationConfigurationName(), sourceSet, project, javaModuleDependencies);
             process(ModuleInfo.Directive.REQUIRES_STATIC, sourceSet.getCompileOnlyConfigurationName(), sourceSet, project, javaModuleDependencies);
             process(ModuleInfo.Directive.REQUIRES_TRANSITIVE, sourceSet.getApiConfigurationName(), sourceSet, project, javaModuleDependencies);
@@ -183,7 +179,9 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                 Collectors.toMap(Project::getName, e -> (String) project.getGroup()));
 
         Provider<Map<String, Object>> gav = javaModuleDependencies.gav(moduleName);
-        String moduleNameSuffix = ownModuleNamesPrefix == null ? null : moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) : null;
+        String moduleNameSuffix = ownModuleNamesPrefix == null ? null :
+                moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) :
+                        ownModuleNamesPrefix.isEmpty() ? moduleName : null;
 
         Optional<String> existingProjectName = allProjectNamesAndGroups.keySet().stream().filter(p -> moduleNameSuffix != null && moduleNameSuffix.startsWith(p + ".")).findFirst();
 
@@ -202,38 +200,9 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                 warnVersionMissing(moduleName, gav.get(), moduleInfoFile, project, javaModuleDependencies);
             }
         } else {
-            Optional<Map.Entry<String, String>> prefixToGroupMapping =
-                    javaModuleDependencies.getModuleNamePrefixToGroup().get().entrySet().stream()
-                    .filter(e -> moduleName.startsWith(e.getKey())).findFirst();
-            if (prefixToGroupMapping.isPresent()) {
-                String prefix = prefixToGroupMapping.get().getKey();
-
-                String group = prefixToGroupMapping.get().getValue();
-                String artifactName = moduleName.substring(prefix.length());
-
-                VersionCatalog catalog = null;
-                VersionCatalogsExtension versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
-                if (versionCatalogs != null) {
-                    String catalogName = javaModuleDependencies.getVersionCatalogName().get();
-                    catalog = versionCatalogs.named(catalogName);
-                }
-                Optional<VersionConstraint> version = catalog == null ? empty() : catalog.findVersion(prefix.replace('_', '.'));
-
-                Map<String, Object> gavFromPrefixMapping = new HashMap<>();
-                gavFromPrefixMapping.put(GAV.GROUP, group);
-                gavFromPrefixMapping.put(GAV.ARTIFACT, artifactName);
-                version.ifPresent(versionConstraint -> gavFromPrefixMapping.put(GAV.VERSION, versionConstraint));
-
-                project.getDependencies().add(configuration.getName(), gavFromPrefixMapping);
-
-                if (!gavFromPrefixMapping.containsKey(GAV.VERSION)) {
-                    warnVersionMissing(prefix, gavFromPrefixMapping, moduleInfoFile, project, javaModuleDependencies);
-                }
-            } else {
-                project.getLogger().lifecycle(
-                        "[WARN] [Java Module Dependencies] No mapping registered for module: " + moduleDebugInfo(moduleName, moduleInfoFile, project.getRootDir()) +
-                                " - use 'javaModuleDependencies.moduleNameToGA.put(\"" + moduleName + "\", \"group:artifact\")' to add mapping.");
-            }
+            project.getLogger().lifecycle(
+                    "[WARN] [Java Module Dependencies] No mapping registered for module: " + moduleDebugInfo(moduleName, moduleInfoFile, project.getRootDir()) +
+                            " - use 'javaModuleDependencies.moduleNameToGA.put(\"" + moduleName + "\", \"group:artifact\")' to add mapping.");
         }
     }
 

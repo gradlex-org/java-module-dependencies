@@ -16,6 +16,7 @@
 
 package org.gradlex.javamodule.dependencies.tasks;
 
+import org.gradle.api.provider.Provider;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
@@ -38,6 +39,7 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -111,10 +113,10 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
             if (moduleVersion != null && !(result.getId() instanceof ProjectComponentIdentifier)) {
                 String ga = moduleVersion.getGroup() + ":" + moduleVersion.getName();
                 String version = moduleVersion.getVersion();
-                String moduleName = javaModuleDependencies.moduleName(ga);
-                if (moduleName != null) {
+                Provider<String> moduleName = javaModuleDependencies.moduleName(ga);
+                if (moduleName.isPresent()) {
                     moduleVersionsPlatform.add("        api(gav(\"" + moduleName + "\", \"" + version + "\"))");
-                    moduleVersionsCatalog.add(moduleName.replace('.', '_') + " = \"" + version + "\"");
+                    moduleVersionsCatalog.add(moduleName.get().replace('.', '_') + " = \"" + version + "\"");
                 }
             }
         }
