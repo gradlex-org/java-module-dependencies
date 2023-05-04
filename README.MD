@@ -310,7 +310,7 @@ However, if you enable (the currently experimental) [configuration cache](https:
 feature of Gradle, the result of the configuration phase is cached, avoiding parsing `module-info.java` files again in a successive build run.
 
 ```
-org.gradle.unsafe.configuration-cache=true
+org.gradle.configuration-cache=true
 ```
 
 # Disclaimer
