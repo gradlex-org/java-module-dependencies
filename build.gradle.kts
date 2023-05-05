@@ -13,7 +13,7 @@ java {
 }
 
 dependencies {
-    implementation("org.ow2.asm:asm:8.0.1")
+    implementation("org.ow2.asm:asm:9.5")
 
     compileOnly("org.gradlex:extra-java-module-info:1.4")
 
