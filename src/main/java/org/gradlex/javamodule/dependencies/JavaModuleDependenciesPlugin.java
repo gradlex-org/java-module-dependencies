@@ -23,6 +23,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
 import org.gradle.api.plugins.JavaPlugin;
@@ -221,7 +222,9 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         Optional<String> existingProjectName = allProjectNamesAndGroups.keySet().stream().filter(p -> moduleNameSuffix != null && moduleNameSuffix.startsWith(p + ".")).findFirst();
 
         if (allProjectNamesAndGroups.containsKey(moduleNameSuffix)) {
-            project.getDependencies().add(configuration.getName(), project.project(":" + moduleNameSuffix));
+            Dependency dependency = project.getDependencies().add(configuration.getName(), project.project(":" + moduleNameSuffix));
+            assert dependency != null;
+            dependency.because(moduleName);
         } else if (existingProjectName.isPresent()) {
             // no exact match -> add capability to point at Module in other source set
             ProjectDependency projectDependency = (ProjectDependency)
@@ -229,8 +232,9 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             assert projectDependency != null;
             projectDependency.capabilities(c -> c.requireCapabilities(
                     allProjectNamesAndGroups.get(existingProjectName.get()) + ":" + moduleNameSuffix.replace(".", "-")));
+            projectDependency.because(moduleName);
         } else if (gav.isPresent()) {
-            project.getDependencies().addProvider(configuration.getName(), gav);
+            project.getDependencies().addProvider(configuration.getName(), gav, d -> d.because(moduleName));
             if (!gav.get().containsKey(GAV.VERSION)) {
                 warnVersionMissing(moduleName, gav.get(), moduleInfoFile, project, javaModuleDependencies);
             }
