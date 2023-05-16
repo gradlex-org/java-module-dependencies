@@ -12,10 +12,16 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+configurations.compileClasspath {
+    // Allow Java 11 dependencies on compile classpath
+    attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 11)
+}
+
 dependencies {
     implementation("org.ow2.asm:asm:9.5")
 
     compileOnly("org.gradlex:extra-java-module-info:1.4")
+    compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:1.20.0")
 
     testImplementation("org.spockframework:spock-core:2.1-groovy-3.0")
     testImplementation("org.gradle.exemplar:samples-check:1.0.0")

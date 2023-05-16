@@ -1,6 +1,7 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
 ## Version 1.3
+* [#27](https://github.com/gradlex-org/java-module-dependencies/issues/27) Add task to check scopes of requires directives (by integrating with 'dependency-analysis' plugin)
 * [#22](https://github.com/gradlex-org/java-module-dependencies/issues/22) Add task to check ordering (alphabetical) of requires directives
 * [#23](https://github.com/gradlex-org/java-module-dependencies/issues/23) Consider 'moduleNamePrefixToGroup' entries in: ga(), gav(), moduleName()
 

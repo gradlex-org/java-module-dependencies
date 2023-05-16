@@ -261,7 +261,6 @@ public abstract class JavaModuleDependenciesExtension {
     @Inject
     protected abstract ObjectFactory getObjects();
 
-
     @Inject
     protected abstract ProviderFactory getProviders();
 

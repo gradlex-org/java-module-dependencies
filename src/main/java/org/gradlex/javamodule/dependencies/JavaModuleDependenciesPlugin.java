@@ -31,6 +31,7 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.util.GradleVersion;
+import org.gradlex.javamodule.dependencies.internal.bridges.DependencyAnalysisBridge;
 import org.gradlex.javamodule.dependencies.internal.bridges.ExtraJavaModuleInfoBridge;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck;
@@ -88,9 +89,19 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                 }
             });
         });
-        setupOrderingCheckTasks(project, javaModuleDependencies);
+
+        TaskProvider<Task> checkAllModuleInfo = project.getTasks().register("checkAllModuleInfo", t -> {
+            t.setGroup(VERIFICATION_GROUP);
+            t.setDescription("Check scope and order of directives in 'module-info.java' files");
+        });
+
+        setupOrderingCheckTasks(project, checkAllModuleInfo, javaModuleDependencies);
         setupReportTasks(project, javaModuleDependencies);
         setupMigrationTasks(project, javaModuleDependencies);
+
+        project.getPlugins().withId("com.autonomousapps.dependency-analysis", analysisPlugin -> {
+            DependencyAnalysisBridge.registerDependencyAnalysisPostProcessingTask(project, checkAllModuleInfo, javaModuleDependencies);
+        });
     }
 
     private void setupExtraJavaModulePluginBridge(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
@@ -151,14 +162,9 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         });
     }
 
-    private void setupOrderingCheckTasks(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
+    private void setupOrderingCheckTasks(Project project, TaskProvider<Task> checkAllModuleInfo, JavaModuleDependenciesExtension javaModuleDependencies) {
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         ConfigurationContainer configurations = project.getConfigurations();
-
-        TaskProvider<Task> checkAllModuleInfo = project.getTasks().register("checkAllModuleInfo", t -> {
-            t.setGroup(VERIFICATION_GROUP);
-            t.setDescription("Check order of directives in 'module-info.java' files");
-        });
 
         sourceSets.all(sourceSet -> {
             TaskProvider<ModuleDirectivesOrderingCheck> checkModuleInfo = project.getTasks().register(sourceSet.getTaskName("check", "ModuleInfo"), ModuleDirectivesOrderingCheck.class, t -> {
