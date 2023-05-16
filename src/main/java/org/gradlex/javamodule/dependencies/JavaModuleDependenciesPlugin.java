@@ -35,6 +35,7 @@ import org.gradle.util.GradleVersion;
 import org.gradlex.javamodule.dependencies.internal.bridges.DependencyAnalysisBridge;
 import org.gradlex.javamodule.dependencies.internal.bridges.ExtraJavaModuleInfoBridge;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
+import org.gradlex.javamodule.dependencies.tasks.ModuleDependencyReport;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck;
 import org.gradlex.javamodule.dependencies.tasks.ModuleInfoGeneration;
 import org.gradlex.javamodule.dependencies.tasks.ModulePathAnalysis;
@@ -42,6 +43,7 @@ import org.gradlex.javamodule.dependencies.tasks.ModuleVersionRecommendation;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -97,6 +99,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         });
 
         setupOrderingCheckTasks(project, checkAllModuleInfo, javaModuleDependencies);
+        setupModuleDependenciesTask(project);
         setupReportTasks(project, javaModuleDependencies);
         setupMigrationTasks(project, javaModuleDependencies);
 
@@ -108,6 +111,39 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
     private void setupExtraJavaModulePluginBridge(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
         project.getPlugins().withId(EXTRA_JAVA_MODULE_INFO_PLUGIN_ID,
                 e -> ExtraJavaModuleInfoBridge.autoRegisterPatchedModuleMappings(project, javaModuleDependencies));
+    }
+
+    private void setupModuleDependenciesTask(Project project) {
+        SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
+        TaskProvider<ModuleDependencyReport> moduleDependencies = project.getTasks().register("moduleDependencies", ModuleDependencyReport.class, t -> {
+            t.setGroup(HELP_GROUP);
+            if (t.isConfigurationSetByUser()) {
+                Configuration conf = t.getConfigurations().iterator().next();
+                t.getModuleJars().from(conf);
+                t.getModuleArtifacts().add(project.provider(() -> conf.getIncoming().getArtifacts()));
+            }
+        });
+        sourceSets.all(sourceSet -> {
+            moduleDependencies.configure(t -> {
+                if (!t.isConfigurationSetByUser()) {
+                    HashSet<Configuration> reportConfigurations = new HashSet<>();
+                    if (t.getConfigurations() != null) {
+                        reportConfigurations.addAll(t.getConfigurations());
+                    }
+                    Configuration cpClasspath = project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
+                    Configuration rtClasspath = project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName());
+                    reportConfigurations.add(cpClasspath);
+                    reportConfigurations.add(rtClasspath);
+                    t.setConfigurations(reportConfigurations);
+
+                    t.getModuleJars().from(cpClasspath);
+                    t.getModuleJars().from(rtClasspath);
+
+                    t.getModuleArtifacts().add(project.provider(() -> cpClasspath.getIncoming().getArtifacts()));
+                    t.getModuleArtifacts().add(project.provider(() -> rtClasspath.getIncoming().getArtifacts()));
+                }
+            });
+        });
     }
 
     private void setupReportTasks(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {

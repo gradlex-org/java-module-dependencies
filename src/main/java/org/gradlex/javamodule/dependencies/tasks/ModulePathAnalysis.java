@@ -16,8 +16,6 @@
 
 package org.gradlex.javamodule.dependencies.tasks;
 
-import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
-import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -31,33 +29,23 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.internal.jvm.JavaModuleDetector;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ModuleVisitor;
-import org.objectweb.asm.Opcodes;
+import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
+import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.jar.JarInputStream;
-import java.util.jar.Manifest;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
+
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.isRealModule;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readNameFromModuleFromJarFile;
 
 public abstract class ModulePathAnalysis extends DefaultTask {
-    private static final String AUTOMATIC_MODULE_NAME_ATTRIBUTE = "Automatic-Module-Name";
-    private static final String MULTI_RELEASE_ATTRIBUTE = "Multi-Release";
-    private static final String MODULE_INFO_CLASS_FILE = "module-info.class";
-    private static final Pattern MODULE_INFO_CLASS_MRJAR_PATH = Pattern.compile("META-INF/versions/\\d+/module-info.class");
-
     private final String projectName;
     private final SourceSetContainer sourceSets;
     private final JavaModuleDependenciesExtension javaModuleDependencies;
@@ -71,9 +59,6 @@ public abstract class ModulePathAnalysis extends DefaultTask {
         this.sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         this.javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
     }
-
-    @Inject
-    protected abstract JavaModuleDetector getJavaModuleDetector();
 
     @TaskAction
     public void report() throws IOException {
@@ -189,7 +174,8 @@ public abstract class ModulePathAnalysis extends DefaultTask {
                 moduleName = null;
             }
 
-            boolean isModuleForReal = getJavaModuleDetector().isModule(true, resultFile);
+            String actualModuleName = readNameFromModuleFromJarFile(resultFile);
+            boolean isModuleForReal = actualModuleName != null;
 
             if (moduleName != null && isModuleForReal) {
                 if (isRealModule(resultFile)) {
@@ -202,77 +188,12 @@ public abstract class ModulePathAnalysis extends DefaultTask {
                 nonModules.add(ga + version);
             }
             if (moduleName == null && isModuleForReal) {
-                String actualModuleName = readNameFromModuleFromJarFile(resultFile);
                 missingMappings.add("moduleNameToGA.put(\"" + actualModuleName + "\", \"" + ga + "\")");
             }
             if (moduleName != null && !isModuleForReal) {
                 wrongMappings.add(moduleName + " -> " + ga + version);
             }
         }
-    }
-
-    private String readNameFromModuleFromJarFile(File jarFile) throws IOException {
-        try (JarInputStream jarStream =  new JarInputStream(Files.newInputStream(jarFile.toPath()))) {
-            String moduleName = getAutomaticModuleName(jarStream.getManifest());
-            if (moduleName != null) {
-                return moduleName;
-            }
-            boolean isMultiReleaseJar = containsMultiReleaseJarEntry(jarStream);
-            ZipEntry next = jarStream.getNextEntry();
-            while (next != null) {
-                if (MODULE_INFO_CLASS_FILE.equals(next.getName())) {
-                    return readNameFromModuleInfoClass(jarStream);
-                }
-                if (isMultiReleaseJar && MODULE_INFO_CLASS_MRJAR_PATH.matcher(next.getName()).matches()) {
-                    return readNameFromModuleInfoClass(jarStream);
-                }
-                next = jarStream.getNextEntry();
-            }
-        }
-        return null;
-    }
-
-    private boolean isRealModule(File jarFile) throws IOException {
-        try (JarInputStream jarStream =  new JarInputStream(Files.newInputStream(jarFile.toPath()))) {
-            boolean isMultiReleaseJar = containsMultiReleaseJarEntry(jarStream);
-            ZipEntry next = jarStream.getNextEntry();
-            while (next != null) {
-                if (MODULE_INFO_CLASS_FILE.equals(next.getName())) {
-                    return true;
-                }
-                if (isMultiReleaseJar && MODULE_INFO_CLASS_MRJAR_PATH.matcher(next.getName()).matches()) {
-                    return true;
-                }
-                next = jarStream.getNextEntry();
-            }
-        }
-        return false;
-    }
-
-
-    private String getAutomaticModuleName(Manifest manifest) {
-        if (manifest == null) {
-            return null;
-        }
-        return manifest.getMainAttributes().getValue(AUTOMATIC_MODULE_NAME_ATTRIBUTE);
-    }
-
-    private boolean containsMultiReleaseJarEntry(JarInputStream jarStream) {
-        Manifest manifest = jarStream.getManifest();
-        return manifest !=null && Boolean.parseBoolean(manifest.getMainAttributes().getValue(MULTI_RELEASE_ATTRIBUTE));
-    }
-
-    private String readNameFromModuleInfoClass(InputStream input) throws IOException {
-        ClassReader classReader = new ClassReader(input);
-        String[] moduleName = new String[1];
-        classReader.accept(new ClassVisitor(Opcodes.ASM8) {
-            @Override
-            public ModuleVisitor visitModule(String name, int access, String version) {
-                moduleName[0] = name;
-                return super.visitModule(name, access, version);
-            }
-        }, 0);
-        return moduleName[0];
     }
 
     private void p(String toPrint) {
