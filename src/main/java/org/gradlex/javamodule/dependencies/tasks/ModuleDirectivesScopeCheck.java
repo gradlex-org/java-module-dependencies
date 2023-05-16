@@ -59,9 +59,10 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
     public void analyze() {
         Set<Advice> projectAdvice = projectAdvice().getDependencyAdvice();
 
+        StringBuilder message = new StringBuilder();
         for (Map.Entry<String, String> sourceSet : getSourceSets().get().entrySet()) {
             List<String> toAdd = projectAdvice.stream().filter(a ->
-                    a.getToConfiguration() != null && !RUNTIME_ONLY_CONFIGURATION_NAME.equals(a.getToConfiguration())
+                    a.getToConfiguration() != null && !RUNTIME_ONLY_CONFIGURATION_NAME.equals(getScope(a.getToConfiguration()).orElse(null))
             ).filter(a ->
                     sourceSet.getKey().equals(sourceSetName(a.getToConfiguration()))
             ).map(a ->
@@ -69,27 +70,35 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
             ).sorted().collect(Collectors.toList());
 
             List<String> toRemove = projectAdvice.stream().filter(a ->
-                    a.getToConfiguration() != null
+                    a.getFromConfiguration() != null
             ).filter(a ->
-                    sourceSet.getKey().equals(sourceSetName(a.getToConfiguration()))
+                    sourceSet.getKey().equals(sourceSetName(a.getFromConfiguration()))
             ).map(a ->
                     declaration(a.getFromConfiguration(), a.getCoordinates().getIdentifier())
             ).sorted().collect(Collectors.toList());
 
             if (!toAdd.isEmpty() || !toRemove.isEmpty()) {
-                throw new RuntimeException(sourceSet.getValue() +
-                        "\n\nPlease add the following requires directives:" +
-                        "\n    " + String.join("\n    ", toAdd) +
-
-                        "\n\nPlease remove the following requires directives:" +
-                        "\n    " + String.join("\n    ", toRemove)
-                );
+                if (message.length() > 0) {
+                    message.append("\n\n\n");
+                }
+                message.append(sourceSet.getValue());
             }
+            if (!toAdd.isEmpty()) {
+                message.append("\n\nPlease add the following requires directives:");
+                message.append("\n    ").append(String.join("\n    ", toAdd));
+            }
+            if (!toRemove.isEmpty()) {
+                message.append("\n\nPlease remove the following requires directives:");
+                message.append("\n    ").append(String.join("\n    ", toRemove));
+            }
+        }
+        if (message.length() > 0) {
+            throw new RuntimeException(message.toString());
         }
     }
 
     private String declaration(String conf, String coordinates) {
-        return directive(conf) + " " + javaModuleDependencies.moduleName(coordinates).get();
+        return directive(conf) + " " + javaModuleDependencies.moduleName(coordinates).getOrElse(coordinates);
     }
 
     private String sourceSetName(String configurationName) {
