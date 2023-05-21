@@ -105,7 +105,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         setupMigrationTasks(project, javaModuleDependencies);
 
         project.getPlugins().withId("com.autonomousapps.dependency-analysis", analysisPlugin -> {
-            DependencyAnalysisBridge.registerDependencyAnalysisPostProcessingTask(project, checkAllModuleInfo, javaModuleDependencies);
+            DependencyAnalysisBridge.registerDependencyAnalysisPostProcessingTask(project, checkAllModuleInfo);
         });
     }
 

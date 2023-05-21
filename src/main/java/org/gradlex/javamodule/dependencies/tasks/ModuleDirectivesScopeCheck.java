@@ -18,12 +18,18 @@ package org.gradlex.javamodule.dependencies.tasks;
 
 import com.autonomousapps.AbstractPostProcessingTask;
 import com.autonomousapps.model.Advice;
+import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.component.ComponentIdentifier;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
-import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 
-import javax.inject.Inject;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -33,6 +39,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.gradle.api.plugins.JavaPlugin.RUNTIME_ONLY_CONFIGURATION_NAME;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readNameFromModuleFromJarFile;
 
 public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingTask {
 
@@ -45,15 +52,11 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
         SCOPES_TO_DIRECTIVES.put("runtimeOnly", "requires /*runtime*/");
     }
 
-    private final JavaModuleDependenciesExtension javaModuleDependencies;
-
     @Input
     public abstract MapProperty<String, String> getSourceSets();
 
-    @Inject
-    public ModuleDirectivesScopeCheck(JavaModuleDependenciesExtension javaModuleDependencies) {
-        this.javaModuleDependencies = javaModuleDependencies;
-    }
+    @Internal
+    public abstract ListProperty<ArtifactCollection> getModuleArtifacts();
 
     @TaskAction
     public void analyze() {
@@ -98,7 +101,23 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
     }
 
     private String declaration(String conf, String coordinates) {
-        return directive(conf) + " " + javaModuleDependencies.moduleName(coordinates).getOrElse(coordinates);
+        ResolvedArtifactResult moduleJar = getModuleArtifacts().get().stream().flatMap(c -> c.getArtifacts().stream()).filter(a ->
+                coordinatesEquals(coordinates, a.getId().getComponentIdentifier())).findFirst().orElse(null);
+        try {
+            return directive(conf) + " " + (moduleJar == null ? coordinates : readNameFromModuleFromJarFile(moduleJar.getFile()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean coordinatesEquals(String coordinates, ComponentIdentifier id) {
+        if (id instanceof ModuleComponentIdentifier) {
+            return coordinates.equals(((ModuleComponentIdentifier) id).getModuleIdentifier().toString());
+        }
+        if (id instanceof ProjectComponentIdentifier) {
+            return coordinates.equals(((ProjectComponentIdentifier) id).getProjectPath());
+        }
+        return false;
     }
 
     private String sourceSetName(String configurationName) {
