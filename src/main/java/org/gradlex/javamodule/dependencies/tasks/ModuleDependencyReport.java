@@ -18,9 +18,7 @@ package org.gradlex.javamodule.dependencies.tasks;
 
 import org.gradle.api.NonNullApi;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.ListProperty;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.diagnostics.DependencyReportTask;
 import org.gradlex.javamodule.dependencies.internal.diagnostics.AsciiModuleDependencyReportRenderer;
@@ -29,9 +27,6 @@ import org.gradlex.javamodule.dependencies.internal.diagnostics.AsciiModuleDepen
 public abstract class ModuleDependencyReport extends DependencyReportTask {
 
     private boolean configurationSetByUser = false;
-
-    @InputFiles
-    public abstract ConfigurableFileCollection getModuleJars();
 
     @Internal
     public abstract ListProperty<ArtifactCollection> getModuleArtifacts();

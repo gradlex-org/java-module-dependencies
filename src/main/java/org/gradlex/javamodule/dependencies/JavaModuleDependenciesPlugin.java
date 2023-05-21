@@ -120,7 +120,6 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             t.setGroup(HELP_GROUP);
             if (t.isConfigurationSetByUser()) {
                 Configuration conf = t.getConfigurations().iterator().next();
-                t.getModuleJars().from(conf);
                 t.getModuleArtifacts().add(project.provider(() -> conf.getIncoming().getArtifacts()));
             }
         });
@@ -136,9 +135,6 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                     reportConfigurations.add(cpClasspath);
                     reportConfigurations.add(rtClasspath);
                     t.setConfigurations(reportConfigurations);
-
-                    t.getModuleJars().from(cpClasspath);
-                    t.getModuleJars().from(rtClasspath);
 
                     t.getModuleArtifacts().add(project.provider(() -> cpClasspath.getIncoming().getArtifacts()));
                     t.getModuleArtifacts().add(project.provider(() -> rtClasspath.getIncoming().getArtifacts()));
