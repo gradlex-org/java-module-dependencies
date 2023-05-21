@@ -167,7 +167,7 @@ public abstract class ModulePathAnalysis extends DefaultTask {
                 ModuleComponentIdentifier moduleVersion = (ModuleComponentIdentifier) id;
                 ga = moduleVersion.getGroup() + ":" + moduleVersion.getModule();
                 version = " (" + moduleVersion.getVersion() + ")";
-                moduleName = javaModuleDependencies.moduleName(ga).get();
+                moduleName = javaModuleDependencies.moduleName(ga).getOrNull();
             } else {
                 ga = "";
                 version = "";

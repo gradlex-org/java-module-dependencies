@@ -85,11 +85,11 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
             }
             if (!toAdd.isEmpty()) {
                 message.append("\n\nPlease add the following requires directives:");
-                message.append("\n    ").append(String.join("\n    ", toAdd));
+                message.append("\n    ").append(String.join(";\n    ", toAdd)).append(";");
             }
             if (!toRemove.isEmpty()) {
                 message.append("\n\nPlease remove the following requires directives:");
-                message.append("\n    ").append(String.join("\n    ", toRemove));
+                message.append("\n    ").append(String.join(";\n    ", toRemove)).append(";");
             }
         }
         if (message.length() > 0) {

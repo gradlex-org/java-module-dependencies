@@ -36,8 +36,16 @@ public class ModuleJar {
     private static final String MODULE_INFO_CLASS_FILE = "module-info.class";
     private static final Pattern MODULE_INFO_CLASS_MRJAR_PATH = Pattern.compile("META-INF/versions/\\d+/module-info.class");
 
-    public static String readNameFromModuleFromJarFile(File jarFile) throws IOException {
-        try (JarInputStream jarStream =  new JarInputStream(Files.newInputStream(jarFile.toPath()))) {
+    public static String readNameFromModuleFromJarFile(File jarFileOrClassFolder) throws IOException {
+        if (jarFileOrClassFolder.isDirectory()) {
+            // class folder
+            File moduleInfo = new File(jarFileOrClassFolder, MODULE_INFO_CLASS_FILE);
+            if (!moduleInfo.exists()) {
+                return null;
+            }
+            return readNameFromModuleInfoClass(Files.newInputStream(moduleInfo.toPath()));
+        }
+        try (JarInputStream jarStream =  new JarInputStream(Files.newInputStream(jarFileOrClassFolder.toPath()))) {
             String moduleName = getAutomaticModuleName(jarStream.getManifest());
             if (moduleName != null) {
                 return moduleName;
@@ -57,8 +65,12 @@ public class ModuleJar {
         return null;
     }
 
-    public static boolean isRealModule(File jarFile) throws IOException {
-        try (JarInputStream jarStream =  new JarInputStream(Files.newInputStream(jarFile.toPath()))) {
+    public static boolean isRealModule(File jarFileOrClassFolder) throws IOException {
+        if (jarFileOrClassFolder.isDirectory()) {
+            // class folder
+            return new File(jarFileOrClassFolder, MODULE_INFO_CLASS_FILE).exists();
+        }
+        try (JarInputStream jarStream =  new JarInputStream(Files.newInputStream(jarFileOrClassFolder.toPath()))) {
             boolean isMultiReleaseJar = containsMultiReleaseJarEntry(jarStream);
             ZipEntry next = jarStream.getNextEntry();
             while (next != null) {

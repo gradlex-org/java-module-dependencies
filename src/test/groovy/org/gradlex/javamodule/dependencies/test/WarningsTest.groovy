@@ -74,6 +74,6 @@ class WarningsTest extends Specification {
         when:
         def result = fail()
         then:
-        result.output.contains('[WARN] [Java Module Dependencies] No mapping registered for module: commons.math3 (required in app/src/main/java/module-info.java) - use \'javaModuleDependencies.moduleNameToGA.put("commons.math3", "group:artifact")\' to add mapping.\n')
+        result.output.contains('[WARN] [Java Module Dependencies] javaModuleDependencies.moduleNameToGA.put("commons.math3", "group:artifact") mapping is missing.\n')
     }
 }
