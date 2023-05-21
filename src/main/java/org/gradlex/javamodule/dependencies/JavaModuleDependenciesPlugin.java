@@ -43,6 +43,7 @@ import org.gradlex.javamodule.dependencies.tasks.ModuleVersionRecommendation;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -251,23 +252,27 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         }
 
         Map<String, String> allProjectNamesAndGroups = project.getRootProject().getSubprojects().stream().collect(
-                Collectors.toMap(Project::getName, e -> (String) project.getGroup()));
+                Collectors.toMap(Project::getName, p -> (String) p.getGroup()));
 
         Provider<Map<String, Object>> gav = javaModuleDependencies.gav(moduleName);
         String moduleNameSuffix = ownModuleNamesPrefix == null ? null :
                 moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) :
                         ownModuleNamesPrefix.isEmpty() ? moduleName : null;
 
-        Optional<String> existingProjectName = allProjectNamesAndGroups.keySet().stream().filter(p -> moduleNameSuffix != null && moduleNameSuffix.startsWith(p + ".")).findFirst();
+        String parentPath = project.getParent() == null ? "" : project.getParent().getPath();
+        Optional<String> perfectMatch = allProjectNamesAndGroups.keySet().stream().filter(p -> p.replace("-", ".").equals(moduleNameSuffix)).findFirst();
+        Optional<String> existingProjectName = allProjectNamesAndGroups.keySet().stream().filter(p -> moduleNameSuffix != null && moduleNameSuffix.startsWith(p.replace("-", ".") + "."))
+                .max(Comparator.comparingInt(String::length));
 
-        if (allProjectNamesAndGroups.containsKey(moduleNameSuffix)) {
-            Dependency dependency = project.getDependencies().add(configuration.getName(), project.project(":" + moduleNameSuffix));
-            assert dependency != null;
-            dependency.because(moduleName);
+        if (perfectMatch.isPresent()) {
+            Dependency projectDependency = project.getDependencies().add(
+                    configuration.getName(), project.project(parentPath + ":" + perfectMatch.get()));
+            assert projectDependency != null;
+            projectDependency.because(moduleName);
         } else if (existingProjectName.isPresent()) {
             // no exact match -> add capability to point at Module in other source set
-            ProjectDependency projectDependency = (ProjectDependency)
-                    project.getDependencies().add(configuration.getName(), project.project(":" + existingProjectName.get()));
+            ProjectDependency projectDependency = (ProjectDependency) project.getDependencies().add(
+                    configuration.getName(), project.project(parentPath + ":" + existingProjectName.get()));
             assert projectDependency != null;
             projectDependency.capabilities(c -> c.requireCapabilities(
                     allProjectNamesAndGroups.get(existingProjectName.get()) + ":" + moduleNameSuffix.replace(".", "-")));
@@ -279,8 +284,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             }
         } else {
             project.getLogger().lifecycle(
-                    "[WARN] [Java Module Dependencies] No mapping registered for module: " + moduleDebugInfo(moduleName, moduleInfoFile, project.getRootDir()) +
-                            " - use 'javaModuleDependencies.moduleNameToGA.put(\"" + moduleName + "\", \"group:artifact\")' to add mapping.");
+                    "[WARN] [Java Module Dependencies] javaModuleDependencies.moduleNameToGA.put(\"" + moduleName + "\", \"group:artifact\") mapping is missing.");
         }
     }
 
