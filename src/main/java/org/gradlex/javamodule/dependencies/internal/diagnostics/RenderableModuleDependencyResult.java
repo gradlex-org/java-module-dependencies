@@ -52,7 +52,12 @@ public class RenderableModuleDependencyResult extends RenderableDependencyResult
             if (d instanceof UnresolvedDependencyResult) {
                 out.add(new RenderableUnresolvedDependencyResult((UnresolvedDependencyResult) d));
             } else {
-                out.add(new RenderableModuleDependencyResult((ResolvedDependencyResult) d, resolvedJars));
+                ResolvedDependencyResult resolved = (ResolvedDependencyResult) d;
+                ResolvedArtifactResult artifact = resolvedJars.stream().filter(a ->
+                        a.getId().getComponentIdentifier().equals(resolved.getSelected().getId())).findFirst().orElse(null);
+                if (artifact != null) {
+                    out.add(new RenderableModuleDependencyResult(resolved, resolvedJars));
+                }
             }
         }
         return out;
