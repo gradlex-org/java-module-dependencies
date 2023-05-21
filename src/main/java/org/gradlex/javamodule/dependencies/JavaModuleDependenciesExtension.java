@@ -17,9 +17,13 @@
 package org.gradlex.javamodule.dependencies;
 
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.VersionCatalog;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
 import org.gradle.api.artifacts.VersionConstraint;
+import org.gradle.api.artifacts.dsl.DependencyHandler;
+import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
@@ -37,6 +41,7 @@ import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
 
 import javax.inject.Inject;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -232,6 +237,26 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     /**
+     * Use consistent resolution to manage versions consistently through in the main application project(s).
+     *
+     * @param versionsProvidingProjects projects which runtime classpaths are the runtime classpaths of the applications/services being built.
+     */
+    public void versionsFromConsistentResolution(String... versionsProvidingProjects) {
+        Configuration mainRuntimeClasspath = getConfigurations().create("mainRuntimeClasspath", c -> {
+            c.setCanBeConsumed(false);
+            c.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, getObjects().named(Usage.class, Usage.JAVA_RUNTIME));
+        });
+        getConfigurations().all(c -> {
+            if (c != mainRuntimeClasspath) {
+                c.shouldResolveConsistentlyWith(mainRuntimeClasspath);
+            }
+        });
+        for (String versionsProvidingProject : versionsProvidingProjects) {
+            getDependencies().add(mainRuntimeClasspath.getName(), getDependencies().project(Collections.singletonMap("path", versionsProvidingProject)));
+        }
+    }
+
+    /**
      * Adds support for compiling module-info.java in the given source set with the given task,
      * if 'requires runtime' dependencies are used.
      *
@@ -275,6 +300,12 @@ public abstract class JavaModuleDependenciesExtension {
 
     @Inject
     protected abstract ProjectLayout getLayout();
+
+    @Inject
+    protected abstract DependencyHandler getDependencies();
+
+    @Inject
+    protected abstract ConfigurationContainer getConfigurations();
 
     ModuleInfoCache getModuleInfoCache() {
         return moduleInfoCache;
