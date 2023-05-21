@@ -83,11 +83,20 @@ public abstract class JavaModuleDependenciesExtension {
      */
     public abstract Property<String> getVersionCatalogName();
 
+    /**
+     * Set this to true to use the analytic help tasks (like :moduleDependencies) of the plugin without performing
+     * the actual dependency calculation.
+     *
+     * @return true – for analyse-only mode
+     */
+    public abstract Property<Boolean> getAnalyseOnly();
+
     public JavaModuleDependenciesExtension(VersionCatalogsExtension versionCatalogs) {
         this.versionCatalogs = versionCatalogs;
         this.moduleInfoCache = getObjects().newInstance(ModuleInfoCache.class);
         getWarnForMissingVersions().convention(versionCatalogs != null);
         getVersionCatalogName().convention("libs");
+        getAnalyseOnly().convention(false);
         getModuleNameToGA().putAll(SharedMappings.mappings);
     }
 

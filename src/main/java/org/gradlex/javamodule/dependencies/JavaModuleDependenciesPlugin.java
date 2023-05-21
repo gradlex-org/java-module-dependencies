@@ -234,6 +234,9 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
     }
 
     private void readModuleInfo(ModuleInfo.Directive moduleDirective, SourceSet sourceSet, Project project, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependenciesExtension) {
+        if (javaModuleDependenciesExtension.getAnalyseOnly().get()) {
+            return;
+        }
         ModuleInfo moduleInfo = javaModuleDependenciesExtension.getModuleInfoCache().get(sourceSet);
         String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName());
         for (String moduleName : moduleInfo.get(moduleDirective)) {
