@@ -23,6 +23,7 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.capabilities.Capability;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.tasks.Input;
@@ -69,7 +70,7 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
             ).filter(a ->
                     sourceSet.getKey().equals(sourceSetName(a.getToConfiguration()))
             ).map(a ->
-                    declaration(a.getToConfiguration(), a.getCoordinates().getIdentifier())
+                    declaration(a.getToConfiguration(), a.getCoordinates().getIdentifier(), a.getCoordinates().getGradleVariantIdentification().getCapabilities())
             ).sorted().collect(Collectors.toList());
 
             List<String> toRemove = projectAdvice.stream().filter(a ->
@@ -77,7 +78,7 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
             ).filter(a ->
                     sourceSet.getKey().equals(sourceSetName(a.getFromConfiguration()))
             ).map(a ->
-                    declaration(a.getFromConfiguration(), a.getCoordinates().getIdentifier())
+                    declaration(a.getFromConfiguration(), a.getCoordinates().getIdentifier(), a.getCoordinates().getGradleVariantIdentification().getCapabilities())
             ).sorted().collect(Collectors.toList());
 
             if (!toAdd.isEmpty() || !toRemove.isEmpty()) {
@@ -88,11 +89,11 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
             }
             if (!toAdd.isEmpty()) {
                 message.append("\n\nPlease add the following requires directives:");
-                message.append("\n    ").append(String.join(";\n    ", toAdd)).append(";");
+                message.append("\n    ").append(String.join("\n    ", toAdd));
             }
             if (!toRemove.isEmpty()) {
                 message.append("\n\nPlease remove the following requires directives:");
-                message.append("\n    ").append(String.join(";\n    ", toRemove)).append(";");
+                message.append("\n    ").append(String.join("\n    ", toRemove));
             }
         }
         if (message.length() > 0) {
@@ -100,17 +101,23 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
         }
     }
 
-    private String declaration(String conf, String coordinates) {
+    private String declaration(String conf, String coordinates, Set<String> capabilities) {
+        String capability = capabilities.isEmpty() ? coordinates : capabilities.iterator().next();
         ResolvedArtifactResult moduleJar = getModuleArtifacts().get().stream().flatMap(c -> c.getArtifacts().stream()).filter(a ->
-                coordinatesEquals(coordinates, a.getId().getComponentIdentifier())).findFirst().orElse(null);
+                coordinatesEquals(coordinates, capability, a)).findFirst().orElse(null);
         try {
-            return directive(conf) + " " + (moduleJar == null ? coordinates : readNameFromModuleFromJarFile(moduleJar.getFile()));
+            return directive(conf) + " " + (moduleJar == null ? coordinates : readNameFromModuleFromJarFile(moduleJar.getFile())) + ";";
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private boolean coordinatesEquals(String coordinates, ComponentIdentifier id) {
+    private boolean coordinatesEquals(String coordinates, String capability, ResolvedArtifactResult selected) {
+        ComponentIdentifier id = selected.getId().getComponentIdentifier();
+        List<Capability> capabilities = selected.getVariant().getCapabilities();
+        if (capabilities.stream().noneMatch(c -> capability.endsWith(":" + c.getName()))) {
+            return false;
+        }
         if (id instanceof ModuleComponentIdentifier) {
             return coordinates.equals(((ModuleComponentIdentifier) id).getModuleIdentifier().toString());
         }
