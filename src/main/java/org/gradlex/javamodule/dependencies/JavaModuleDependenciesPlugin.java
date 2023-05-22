@@ -250,7 +250,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         Map<String, String> allProjectNamesAndGroups = project.getRootProject().getSubprojects().stream().collect(
                 Collectors.toMap(Project::getName, p -> (String) p.getGroup()));
 
-        Provider<Map<String, Object>> gav = javaModuleDependencies.gav(moduleName);
+        Provider<Map<String, Object>> gav = javaModuleDependencies.gavNoError(moduleName);
         String moduleNameSuffix = ownModuleNamesPrefix == null ? null :
                 moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) :
                         ownModuleNamesPrefix.isEmpty() ? moduleName : null;

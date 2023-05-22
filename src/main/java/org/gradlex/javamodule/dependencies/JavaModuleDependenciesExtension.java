@@ -113,7 +113,7 @@ public abstract class JavaModuleDependenciesExtension {
      * @return Dependency notation
      */
     public Provider<String> ga(String moduleName) {
-        return getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
+        return getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName))).orElse(errorIfNotFound(moduleName));
     }
 
     /**
@@ -124,7 +124,7 @@ public abstract class JavaModuleDependenciesExtension {
      * @return Dependency notation
      */
     public Provider<String> ga(Provider<String> moduleName) {
-        return moduleName.flatMap(n -> getModuleNameToGA().getting(n)).orElse(mapByPrefix(moduleName));
+        return moduleName.flatMap(n -> getModuleNameToGA().getting(n)).orElse(mapByPrefix(moduleName)).orElse(errorIfNotFound(moduleName));
     }
 
     private Provider<String> mapByPrefix(Provider<String> moduleName) {
@@ -177,6 +177,10 @@ public abstract class JavaModuleDependenciesExtension {
      */
     public Provider<Map<String, Object>> gav(String moduleName) {
         return ga(moduleName).map(ga -> findGav(ga, moduleName));
+    }
+
+    Provider<Map<String, Object>> gavNoError(String moduleName) {
+        return getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName))).map(ga -> findGav(ga, moduleName));
     }
 
     /**
@@ -290,6 +294,18 @@ public abstract class JavaModuleDependenciesExtension {
             return syntheticModuleInfoFolders;
         }
         return syntheticModuleInfoFolders;
+    }
+
+    private <T> Provider<T> errorIfNotFound(String moduleName) {
+        return getProviders().provider(() -> {
+            throw new RuntimeException("Unknown Module: " + moduleName);
+        });
+    }
+
+    private <T> Provider<T> errorIfNotFound(Provider<String> moduleName) {
+        return getProviders().provider(() -> {
+            throw new RuntimeException("Unknown Module: " + moduleName.get());
+        });
     }
 
     @Inject
