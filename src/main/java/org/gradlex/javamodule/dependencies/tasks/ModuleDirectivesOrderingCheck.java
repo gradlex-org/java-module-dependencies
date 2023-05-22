@@ -25,6 +25,7 @@ import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class ModuleDirectivesOrderingCheck extends DefaultTask {
 
@@ -42,7 +43,7 @@ public abstract class ModuleDirectivesOrderingCheck extends DefaultTask {
     public void checkOrder() {
         StringBuilder sb = new StringBuilder();
         for (ModuleInfo.Directive directive : ModuleInfo.Directive.values()) {
-            List<String> originalOrder = getModuleInfo().get().get(directive);
+            List<String> originalOrder = getModuleInfo().get().get(directive).stream().map(name -> name + ";").collect(Collectors.toList());
 
             List<String> sorted = new ArrayList<>(originalOrder);
             sorted.sort((m1, m2) -> {

@@ -44,9 +44,9 @@ class OrderingCheckTest extends Specification {
             |> app/src/main/java/module-info.java
             |  
             |  'requires' are not declared in alphabetical order. Please use this order:
-            |      requires a.b.c
-            |      requires b.f.g
-            |      requires b.z.u'''.stripMargin()
+            |      requires a.b.c;
+            |      requires b.f.g;
+            |      requires b.z.u;'''.stripMargin()
         )
     }
 
