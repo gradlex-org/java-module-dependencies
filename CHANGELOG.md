@@ -4,6 +4,8 @@
 * [#25](https://github.com/gradlex-org/java-module-dependencies/issues/25) Add 'moduleDependencies' help task - similar to 'dependencies' but with Module Names
 * [#27](https://github.com/gradlex-org/java-module-dependencies/issues/27) Add task to check scopes of requires directives (by integrating with 'dependency-analysis' plugin)
 * [#22](https://github.com/gradlex-org/java-module-dependencies/issues/22) Add task to check ordering (alphabetical) of requires directives
+* [#29](https://github.com/gradlex-org/java-module-dependencies/issues/29) Add convenience to enable consistent resolution
+* [#30](https://github.com/gradlex-org/java-module-dependencies/issues/30) Add an 'analyse only' mode
 * [#23](https://github.com/gradlex-org/java-module-dependencies/issues/23) Consider 'moduleNamePrefixToGroup' entries in: ga(), gav(), moduleName()
 
 ## Version 1.2
