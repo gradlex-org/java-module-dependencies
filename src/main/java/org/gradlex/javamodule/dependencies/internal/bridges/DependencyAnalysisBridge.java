@@ -16,7 +16,7 @@
 
 package org.gradlex.javamodule.dependencies.internal.bridges;
 
-import com.autonomousapps.DependencyAnalysisSubExtension;
+import com.autonomousapps.AbstractExtension;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
@@ -44,7 +44,7 @@ public class DependencyAnalysisBridge {
             t.getModuleArtifacts().add(project.provider(() -> rtClasspath.getIncoming().getArtifacts()));
         }));
 
-        project.getExtensions().getByType(DependencyAnalysisSubExtension.class)
+        project.getExtensions().getByType(AbstractExtension.class)
                 .registerPostProcessingTask(checkModuleDirectivesScope);
 
         checkAllModuleInfo.configure(t -> t.dependsOn(checkModuleDirectivesScope));
