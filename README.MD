@@ -167,21 +167,35 @@ dependencies {
 ## Define Module versions in a version catalog
 
 Alternatively, versions can be defined in the `[version]` block of a [version catalog](https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog).
-- *Note:* Since `.` is not supported, you need to use `_` as delimiter in the module names.
+- *Note, if you use the _libs.versions.toml_ notation:* Since `.` is not supported, you need to use `_` as delimiter in the module names.
+
+**settings.gradle.kts**
+
+```
+dependencyResolutionManagement {
+    versionCatalogs.create("libs") {
+        version("org.apache.xmlbeans", "5.0.1")
+        version("com.fasterxml.jackson.databind", "2.12.5")
+        version("org.slf4j", "2.0.7")
+        
+        version("org.junit.jupiter.api", "5.8.2")
+    }
+}
+```
 
 **gradle/libs.versions.toml**
 ```
 [versions]
 org_apache_xmlbeans = "5.0.1"
 com_fasterxml_jackson_databind = "2.12.5"
-org_slf4j = "1.7.32"
+org_slf4j = "2.0.7"
 
 org_junit_jupiter_api = "5.7.2"
 ```
 
 - _If_ you use a catalog, the plugin will warn if a version it looks for is missing.
   You can turn these warnings off using `warnForMissingVersions.set(false)`.
-- _If_ you use a catalog with a custom name (not `libs`), you can tell the plugin using `getVersionCatalogName.set("customName")`.
+- _If_ you use a catalog with a custom name (not `libs`), you can tell the plugin using `versionCatalogName.set("customName")`.
 
 ## Find the latest stable version of a Module
 
@@ -236,15 +250,82 @@ org_slf4j_simple = "1.7.36"
 
 ## Check module-info.java files
 
-You can use the `checkAllModuleInfo` check task to fail the build if require directives are not defined in alphabetical order in your `module-info.java` files.
+You can use the `checkAllModuleInfo` check task to validate all `module-info.java` files for the following:
+
+- Do the _requires_ directives correspond to what is needed in the source code?
+  To activate this functionality, you need to apply the [com.autonomousapps.dependency-analysis](https://github.com/autonomousapps/dependency-analysis-android-gradle-plugin) in the root project.
+- Are the _requires_ directives defined in alphabetical order?
 
 ## Analyze Module Paths
 
-You can use the `analyzeModulePath` help task to analyse the Module Paths of a project.
+You can use the `moduleDependencies` and `analyzeModulePath` help task to analyse the Module Paths of a project.
 It will show you which Modules are used and to which GAV coordinates they map.
 It will also print potential issues - like Jars that are not Modules
 (and are therefore put on the classpath)
 or wrong custom mappings from Module Names to GAs where the Jars are not Modules.
+
+```
+$ ./gradlew :app:moduleDependencies --configuration=runtimeClasspath -q
+
+------------------------------------------------------------
+Project ':app'
+------------------------------------------------------------
+
+runtimeClasspath - Runtime classpath of source set 'main'.
++--- org.example.product.bespin
+|    +--- org.example.product.corellia
+|    |    +--- org.apache.poi.poi (5.2.2)
+|    |    |    +--- org.apache.commons.codec (1.15)
+|    |    |    +--- org.apache.commons.collections4 (4.4)
+|    |    |    +--- commons.math3 (3.6.1)
+|    |    |    +--- org.apache.commons.io (2.11.0)
+|    |    |    +--- SparseBitSet (1.2)
+|    |    |    \--- org.apache.logging.log4j (2.17.2)
+|    |    +--- org.apache.commons.io (2.11.0)
+|    |    \--- org.apache.poi.ooxml (5.2.2)
+|    |         +--- org.apache.poi.poi (5.2.2) (*)
+|    |         +--- org.apache.poi.ooxml.schemas (5.2.2)
+|    |         |    \--- org.apache.xmlbeans (5.0.3)
+|    |         |         \--- org.apache.logging.log4j (2.17.2)
+|    |         +--- org.apache.xmlbeans (5.0.3) (*)
+|    |         +--- org.apache.commons.compress (1.21)
+|    |         +--- org.apache.commons.io (2.11.0)
+|    |         +--- com.github.virtuald.curvesapi (1.07)
+|    |         +--- org.apache.logging.log4j (2.17.2)
+|    |         \--- org.apache.commons.collections4 (4.4)
+|    +--- org.example.product.coruscant
+|    |    +--- com.fasterxml.jackson.annotation (2.13.4)
+|    |    +--- com.fasterxml.jackson.databind (2.13.4)
+|    |    |    +--- com.fasterxml.jackson.annotation (2.13.4)
+|    |    |    \--- com.fasterxml.jackson.core (2.13.4)
+|    |    +--- com.google.common (30.1-jre)
+|    |    +--- java.inject (1.0.5)
+|    |    +--- com.fasterxml.jackson.core (2.13.4)
+|    |    +--- com.fasterxml.jackson.datatype.jsr310 (2.13.4)
+|    |    |    +--- com.fasterxml.jackson.annotation (2.13.4)
+|    |    |    +--- com.fasterxml.jackson.core (2.13.4)
+|    |    |    \--- com.fasterxml.jackson.databind (2.13.4) (*)
+|    |    +--- jakarta.activation (1.2.2)
+|    |    +--- jakarta.mail (1.6.7)
+|    |    |    \--- jakarta.activation (1.2.2)
+|    |    \--- org.slf4j (2.0.3)
+|    \--- velocity.engine.core (2.3)
+|         +--- org.apache.commons.lang3 (3.11)
+|         \--- org.slf4j (2.0.3)
++--- org.example.product.corellia (*)
++--- org.example.product.kamino
+|    \--- org.example.product.coruscant (*)
++--- org.example.product.kashyyyk
+|    +--- org.example.product.naboo
+|    +--- org.example.product.tatooine
+|    +--- org.example.product.bespin (*)
+|    \--- org.example.product.kamino (*)
++--- org.example.product.naboo
++--- org.example.product.tatooine
++--- jakarta.servlet (6.0.0)
+\--- org.slf4j (2.0.3)
+```
+
 
 ```
 $ ./gradlew :app:analyzeModulePath -q
