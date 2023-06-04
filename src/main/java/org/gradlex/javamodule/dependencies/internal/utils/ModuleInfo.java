@@ -91,6 +91,9 @@ public class ModuleInfo implements Serializable {
         if (moduleName.endsWith("." + projectPlusSourceSetName)) {
             return moduleName.substring(0, moduleName.length() - projectPlusSourceSetName.length() - 1);
         }
+        if (moduleName.equals(projectPlusSourceSetName)) {
+            return "";
+        }
         if (moduleName.endsWith("." + projectName)) {
             return moduleName.substring(0, moduleName.length() - projectName.length() - 1);
         }

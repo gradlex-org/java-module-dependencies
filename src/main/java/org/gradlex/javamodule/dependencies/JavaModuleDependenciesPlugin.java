@@ -267,11 +267,13 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             projectDependency.because(moduleName);
         } else if (existingProjectName.isPresent()) {
             // no exact match -> add capability to point at Module in other source set
+            String projectName = existingProjectName.get();
             ProjectDependency projectDependency = (ProjectDependency) project.getDependencies().add(
-                    configuration.getName(), project.project(parentPath + ":" + existingProjectName.get()));
+                    configuration.getName(), project.project(parentPath + ":" + projectName));
             assert projectDependency != null;
+            String capabilityName = projectName + moduleNameSuffix.substring(projectName.length()).replace(".", "-");
             projectDependency.capabilities(c -> c.requireCapabilities(
-                    allProjectNamesAndGroups.get(existingProjectName.get()) + ":" + moduleNameSuffix.replace(".", "-")));
+                    allProjectNamesAndGroups.get(projectName) + ":" + capabilityName));
             projectDependency.because(moduleName);
         } else if (gav.isPresent()) {
             project.getDependencies().addProvider(configuration.getName(), gav, d -> d.because(moduleName));
