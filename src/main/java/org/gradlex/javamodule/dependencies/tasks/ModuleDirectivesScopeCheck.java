@@ -65,12 +65,13 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
 
         StringBuilder message = new StringBuilder();
         for (Map.Entry<String, String> sourceSet : getSourceSets().get().entrySet()) {
+            boolean inBuildFile = !sourceSet.getValue().endsWith("module-info.java");
             List<String> toAdd = projectAdvice.stream().filter(a ->
                     a.getToConfiguration() != null && !RUNTIME_ONLY_CONFIGURATION_NAME.equals(getScope(a.getToConfiguration()).orElse(null))
             ).filter(a ->
                     sourceSet.getKey().equals(sourceSetName(a.getToConfiguration()))
             ).map(a ->
-                    declaration(a.getToConfiguration(), a.getCoordinates().getIdentifier(), a.getCoordinates().getGradleVariantIdentification().getCapabilities())
+                    declaration(a.getToConfiguration(), a.getCoordinates().getIdentifier(), a.getCoordinates().getGradleVariantIdentification().getCapabilities(), inBuildFile)
             ).sorted().collect(Collectors.toList());
 
             List<String> toRemove = projectAdvice.stream().filter(a ->
@@ -78,7 +79,7 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
             ).filter(a ->
                     sourceSet.getKey().equals(sourceSetName(a.getFromConfiguration()))
             ).map(a ->
-                    declaration(a.getFromConfiguration(), a.getCoordinates().getIdentifier(), a.getCoordinates().getGradleVariantIdentification().getCapabilities())
+                    declaration(a.getFromConfiguration(), a.getCoordinates().getIdentifier(), a.getCoordinates().getGradleVariantIdentification().getCapabilities(), inBuildFile)
             ).sorted().collect(Collectors.toList());
 
             if (!toAdd.isEmpty() || !toRemove.isEmpty()) {
@@ -92,7 +93,7 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
                 message.append("\n    ").append(String.join("\n    ", toAdd));
             }
             if (!toRemove.isEmpty()) {
-                message.append("\n\nPlease remove the following requires directives:");
+                message.append("\n\nPlease remove the following requires directives (or change to runtimeOnly):");
                 message.append("\n    ").append(String.join("\n    ", toRemove));
             }
         }
@@ -101,12 +102,20 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
         }
     }
 
-    private String declaration(String conf, String coordinates, Set<String> capabilities) {
+    private String declaration(String conf, String coordinates, Set<String> capabilities, boolean inBuildFile) {
         String capability = capabilities.isEmpty() ? coordinates : capabilities.iterator().next();
         ResolvedArtifactResult moduleJar = getModuleArtifacts().get().stream().flatMap(c -> c.getArtifacts().stream()).filter(a ->
                 coordinatesEquals(coordinates, capability, a)).findFirst().orElse(null);
         try {
-            return directive(conf) + " " + (moduleJar == null ? coordinates : readNameFromModuleFromJarFile(moduleJar.getFile())) + ";";
+            String moduleName = moduleJar == null ? coordinates : readNameFromModuleFromJarFile(moduleJar.getFile());
+            if (inBuildFile) {
+                return conf + (coordinates.startsWith(":")
+                        ? "(project(\"" + coordinates + "\"))"
+                        : "(gav(\"" + moduleName + "\"))"
+                );
+            } else {
+                return directive(conf) + " " + moduleName + ";";
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

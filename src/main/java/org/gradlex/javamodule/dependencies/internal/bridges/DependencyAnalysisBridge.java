@@ -24,6 +24,8 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesScopeCheck;
 
+import java.io.File;
+
 public class DependencyAnalysisBridge {
 
     public static void registerDependencyAnalysisPostProcessingTask(Project project, TaskProvider<Task> checkAllModuleInfo) {
@@ -33,10 +35,13 @@ public class DependencyAnalysisBridge {
                 project.getTasks().register("checkModuleDirectivesScope", ModuleDirectivesScopeCheck.class);
 
         sourceSets.all(sourceSet -> checkModuleDirectivesScope.configure(t -> {
+            File moduleInfo = new File(sourceSet.getJava().getSrcDirs().iterator().next(), "module-info.java");
+            if (!moduleInfo.exists()) {
+                moduleInfo = project.getBuildFile(); // no module-info: dependencies are declared in build file
+            }
             t.getSourceSets().put(
                     sourceSet.getName(),
-                    project.getLayout().getProjectDirectory().getAsFile().getParentFile().toPath().relativize(
-                            sourceSet.getJava().getSrcDirs().iterator().next().toPath()).resolve("module-info.java").toString());
+                    project.getLayout().getProjectDirectory().getAsFile().getParentFile().toPath().relativize(moduleInfo.toPath()).toString());
 
             Configuration cpClasspath = project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
             Configuration rtClasspath = project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName());
