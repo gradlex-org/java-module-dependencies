@@ -1,5 +1,11 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.3.1
+
+* Fix integration with analysis plugin if root projects are involved
+* Fix in module name calculation for additional source sets
+* Improve dependency analysis reporting for source sets without module-info.java 
+
 ## Version 1.3
 * [#25](https://github.com/gradlex-org/java-module-dependencies/issues/25) Add 'moduleDependencies' help task - similar to 'dependencies' but with Module Names
 * [#27](https://github.com/gradlex-org/java-module-dependencies/issues/27) Add task to check scopes of requires directives (by integrating with 'dependency-analysis' plugin)
