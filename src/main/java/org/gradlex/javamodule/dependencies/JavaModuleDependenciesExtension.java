@@ -16,9 +16,12 @@
 
 package org.gradlex.javamodule.dependencies;
 
+import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.VersionCatalog;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
 import org.gradle.api.artifacts.VersionConstraint;
@@ -41,11 +44,14 @@ import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
 
 import javax.inject.Inject;
+import java.io.File;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.Optional.empty;
 
@@ -142,6 +148,53 @@ public abstract class JavaModuleDependenciesExtension {
         );
     }
 
+    public Provider<Dependency> create(String moduleName, SourceSet sourceSetWithModuleInfo) {
+        return getProviders().provider(() -> {
+            Map<String, String> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream().collect(
+                    Collectors.toMap(Project::getName, p -> (String) p.getGroup()));
+
+            Provider<Map<String, Object>> gav = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName))).map(ga -> findGav(ga, moduleName));
+
+            ModuleInfo moduleInfo = getModuleInfoCache().get(sourceSetWithModuleInfo);
+            String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(getProject().getName(), sourceSetWithModuleInfo.getName());
+
+            String moduleNameSuffix = ownModuleNamesPrefix == null ? null :
+                    moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) :
+                            ownModuleNamesPrefix.isEmpty() ? moduleName : null;
+
+            String parentPath = getProject().getParent() == null ? "" : getProject().getParent().getPath();
+            Optional<String> perfectMatch = allProjectNamesAndGroups.keySet().stream().filter(p -> p.replace("-", ".").equals(moduleNameSuffix)).findFirst();
+            Optional<String> existingProjectName = allProjectNamesAndGroups.keySet().stream().filter(p -> moduleNameSuffix != null && moduleNameSuffix.startsWith(p.replace("-", ".") + "."))
+                    .max(Comparator.comparingInt(String::length));
+
+            if (perfectMatch.isPresent()) {
+                Dependency projectDependency = getDependencies().create(getProject().project(parentPath + ":" + perfectMatch.get()));
+                projectDependency.because(moduleName);
+                return projectDependency;
+            } else if (existingProjectName.isPresent()) {
+                // no exact match -> add capability to point at Module in other source set
+                String projectName = existingProjectName.get();
+                ProjectDependency projectDependency = (ProjectDependency) getDependencies().create(getProject().project(parentPath + ":" + projectName));
+                String capabilityName = projectName + moduleNameSuffix.substring(projectName.length()).replace(".", "-");
+                projectDependency.capabilities(c -> c.requireCapabilities(
+                        allProjectNamesAndGroups.get(projectName) + ":" + capabilityName));
+                projectDependency.because(moduleName);
+                return projectDependency;
+            } else if (gav.isPresent()) {
+                Dependency dependency = getDependencies().create(gav.get());
+                dependency.because(moduleName);
+                if (!gav.get().containsKey(GAV.VERSION)) {
+                    warnVersionMissing(moduleName, gav.get(), moduleInfo.getFilePath());
+                }
+                return dependency;
+            } else {
+                getProject().getLogger().lifecycle(
+                        "[WARN] [Java Module Dependencies] javaModuleDependencies.moduleNameToGA.put(\"" + moduleName + "\", \"group:artifact\") mapping is missing.");
+                return null;
+            }
+        });
+    }
+
     /**
      * Converts 'Module Name' and 'Version' to GAV coordinates that can be used in
      * dependency declarations as String: "group:name:version"
@@ -177,10 +230,6 @@ public abstract class JavaModuleDependenciesExtension {
      */
     public Provider<Map<String, Object>> gav(String moduleName) {
         return ga(moduleName).map(ga -> findGav(ga, moduleName));
-    }
-
-    Provider<Map<String, Object>> gavNoError(String moduleName) {
-        return getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName))).map(ga -> findGav(ga, moduleName));
     }
 
     /**
@@ -307,6 +356,23 @@ public abstract class JavaModuleDependenciesExtension {
             throw new RuntimeException("Unknown Module: " + moduleName.get());
         });
     }
+
+    private void warnVersionMissing(String moduleName, Map<String, Object> ga, File moduleInfoFile) {
+        if (getWarnForMissingVersions().get()) {
+            getProject().getLogger().warn("[WARN] [Java Module Dependencies] No version defined in catalog - " + ga.get(GAV.GROUP) + ":" + ga.get(GAV.ARTIFACT) + " - "
+                    + moduleDebugInfo(moduleName.replace('.', '_'), moduleInfoFile, getProject().getRootDir()));
+        }
+    }
+
+    private String moduleDebugInfo(String moduleName, File moduleInfoFile, File rootDir) {
+        return moduleName
+                + " (required in "
+                + moduleInfoFile.getAbsolutePath().substring(rootDir.getAbsolutePath().length() + 1)
+                + ")";
+    }
+
+    @Inject
+    protected abstract Project getProject();
 
     @Inject
     protected abstract ObjectFactory getObjects();
