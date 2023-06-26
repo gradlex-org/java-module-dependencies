@@ -42,6 +42,11 @@ pluginPublishConventions {
     }
 }
 
+gradlePlugin.plugins.create("java-module-versions") {
+    id = "${project.group}.${name}"
+    implementationClass = "org.gradlex.javamodule.dependencies.JavaModuleVersionsPlugin"
+}
+
 tasks.test {
     useJUnitPlatform()
     maxParallelForks = 4
