@@ -45,12 +45,16 @@ import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readN
 public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingTask {
 
     private static final Map<String, String> SCOPES_TO_DIRECTIVES = new HashMap<>();
+    private static final Map<String, String> SCOPES_TO_DIRECTIVES_BUILD_FILE_DSL = new HashMap<>();
     static {
         SCOPES_TO_DIRECTIVES.put("compileOnlyApi", "requires static transitive");
         SCOPES_TO_DIRECTIVES.put("compileOnly", "requires static");
         SCOPES_TO_DIRECTIVES.put("api", "requires transitive");
         SCOPES_TO_DIRECTIVES.put("implementation", "requires");
-        SCOPES_TO_DIRECTIVES.put("runtimeOnly", "requires /*runtime*/");
+        SCOPES_TO_DIRECTIVES_BUILD_FILE_DSL.put("compileOnlyApi", "requiresStaticTransitive");
+        SCOPES_TO_DIRECTIVES_BUILD_FILE_DSL.put("compileOnly", "requiresStatic");
+        SCOPES_TO_DIRECTIVES_BUILD_FILE_DSL.put("api", "requiresTransitive");
+        SCOPES_TO_DIRECTIVES_BUILD_FILE_DSL.put("implementation", "requires");
     }
 
     @Input
@@ -90,7 +94,13 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
             }
             if (!toAdd.isEmpty()) {
                 message.append("\n\nPlease add the following requires directives:");
+                if (inBuildFile) {
+                    message.append("\n  ").append(sourceSet.getKey()).append("ModuleInfo {");
+                }
                 message.append("\n    ").append(String.join("\n    ", toAdd));
+                if (inBuildFile) {
+                    message.append("\n  }");
+                }
             }
             if (!toRemove.isEmpty()) {
                 message.append("\n\nPlease remove the following requires directives (or change to runtimeOnly):");
@@ -109,12 +119,9 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
         try {
             String moduleName = moduleJar == null ? coordinates : readNameFromModuleFromJarFile(moduleJar.getFile());
             if (inBuildFile) {
-                return conf + (coordinates.startsWith(":")
-                        ? "(project(\"" + coordinates + "\"))"
-                        : "(gav(\"" + moduleName + "\"))"
-                );
+                return directive(conf, SCOPES_TO_DIRECTIVES_BUILD_FILE_DSL) + "(\"" + moduleName + "\")";
             } else {
-                return directive(conf) + " " + moduleName + ";";
+                return directive(conf, SCOPES_TO_DIRECTIVES) + " " + moduleName + ";";
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -145,8 +152,8 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
         return sourceSet.isEmpty() ? "main" : sourceSet;
     }
 
-    private String directive(String configurationName) {
-        return getScope(configurationName).map(SCOPES_TO_DIRECTIVES::get).orElse(null);
+    private String directive(String configurationName, Map<String, String> scopesToDirectives) {
+        return getScope(configurationName).map(scopesToDirectives::get).orElse(null);
     }
 
     private Optional<String> getScope(String configurationName) {
