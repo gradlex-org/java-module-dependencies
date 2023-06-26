@@ -39,7 +39,6 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 
 import javax.inject.Inject;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
