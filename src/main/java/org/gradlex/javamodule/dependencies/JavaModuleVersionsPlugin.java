@@ -20,9 +20,16 @@ import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.attributes.Usage;
+import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPlatformPlugin;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradlex.javamodule.dependencies.dsl.ModuleVersions;
+
+import static org.gradle.api.attributes.Usage.JAVA_RUNTIME;
+import static org.gradle.api.plugins.JavaPlatformPlugin.API_CONFIGURATION_NAME;
 
 @SuppressWarnings("unused")
 @NonNullApi
@@ -30,17 +37,41 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getPlugins().withType(JavaPlugin.class, javaPlugin -> setupForProject(project));
-        project.getPlugins().withType(JavaPlatformPlugin.class, javaPlugin -> setupForProject(project));
+        project.getPlugins().withType(JavaPlatformPlugin.class, plugin -> setupForJavaPlatformProject(project));
+        project.getPlugins().withType(JavaPlugin.class, plugin -> setupForJavaProject(project));
     }
 
-    private void setupForProject(Project project) {
+    private void setupForJavaPlatformProject(Project project) {
+        setupVersionsDSL(project, project.getConfigurations().getByName(API_CONFIGURATION_NAME));
+    }
+
+    private void setupForJavaProject(Project project) {
+        ObjectFactory objects = project.getObjects();
+        SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
+
+        Configuration versions = project.getConfigurations().create("versions", c -> {
+            c.setCanBeResolved(false);
+            c.setCanBeConsumed(false);
+        });
+
+        project.getConfigurations().create("platformElements", c -> {
+            c.setCanBeResolved(false);
+            c.setCanBeConsumed(true);
+            c.setVisible(false);
+            c.extendsFrom(versions);
+            c.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.class, JAVA_RUNTIME));
+            // c.getAttributes().attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.class, REGULAR_PLATFORM));
+            ((ConfigurationInternal) c).beforeLocking(conf -> {
+                c.getOutgoing().capability(project.getGroup() + ":" + project.getName() + "-platform:" + project.getVersion());
+            });
+        });
+
+        setupVersionsDSL(project, versions);
+    }
+
+    private void setupVersionsDSL(Project project, Configuration configuration) {
         project.getPlugins().apply(JavaModuleDependenciesPlugin.class);
         JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
-        Configuration configuration = project.getConfigurations().findByName(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME);
-        if (configuration == null) {
-            configuration = project.getConfigurations().getByName(JavaPlatformPlugin.API_CONFIGURATION_NAME);
-        }
         project.getExtensions().create("moduleInfo", ModuleVersions.class, configuration, javaModuleDependencies);
     }
 

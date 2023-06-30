@@ -21,6 +21,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.VersionCatalog;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
@@ -37,6 +38,7 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradlex.javamodule.dependencies.internal.compile.AddSyntheticModulesToCompileClasspathAction;
@@ -45,6 +47,7 @@ import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -299,14 +302,40 @@ public abstract class JavaModuleDependenciesExtension {
             c.setCanBeConsumed(false);
             c.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, getObjects().named(Usage.class, Usage.JAVA_RUNTIME));
         });
-        getConfigurations().all(c -> {
-            if (c != mainRuntimeClasspath) {
+        getConfigurations().configureEach(c -> {
+            if (c.isCanBeResolved() && c != mainRuntimeClasspath) {
                 c.shouldResolveConsistentlyWith(mainRuntimeClasspath);
             }
         });
         for (String versionsProvidingProject : versionsProvidingProjects) {
-            getDependencies().add(mainRuntimeClasspath.getName(), getDependencies().project(Collections.singletonMap("path", versionsProvidingProject)));
+            getDependencies().add(mainRuntimeClasspath.getName(), createDependency(versionsProvidingProject));
         }
+    }
+
+    public void versionsFromPlatformAndConsistentResolution(String platformProject, String... versionsProvidingProjects) {
+        boolean platformInJavaProject = Arrays.asList(versionsProvidingProjects).contains(platformProject);
+        getSourceSets().configureEach(sourceSet -> getConfigurations().getByName(sourceSet.getImplementationConfigurationName()).withDependencies(d -> {
+            Dependency platformDependency = getDependencies().platform(createDependency(platformProject));
+            if (platformInJavaProject) {
+                if (platformProject.startsWith(":")) {
+                    String capability = ((ProjectDependency) platformDependency).getDependencyProject().getGroup() + platformProject + "-platform";
+                    ((ProjectDependency) platformDependency).capabilities(c -> c.requireCapability(capability));
+                } else if (platformDependency instanceof ModuleDependency) {
+                    String capability = platformProject + "-platform";
+                    ((ModuleDependency) platformDependency).capabilities(c -> c.requireCapability(capability));
+                }
+            }
+            d.add(platformDependency);
+        }));
+
+        versionsFromConsistentResolution(versionsProvidingProjects);
+    }
+
+    private Dependency createDependency(String project) {
+        boolean isProjectInBuild = project.startsWith(":");
+        return getDependencies().create(isProjectInBuild
+                ? getDependencies().project(Collections.singletonMap("path", project))
+                : project);
     }
 
     /**
@@ -388,6 +417,9 @@ public abstract class JavaModuleDependenciesExtension {
 
     @Inject
     protected abstract ConfigurationContainer getConfigurations();
+
+    @Inject
+    protected abstract SourceSetContainer getSourceSets();
 
     ModuleInfoCache getModuleInfoCache() {
         return moduleInfoCache;
