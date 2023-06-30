@@ -21,12 +21,17 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class GradleOnlyDirectives {
 
     protected final SourceSet sourceSet;
     protected final SourceSet mainSourceSet;
     protected final JavaModuleDependenciesExtension javaModuleDependencies;
+
+    protected final List<String> compileClasspathModules = new ArrayList<>();
+    protected final List<String> runtimeClasspathModules = new ArrayList<>();
 
     @Inject
     protected abstract DependencyHandler getDependencies();
@@ -42,6 +47,7 @@ public abstract class GradleOnlyDirectives {
     }
 
     public void runtimeOnly(String moduleName) {
+        runtimeClasspathModules.add(moduleName);
         add(sourceSet.getRuntimeOnlyConfigurationName(), moduleName);
     }
 

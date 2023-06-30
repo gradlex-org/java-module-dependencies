@@ -26,18 +26,24 @@ abstract public class AllDirectives extends GradleOnlyDirectives {
     }
 
     public void requires(String moduleName) {
+        runtimeClasspathModules.add(moduleName);
+        compileClasspathModules.add(moduleName);
         add(sourceSet.getImplementationConfigurationName(), moduleName);
     }
 
     public void requiresTransitive(String moduleName) {
+        runtimeClasspathModules.add(moduleName);
+        compileClasspathModules.add(moduleName);
         add(sourceSet.getApiConfigurationName(), moduleName);
     }
 
     public void requiresStatic(String moduleName) {
+        compileClasspathModules.add(moduleName);
         add(sourceSet.getCompileOnlyConfigurationName(), moduleName);
     }
 
     public void requiresStaticTransitive(String moduleName) {
+        compileClasspathModules.add(moduleName);
         add(sourceSet.getCompileOnlyApiConfigurationName(), moduleName);
     }
 }
