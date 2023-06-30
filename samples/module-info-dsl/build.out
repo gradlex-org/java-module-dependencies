@@ -1,0 +1,41 @@
+> Task :lib:compileJava
+> Task :lib:processResources NO-SOURCE
+> Task :lib:classes
+> Task :lib:jar
+> Task :app:compileJava
+> Task :app:processResources NO-SOURCE
+> Task :app:classes
+> Task :app:jar
+> Task :app:startScripts
+> Task :app:distTar
+> Task :app:distZip
+> Task :app:assemble
+> Task :app:compileTestJava
+> Task :app:processTestResources
+> Task :app:testClasses
+> Task :app:test
+> Task :app:compileTestFunctionalJava
+> Task :app:processTestFunctionalResources
+> Task :app:testFunctionalClasses
+> Task :app:testFunctionalJar
+> Task :app:testFunctional
+> Task :app:check
+> Task :app:build
+> Task :lib:assemble
+> Task :lib:compileTestJava
+> Task :lib:processTestResources
+> Task :lib:testClasses
+> Task :lib:test
+> Task :lib:compileTestFunctionalJava
+> Task :lib:processTestFunctionalResources
+> Task :lib:testFunctionalClasses
+> Task :lib:testFunctionalJar
+> Task :lib:testFunctional
+> Task :lib:check
+> Task :lib:build
+> Task :versions:assemble UP-TO-DATE
+> Task :versions:check UP-TO-DATE
+> Task :versions:build UP-TO-DATE
+
+> Task :app:run
+[main] INFO org.example.app.App - App running...
