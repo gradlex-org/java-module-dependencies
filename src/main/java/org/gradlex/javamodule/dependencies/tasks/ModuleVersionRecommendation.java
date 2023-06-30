@@ -114,7 +114,7 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
                 String version = moduleVersion.getVersion();
                 Provider<String> moduleName = javaModuleDependencies.moduleName(ga);
                 if (moduleName.isPresent()) {
-                    moduleVersionsPlatform.add("        api(gav(\"" + moduleName + "\", \"" + version + "\"))");
+                    moduleVersionsPlatform.add("    version(\"" + moduleName.get() + "\", \"" + version + "\")");
                     moduleVersionsCatalog.add(moduleName.get().replace('.', '_') + " = \"" + version + "\"");
                 }
             }
@@ -124,12 +124,10 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
             p("");
             p("Latest Stable Versions of Java Modules - use in your platform project's build.gradle(.kts)");
             p("==========================================================================================");
-            p("dependencies.constraints {");
-            p("    javaModuleDependencies {");
+            p("moduleInfo {");
             for (String entry : moduleVersionsPlatform) {
                 p(entry);
             }
-            p("    }");
             p("}");
         }
 
