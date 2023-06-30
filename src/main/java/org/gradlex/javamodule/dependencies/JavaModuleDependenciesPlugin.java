@@ -34,6 +34,8 @@ import org.gradlex.javamodule.dependencies.dsl.AllDirectives;
 import org.gradlex.javamodule.dependencies.dsl.GradleOnlyDirectives;
 import org.gradlex.javamodule.dependencies.internal.bridges.DependencyAnalysisBridge;
 import org.gradlex.javamodule.dependencies.internal.bridges.ExtraJavaModuleInfoBridge;
+import org.gradlex.javamodule.dependencies.internal.dsl.AllDirectivesInternal;
+import org.gradlex.javamodule.dependencies.internal.dsl.GradleOnlyDirectivesInternal;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDependencyReport;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck;
@@ -119,9 +121,9 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             File moduleInfoFile = new File(sourceSet.getJava().getSrcDirs().iterator().next(), "module-info.java");
             String extensionName = sourceSet.getName() + "ModuleInfo";
             if (moduleInfoFile.exists()) {
-                extensions.create(extensionName, GradleOnlyDirectives.class, sourceSet, mainSourceSet, javaModuleDependencies);
+                extensions.create(GradleOnlyDirectives.class, extensionName, GradleOnlyDirectivesInternal.class, sourceSet, mainSourceSet, javaModuleDependencies);
             } else {
-                extensions.create(extensionName, AllDirectives.class, sourceSet, mainSourceSet, javaModuleDependencies);
+                extensions.create(AllDirectives.class, extensionName, AllDirectivesInternal.class, sourceSet, mainSourceSet, javaModuleDependencies);
             }
         });
     }
