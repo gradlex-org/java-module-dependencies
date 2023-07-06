@@ -49,4 +49,5 @@ tasks.test {
 
 dependencies {
     testRuntimeOnly(javaModuleDependencies.gav("org.junit.jupiter.engine"))
+    testRuntimeOnly(javaModuleDependencies.gav("org.junit.platform.launcher"))
 }
