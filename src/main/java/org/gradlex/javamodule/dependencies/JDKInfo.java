@@ -79,6 +79,8 @@ interface JDKInfo {
             "jdk.sctp",
             "jdk.security.auth",
             "jdk.security.jgss",
+            "jdk.unsupported",
+            "jdk.unsupported.desktop",
             "jdk.xml.dom",
             "jdk.zipfs"
     );
