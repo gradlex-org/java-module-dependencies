@@ -1,5 +1,8 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.4
+* [#31](https://github.com/gradlex-org/java-module-dependencies/issues/31) DSL for module dependencies that cannot be defined in module-info
+
 ## Version 1.3.1
 
 * Fix integration with analysis plugin if root projects are involved
