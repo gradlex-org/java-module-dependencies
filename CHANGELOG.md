@@ -2,6 +2,7 @@
 
 ## Version 1.4
 * [#31](https://github.com/gradlex-org/java-module-dependencies/issues/31) DSL for module dependencies that cannot be defined in module-info
+* [#45](https://github.com/gradlex-org/java-module-dependencies/issues/45) Support Capability Coordinates in mappings
 
 ## Version 1.3.1
 
