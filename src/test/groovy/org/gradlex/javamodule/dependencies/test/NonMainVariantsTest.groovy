@@ -60,4 +60,29 @@ class NonMainVariantsTest extends Specification {
         then:
         result.output.contains('[lib-extra-feature.jar')
     }
+
+    def "finds published feature variant when corresponding mapping is defined"() {
+        // There are no modules published like this anywhere public right now.
+        // We test that the expected Jar file would have been downloaded if 'org.slf4j' would have test fixtures.
+        given:
+        appBuildFile << '''
+            javaModuleDependencies {
+                moduleNameToGA.put("org.slf4j.test.fixtures", "org.slf4j:slf4j-api|org.slf4j:slf4j-api-test-fixtures")
+            }
+            dependencies.constraints {
+                javaModuleDependencies { implementation(gav("org.slf4j", "2.0.3")) }
+            }
+        '''
+        appModuleInfoFile << '''
+            module org.gradlex.test.app { 
+                requires org.slf4j.test.fixtures;
+            }
+        '''
+
+        when:
+        def result = fail()
+
+        then:
+        result.output.contains('> Unable to find a variant of org.slf4j:slf4j-api:2.0.3 providing the requested capability org.slf4j:slf4j-api-test-fixtures')
+    }
 }

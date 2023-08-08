@@ -71,6 +71,10 @@ public abstract class JavaModuleDependenciesExtension {
     private final ModuleInfoCache moduleInfoCache;
 
     /**
+     * Register mapping from Module Name to GA Coordinates (and optionally Capability Coordinates).
+     * - moduleNameToGA.put("org.slf4j", "org.slf4j:slf4j-api")
+     * - moduleNameToGA.put("org.slf4j.test.fixtures", "org.slf4j:slf4j-api|org.slf4j:slf4j-api-test-fixtures")
+     *
      * @return the mappings from Module Name to GA coordinates; can be modified
      */
     public abstract MapProperty<String, String> getModuleNameToGA();
@@ -156,7 +160,7 @@ public abstract class JavaModuleDependenciesExtension {
             Map<String, String> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream().collect(
                     Collectors.toMap(Project::getName, p -> (String) p.getGroup()));
 
-            Provider<Map<String, Object>> gav = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName))).map(ga -> findGav(ga, moduleName));
+            Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
 
             ModuleInfo moduleInfo = getModuleInfoCache().get(sourceSetWithModuleInfo);
             String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(getProject().getName(), sourceSetWithModuleInfo.getName());
@@ -183,11 +187,24 @@ public abstract class JavaModuleDependenciesExtension {
                         allProjectNamesAndGroups.get(projectName) + ":" + capabilityName));
                 projectDependency.because(moduleName);
                 return projectDependency;
-            } else if (gav.isPresent()) {
-                Dependency dependency = getDependencies().create(gav.get());
+            } else if (coordinates.isPresent()) {
+                Map<String, Object> component;
+                String capability;
+                if (coordinates.get().contains("|")) {
+                    String[] split = coordinates.get().split("\\|");
+                    component = findGav(split[0], moduleName);
+                    capability = split[1];
+                } else {
+                    component = findGav(coordinates.get(), moduleName);
+                    capability = null;
+                }
+                ModuleDependency dependency = (ModuleDependency) getDependencies().create(component);
                 dependency.because(moduleName);
-                if (!gav.get().containsKey(GAV.VERSION)) {
-                    warnVersionMissing(moduleName, gav.get(), moduleInfo.getFilePath());
+                if (capability != null) {
+                    dependency.capabilities(c -> c.requireCapability(capability));
+                }
+                if (!component.containsKey(GAV.VERSION)) {
+                    warnVersionMissing(moduleName, component, moduleInfo.getFilePath());
                 }
                 return dependency;
             } else {
