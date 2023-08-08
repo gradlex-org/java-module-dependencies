@@ -104,7 +104,13 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
             }
             if (!toRemove.isEmpty()) {
                 message.append("\n\nPlease remove the following requires directives (or change to runtimeOnly):");
+                if (inBuildFile) {
+                    message.append("\n  ").append(sourceSet.getKey()).append("ModuleInfo {");
+                }
                 message.append("\n    ").append(String.join("\n    ", toRemove));
+                if (inBuildFile) {
+                    message.append("\n  }");
+                }
             }
         }
         if (message.length() > 0) {
