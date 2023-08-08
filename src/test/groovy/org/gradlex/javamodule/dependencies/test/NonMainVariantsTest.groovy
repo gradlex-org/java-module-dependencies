@@ -31,7 +31,6 @@ class NonMainVariantsTest extends Specification {
         result.output.contains('[lib-test-fixtures.jar, lib.jar]')
     }
 
-
     def "finds feature variant module"() {
         given:
         libBuildFile << '''
@@ -43,7 +42,7 @@ class NonMainVariantsTest extends Specification {
         
         appModuleInfoFile << '''
             module org.gradlex.test.app { 
-                requires org.gradlex.test.lib.extra.feature
+                requires org.gradlex.test.lib.extra.feature;
             }
         '''
         libModuleInfoFile << '''

@@ -40,7 +40,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.gradle.api.plugins.JavaPlugin.RUNTIME_ONLY_CONFIGURATION_NAME;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readNameFromModuleFromJarFile;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readModuleNameFromJarFile;
 
 public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingTask {
 
@@ -117,7 +117,7 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
         ResolvedArtifactResult moduleJar = getModuleArtifacts().get().stream().flatMap(c -> c.getArtifacts().stream()).filter(a ->
                 coordinatesEquals(coordinates, capability, a)).findFirst().orElse(null);
         try {
-            String moduleName = moduleJar == null ? coordinates : readNameFromModuleFromJarFile(moduleJar.getFile());
+            String moduleName = moduleJar == null ? coordinates : readModuleNameFromJarFile(moduleJar.getFile());
             if (inBuildFile) {
                 return directive(conf, SCOPES_TO_DIRECTIVES_BUILD_FILE_DSL) + "(\"" + moduleName + "\")";
             } else {

@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.isRealModule;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readNameFromModuleFromJarFile;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readModuleNameFromJarFile;
 
 public abstract class ModulePathAnalysis extends DefaultTask {
     private final String projectName;
@@ -174,7 +174,7 @@ public abstract class ModulePathAnalysis extends DefaultTask {
                 moduleName = null;
             }
 
-            String actualModuleName = readNameFromModuleFromJarFile(resultFile);
+            String actualModuleName = readModuleNameFromJarFile(resultFile);
             boolean isModuleForReal = actualModuleName != null;
 
             if (moduleName != null && isModuleForReal) {

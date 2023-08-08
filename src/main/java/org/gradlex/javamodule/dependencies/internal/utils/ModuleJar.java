@@ -36,7 +36,7 @@ public class ModuleJar {
     private static final String MODULE_INFO_CLASS_FILE = "module-info.class";
     private static final Pattern MODULE_INFO_CLASS_MRJAR_PATH = Pattern.compile("META-INF/versions/\\d+/module-info.class");
 
-    public static String readNameFromModuleFromJarFile(File jarFileOrClassFolder) throws IOException {
+    public static String readModuleNameFromJarFile(File jarFileOrClassFolder) throws IOException {
         if (jarFileOrClassFolder.isDirectory()) {
             // class folder
             File moduleInfo = new File(jarFileOrClassFolder, MODULE_INFO_CLASS_FILE);

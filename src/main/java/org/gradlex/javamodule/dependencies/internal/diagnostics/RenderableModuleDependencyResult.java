@@ -32,7 +32,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.isRealModule;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readNameFromModuleFromJarFile;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readModuleNameFromJarFile;
 
 @NonNullApi
 public class RenderableModuleDependencyResult extends RenderableDependencyResult {
@@ -73,7 +73,7 @@ public class RenderableModuleDependencyResult extends RenderableDependencyResult
             if (artifact == null) {
                 return "[BOM] " + selected.getDisplayName();
             } else {
-                String actualModuleName = readNameFromModuleFromJarFile(artifact.getFile());
+                String actualModuleName = readModuleNameFromJarFile(artifact.getFile());
                 if (actualModuleName == null) {
                     return "[CLASSPATH] " + selected.getDisplayName();
                 } else {
