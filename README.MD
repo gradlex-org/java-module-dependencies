@@ -42,6 +42,8 @@ that shows all plugins in combination.
 For a quick start, you can find some samples here:
 * [samples/versions-in-platform](samples/versions-in-platform)
 * [samples/versions-in-catalog](samples/versions-in-catalog)
+* [samples/module-info-dsl](samples/module-info-dsl)
+* [samples/module-info-dsl-no-platform](samples/module-info-dsl-no-platform)
 * [samples/kotlin](samples/kotlin)
 
 For general information about how to structure Gradle builds and apply community plugins like this one to all subprojects
@@ -84,6 +86,32 @@ module org.example.mymodule {
 
 Note that `requires /*runtime*/` is a directive specifically supported by this plugin to allow the specification of _runtime only_ dependencies.
 
+## Define additional module dependencies in build files
+
+With this plugin you move dependency definitions into `module-info.java` files and no longer use the `dependencies {}` block in build files.
+However, there are certain dependency "scopes" not supported by the `module-info.java` syntax.
+For this, the plugin offers an extension of Gradle's DSL to be used in `build.gradle(.kts)` files.
+
+```
+mainModuleInfo {
+    runtimeOnly("org.slf4j.simple") // runtime only dependency for the 'main' module
+    annotationProcessor("dagger.compiler")  // annotation processor dependency for the 'main' module
+}
+```
+
+For modules in other source sets, there are corresponding blocks to define dependencies if needed – e.g. `testFixturesModuleInfo {}`.
+
+In case a source set does **not** contain a `module-info.java`, all dependencies can be defined in the `build.gradle(.kts)` files.
+The only case where this should be used is for whitebox testing activated via the [org.gradlex.java-module-testing](https://github.com/gradlex-org/java-module-testing) plugin.
+
+```
+testModuleInfo {
+    requires("org.assertj.core")
+    requires("org.hamcrest")
+    requires("org.junit.jupiter.api")
+}
+```
+
 ## Add Module Name mapping information (if needed)
 
 You may define additional mappings from _Module Name_ to _group:name (GA) coordinates_.
@@ -98,7 +126,6 @@ You can define additional entries (or overwrite entries from the plugin) as foll
 ```
 // optional configuration if required
 javaModuleDependencies {
-    // Make an automatic module known
     moduleNameToGA.put("org.apache.commons.lang3", "org.apache.commons:commons-lang3")
 }
 ```
@@ -124,7 +151,8 @@ If you have a `prefixOfYourChoice`, all your Modules **need to have the same pre
 ## Define Module versions in a Platform project as Dependency Constraints
 
 Use Gradle's dependency constraints and/or platforms to define versions for the modules you depend on.
-Inside a `javaModuleDependencies { }` block, you can use the `gav("module.name", "1.0")` notation to define a version by Module Name instead of coordinates.
+For that the plugin offers a `moduleInfo { }` block in `java-platform` projects.
+In that block, you have the `version("module.name", "1.0")` notation to define a version by Module Name instead of coordinates.
 For libraries that consist of multiple components and have a BOM for version management, you might prefer to include the BOM, which you need to do by coordinates, because a BOM does not have a Module Name.
 
 ```
@@ -134,12 +162,10 @@ plugins {
 }
 
 // Define versions for Modules via the Module Name
-dependencies.constraints {
-    javaModuleDependencies {
-        api(gav("org.apache.xmlbeans", "5.0.1"))
-        api(gav("org.slf4j", "1.7.28"))
-        api(gav("org.slf4j.simple", "1.7.28"))
-    }
+moduleInfo {
+    version("org.apache.xmlbeans", "5.0.1")
+    version("org.slf4j", "2.0.7")
+    version("org.slf4j.simple", "2.0.7")
 }
 
 // Use BOMs for Modules that are part of a library of multiple Modules
@@ -205,22 +231,20 @@ $ ./gradlew :app:recommendModuleVersions -q
 
 Latest Stable Versions of Java Modules - use in your platform project's build.gradle(.kts)
 ==========================================================================================
-dependencies.constraints {
-    javaModuleDependencies {
-        api(gav("com.fasterxml.jackson.annotation", "2.13.2"))
-        api(gav("com.fasterxml.jackson.core", "2.13.2"))
-        api(gav("com.fasterxml.jackson.databind", "2.13.2.2"))
-        api(gav("org.apache.logging.log4j", "2.17.2"))
-        api(gav("org.apache.xmlbeans", "5.0.3"))
-        api(gav("org.junit.jupiter.api", "5.8.2"))
-        api(gav("org.junit.jupiter.engine", "5.8.2"))
-        api(gav("org.junit.platform.commons", "1.8.2"))
-        api(gav("org.junit.platform.engine", "1.8.2"))
-        api(gav("org.junit.platform.launcher", "1.8.2"))
-        api(gav("org.opentest4j", "1.2.0"))
-        api(gav("org.slf4j", "1.7.36"))
-        api(gav("org.slf4j.simple", "1.7.36"))
-    }
+moduleInfo {
+    version("com.fasterxml.jackson.annotation", "2.13.2")
+    version("com.fasterxml.jackson.core", "2.13.2")
+    version("com.fasterxml.jackson.databind", "2.13.2.2")
+    version("org.apache.logging.log4j", "2.17.2")
+    version("org.apache.xmlbeans", "5.0.3")
+    version("org.junit.jupiter.api", "5.8.2")
+    version("org.junit.jupiter.engine", "5.8.2")
+    version("org.junit.platform.commons", "1.8.2")
+    version("org.junit.platform.engine", "1.8.2")
+    version("org.junit.platform.launcher", "1.8.2")
+    version("org.opentest4j", "1.2.0")
+    version("org.slf4j", "1.7.36")
+    version("org.slf4j.simple", "1.7.36")
 }
 ```
 
