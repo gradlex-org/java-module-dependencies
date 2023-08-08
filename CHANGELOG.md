@@ -5,7 +5,6 @@
 * [#45](https://github.com/gradlex-org/java-module-dependencies/issues/45) Support Capability Coordinates in mappings
 
 ## Version 1.3.1
-
 * Fix integration with analysis plugin if root projects are involved
 * Fix in module name calculation for additional source sets
 * Improve dependency analysis reporting for source sets without module-info.java 

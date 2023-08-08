@@ -56,7 +56,7 @@ Add this to the build file of your convention plugin's build
 
 ```
 dependencies {
-    implementation("org.gradlex:java-module-dependencies:1.3.1")
+    implementation("org.gradlex:java-module-dependencies:1.4")
 }
 ```
 
@@ -154,14 +154,14 @@ If you have a `prefixOfYourChoice`, all your Modules **need to have the same pre
 ## Define Module versions in a Platform project as Dependency Constraints
 
 Use Gradle's dependency constraints and/or platforms to define versions for the modules you depend on.
-For that the plugin offers a `moduleInfo { }` block in `java-platform` projects.
+For that you can combine the `java-platform` with the `org.gradlex.java-module-versions` plugin which adds a `moduleInfo { }` configuration block.
 In that block, you have the `version("module.name", "1.0")` notation to define a version by Module Name instead of coordinates.
 For libraries that consist of multiple components and have a BOM for version management, you might prefer to include the BOM, which you need to do by coordinates, because a BOM does not have a Module Name.
 
 ```
 plugins {
     id("java-platform")
-    id("org.gradlex.java-module-dependencies")
+    id("org.gradlex.java-module-versions")
 }
 
 // Define versions for Modules via the Module Name

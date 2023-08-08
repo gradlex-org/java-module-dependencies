@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "org.gradlex"
-version = "1.3.1"
+version = "1.4"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -45,6 +45,9 @@ pluginPublishConventions {
 gradlePlugin.plugins.create("java-module-versions") {
     id = "${project.group}.${name}"
     implementationClass = "org.gradlex.javamodule.dependencies.JavaModuleVersionsPlugin"
+    displayName = "Java Module Versions Gradle Plugin"
+    description = "A plugin that makes Gradle respect the dependencies defined in 'module-info.java' files."
+    tags = listOf("gradlex", "java", "modularity", "jigsaw", "jpms", "dependencies", "versions")
 }
 
 tasks.test {
