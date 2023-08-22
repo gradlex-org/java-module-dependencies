@@ -40,13 +40,13 @@ class OrderingCheckTest extends Specification {
 
         then:
         def result = runner(":app:checkAllModuleInfo").buildAndFail()
-        result.output.contains('''
-            |> app/src/main/java/module-info.java
+        result.output.contains("""
+            |> ${projectDir.canonicalPath}/app/src/main/java/module-info.java
             |  
             |  'requires' are not declared in alphabetical order. Please use this order:
             |      requires a.b.c;
             |      requires b.f.g;
-            |      requires b.z.u;'''.stripMargin()
+            |      requires b.z.u;""".stripMargin()
         )
     }
 

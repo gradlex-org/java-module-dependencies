@@ -39,9 +39,7 @@ public class DependencyAnalysisBridge {
             if (!moduleInfo.exists()) {
                 moduleInfo = project.getBuildFile(); // no module-info: dependencies are declared in build file
             }
-            t.getSourceSets().put(
-                    sourceSet.getName(),
-                    project.getLayout().getProjectDirectory().getAsFile().getParentFile().toPath().relativize(moduleInfo.toPath()).toString());
+            t.getSourceSets().put(sourceSet.getName(), moduleInfo.getAbsolutePath());
 
             Configuration cpClasspath = project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
             Configuration rtClasspath = project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName());
