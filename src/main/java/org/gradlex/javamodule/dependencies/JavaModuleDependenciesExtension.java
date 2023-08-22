@@ -320,7 +320,7 @@ public abstract class JavaModuleDependenciesExtension {
             c.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, getObjects().named(Usage.class, Usage.JAVA_RUNTIME));
         });
         getConfigurations().configureEach(c -> {
-            if (c.isCanBeResolved() && c != mainRuntimeClasspath) {
+            if (c.isCanBeResolved() && !c.isCanBeConsumed() && c != mainRuntimeClasspath) {
                 c.shouldResolveConsistentlyWith(mainRuntimeClasspath);
             }
         });
