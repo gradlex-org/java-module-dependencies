@@ -21,7 +21,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.Usage;
-import org.gradle.api.internal.artifacts.configurations.ConfigurationInternal;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPlatformPlugin;
 import org.gradle.api.plugins.JavaPlugin;
@@ -54,17 +53,15 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
             c.setCanBeConsumed(false);
         });
 
-        project.getConfigurations().create("platformElements", c -> {
+        Configuration platformElements = project.getConfigurations().create("platformElements", c -> {
             c.setCanBeResolved(false);
             c.setCanBeConsumed(true);
             c.setVisible(false);
             c.extendsFrom(versions);
             c.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.class, JAVA_RUNTIME));
-            // c.getAttributes().attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.class, REGULAR_PLATFORM));
-            ((ConfigurationInternal) c).beforeLocking(conf -> {
-                c.getOutgoing().capability(project.getGroup() + ":" + project.getName() + "-platform:" + project.getVersion());
-            });
         });
+
+        project.afterEvaluate(p -> platformElements.getOutgoing().capability(project.getGroup() + ":" + project.getName() + "-platform:" + project.getVersion()));
 
         setupVersionsDSL(project, versions);
     }
