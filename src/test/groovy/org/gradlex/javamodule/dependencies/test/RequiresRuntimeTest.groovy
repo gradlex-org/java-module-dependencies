@@ -158,11 +158,14 @@ class RequiresRuntimeTest extends Specification {
                 
                 val syntheticModules = javaModuleDependencies.addRequiresRuntimeSupport(this, sourceSets.main.get())
                 
-                options.compilerArgs.add("--module-path")
-                options.compilerArgs.add(classpath.files.joinToString(":") + ":" + syntheticModules.files.joinToString(":"))
-                options.compilerArgs.add("--patch-module")
-                options.compilerArgs.add("org.gradlex.test.app=" + sourceSets.test.get().java.sourceDirectories.first())
-                
+                options.compilerArgumentProviders.add {
+                    listOf(
+                        "--module-path",
+                        classpath.files.joinToString(":") + ":" + syntheticModules.files.joinToString(":"),
+                        "--patch-module",
+                        "org.gradlex.test.app=" + sourceSets.test.get().java.sourceDirectories.first()
+                    )
+                }
             }
             
             dependencies.constraints {

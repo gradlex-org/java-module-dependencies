@@ -5,6 +5,8 @@ plugins {
 
 group = "org.my"
 
+javaModuleDependencies.versionsFromConsistentResolution(":app")
+
 tasks.test {
     useJUnitPlatform()
     jvmArgs("-Dorg.slf4j.simpleLogger.defaultLogLevel=error")
