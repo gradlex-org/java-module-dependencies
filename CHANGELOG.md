@@ -1,5 +1,8 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.4.1
+* [#47](https://github.com/gradlex-org/java-module-dependencies/issues/47) Fix Gradle 8.3 compatibility
+
 ## Version 1.4
 * [#31](https://github.com/gradlex-org/java-module-dependencies/issues/31) DSL for module dependencies that cannot be defined in module-info
 * [#45](https://github.com/gradlex-org/java-module-dependencies/issues/45) Support Capability Coordinates in mappings
