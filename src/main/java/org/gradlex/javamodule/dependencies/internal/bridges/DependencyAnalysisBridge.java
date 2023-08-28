@@ -21,7 +21,9 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesScopeCheck;
 
 import java.io.File;
@@ -29,10 +31,11 @@ import java.io.File;
 public class DependencyAnalysisBridge {
 
     public static void registerDependencyAnalysisPostProcessingTask(Project project, TaskProvider<Task> checkAllModuleInfo) {
+        TaskContainer tasks = project.getTasks();
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
 
         TaskProvider<ModuleDirectivesScopeCheck> checkModuleDirectivesScope =
-                project.getTasks().register("checkModuleDirectivesScope", ModuleDirectivesScopeCheck.class);
+                tasks.register("checkModuleDirectivesScope", ModuleDirectivesScopeCheck.class);
 
         sourceSets.all(sourceSet -> checkModuleDirectivesScope.configure(t -> {
             File moduleInfo = new File(sourceSet.getJava().getSrcDirs().iterator().next(), "module-info.java");
@@ -51,5 +54,6 @@ public class DependencyAnalysisBridge {
                 .registerPostProcessingTask(checkModuleDirectivesScope);
 
         checkAllModuleInfo.configure(t -> t.dependsOn(checkModuleDirectivesScope));
+        tasks.withType(ModuleDirectivesOrderingCheck.class).configureEach(t -> t.shouldRunAfter(checkModuleDirectivesScope));
     }
 }
