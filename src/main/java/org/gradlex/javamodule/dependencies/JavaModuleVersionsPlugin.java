@@ -61,6 +61,7 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
             c.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.class, JAVA_RUNTIME));
         });
 
+        // https://github.com/gradle/gradle/issues/26163
         project.afterEvaluate(p -> platformElements.getOutgoing().capability(project.getGroup() + ":" + project.getName() + "-platform:" + project.getVersion()));
 
         setupVersionsDSL(project, versions);
