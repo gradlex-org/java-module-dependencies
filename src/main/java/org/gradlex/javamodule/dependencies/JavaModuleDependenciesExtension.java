@@ -266,7 +266,7 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     private Map<String, Object> findGav(String ga, String moduleName) {
-        VersionCatalog catalog = versionCatalogs == null ? null : versionCatalogs.named(getVersionCatalogName().get());
+        VersionCatalog catalog = versionCatalogs == null ? null : versionCatalogs.find(getVersionCatalogName().get()).orElse(null);
         Optional<VersionConstraint> version = catalog == null ? empty() : catalog.findVersion(moduleName.replace('_', '.'));
         Map<String, Object> gav = new HashMap<>();
         String[] gaSplit = ga.split(":");
