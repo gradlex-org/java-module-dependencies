@@ -1,5 +1,8 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.4.2
+* Fix Gradle 8.6 compatibility
+
 ## Version 1.4.1
 * [#47](https://github.com/gradlex-org/java-module-dependencies/issues/47) Fix Gradle 8.3 compatibility
 
