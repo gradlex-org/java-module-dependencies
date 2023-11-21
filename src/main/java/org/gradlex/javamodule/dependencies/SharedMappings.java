@@ -21,7 +21,7 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
 
-final class SharedMappings {
+final public class SharedMappings {
     static Map<String, String> mappings = loadModuleNameToGAProperties();
 
     static Map<String, String> loadModuleNameToGAProperties() {

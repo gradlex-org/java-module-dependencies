@@ -64,6 +64,7 @@ import static java.util.Optional.empty;
  * - Define dependencies and dependency constraints by Module Name
  *   using {@link #ga(String)}, {@link #gav(String, String)} or {@link #gav(String)}
  */
+@SuppressWarnings("unused")
 public abstract class JavaModuleDependenciesExtension {
     static final String JAVA_MODULE_DEPENDENCIES = "javaModuleDependencies";
 
@@ -84,7 +85,7 @@ public abstract class JavaModuleDependenciesExtension {
      * name that corresponds to the artifact name and all have the group (e.g. 'com.example.product'), you can
      * register a mapping for all these Modules. and with that allow Gradle to map them correctly even if you
      * publish some of your Modules or use included builds.
-     *
+     * <p>
      * moduleNamePrefixToGroup.put("com.example.product.module.", "com.example.product")
      *
      * @return the mappings from 'Module Name Prefix' to 'group'
@@ -92,8 +93,9 @@ public abstract class JavaModuleDependenciesExtension {
     public abstract MapProperty<String, String> getModuleNamePrefixToGroup();
 
     /**
-     * @return If a Version Catalog is used: print a WARN for missing versions (default is 'true')
+     * @return no-op
      */
+    @Deprecated
     public abstract Property<Boolean> getWarnForMissingVersions();
 
     /**
@@ -112,7 +114,6 @@ public abstract class JavaModuleDependenciesExtension {
     public JavaModuleDependenciesExtension(VersionCatalogsExtension versionCatalogs) {
         this.versionCatalogs = versionCatalogs;
         this.moduleInfoCache = getObjects().newInstance(ModuleInfoCache.class);
-        getWarnForMissingVersions().convention(versionCatalogs != null);
         getVersionCatalogName().convention("libs");
         getAnalyseOnly().convention(false);
         getModuleNameToGA().putAll(SharedMappings.mappings);
@@ -207,9 +208,6 @@ public abstract class JavaModuleDependenciesExtension {
                 dependency.because(moduleName);
                 if (capability != null) {
                     dependency.capabilities(c -> c.requireCapability(capability));
-                }
-                if (!component.containsKey(GAV.VERSION)) {
-                    warnVersionMissing(moduleName, component, moduleInfo.getFilePath());
                 }
                 return dependency;
             } else {
@@ -326,6 +324,7 @@ public abstract class JavaModuleDependenciesExtension {
         });
         getConfigurations().configureEach(c -> {
             if (c.isCanBeResolved() && !c.isCanBeConsumed() && c != mainRuntimeClasspath) {
+                //noinspection UnstableApiUsage
                 c.shouldResolveConsistentlyWith(mainRuntimeClasspath);
             }
         });
@@ -406,13 +405,6 @@ public abstract class JavaModuleDependenciesExtension {
         return getProviders().provider(() -> {
             throw new RuntimeException("Unknown Module: " + moduleName.get());
         });
-    }
-
-    private void warnVersionMissing(String moduleName, Map<String, Object> ga, File moduleInfoFile) {
-        if (getWarnForMissingVersions().get()) {
-            getProject().getLogger().warn("[WARN] [Java Module Dependencies] No version defined in catalog - " + ga.get(GAV.GROUP) + ":" + ga.get(GAV.ARTIFACT) + " - "
-                    + moduleDebugInfo(moduleName.replace('.', '_'), moduleInfoFile, getProject().getRootDir()));
-        }
     }
 
     private String moduleDebugInfo(String moduleName, File moduleInfoFile, File rootDir) {

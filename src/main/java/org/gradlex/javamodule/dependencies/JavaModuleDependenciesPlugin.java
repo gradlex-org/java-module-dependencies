@@ -172,8 +172,8 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             t.setGroup(HELP_GROUP);
             t.setDescription("Query repositories for latest stable versions of the used Java Modules");
 
-            t.getPrintForPlatform().convention(javaModuleDependencies.getWarnForMissingVersions().map(b -> !b));
-            t.getPrintForCatalog().convention(javaModuleDependencies.getWarnForMissingVersions());
+            t.getPrintForPlatform().convention(true);
+            t.getPrintForCatalog().convention(false);
         });
     }
 
