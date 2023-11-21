@@ -1,5 +1,11 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.4.3
+* Support '.' to '-' conversion in 'moduleNamePrefixToGroup'
+* Fix issue in integration with 'extra-module-info'
+* Improve support for Capability Coordinates in mappings
+* Remove 'version missing in catalog' warning (triggered when catalog is used for different things)
+
 ## Version 1.4.2
 * Fix Gradle 8.6 compatibility
 
