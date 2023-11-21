@@ -148,12 +148,29 @@ public abstract class JavaModuleDependenciesExtension {
                             .filter(e -> moduleName.get().startsWith(e.getKey())).findFirst();
                     if (prefixToGroup.isPresent()) {
                         String group = prefixToGroup.get().getValue();
-                        String artifact = moduleName.get().substring(prefixToGroup.get().getKey().length());
+                        String artifact = toProjectName(moduleName.get().substring(prefixToGroup.get().getKey().length()));
                         return group + ":" + artifact;
                     }
                     return null;
                 }
         );
+    }
+
+    private String toProjectName(String moduleNameSuffix) {
+        List<String> allProjectNames = getProject().getRootProject().getSubprojects().stream().map(Project::getName).collect(Collectors.toList());
+
+        Optional<String> perfectMatch = allProjectNames.stream().filter(p -> p.replace("-", ".").equals(moduleNameSuffix)).findFirst();
+        Optional<String> existingProjectName = allProjectNames.stream().filter(p -> moduleNameSuffix != null && moduleNameSuffix.startsWith(p.replace("-", ".") + "."))
+                .max(Comparator.comparingInt(String::length));
+
+        if (perfectMatch.isPresent()) {
+            return perfectMatch.get();
+        } else if (existingProjectName.isPresent()) {
+            String capabilityClassifier = moduleNameSuffix.substring(existingProjectName.get().length() + 1).replace(".", "-");
+            return existingProjectName.get() + "|" + capabilityClassifier; // no exact match (assume last segment is capability)
+        }
+
+        return moduleNameSuffix;
     }
 
     public Provider<Dependency> create(String moduleName, SourceSet sourceSetWithModuleInfo) {
