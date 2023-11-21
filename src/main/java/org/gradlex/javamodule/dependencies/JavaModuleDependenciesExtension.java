@@ -193,7 +193,12 @@ public abstract class JavaModuleDependenciesExtension {
                 if (coordinates.get().contains("|")) {
                     String[] split = coordinates.get().split("\\|");
                     component = findGav(split[0], moduleName);
-                    capability = split[1];
+                    if (split[1].contains(":")) {
+                        capability = split[1];
+                    } else {
+                        // only classifier was specified
+                        capability = split[0] + "-" + split[1];
+                    }
                 } else {
                     component = findGav(coordinates.get(), moduleName);
                     capability = null;
