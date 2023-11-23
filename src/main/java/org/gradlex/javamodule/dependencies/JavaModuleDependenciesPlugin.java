@@ -51,8 +51,6 @@ import static org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_
 import static org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension.JAVA_MODULE_DEPENDENCIES;
 import static org.gradlex.javamodule.dependencies.internal.utils.DependencyDeclarationsUtil.declaredDependencies;
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
-import static org.gradlex.javamodule.dependencies.internal.utils.TaskConfigurationUtil.isJavaCompileTask;
-import static org.gradlex.javamodule.dependencies.internal.utils.TaskConfigurationUtil.isJavadocTask;
 
 @SuppressWarnings("unused")
 @NonNullApi
@@ -84,11 +82,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             process(ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE, sourceSet.getCompileOnlyApiConfigurationName(), sourceSet, project, javaModuleDependencies);
             process(ModuleInfo.Directive.REQUIRES_RUNTIME, sourceSet.getRuntimeOnlyConfigurationName(), sourceSet, project, javaModuleDependencies);
 
-            project.getTasks().configureEach(task -> {
-                if (isJavaCompileTask(task, sourceSet) || isJavadocTask(task, sourceSet)) {
-                    javaModuleDependencies.doAddRequiresRuntimeSupport(task, sourceSet);
-                }
-            });
+            javaModuleDependencies.doAddRequiresRuntimeSupport(sourceSet, sourceSet);
         });
 
         TaskProvider<Task> checkAllModuleInfo = project.getTasks().register("checkAllModuleInfo", t -> {

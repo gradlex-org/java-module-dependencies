@@ -17,7 +17,6 @@
 package org.gradlex.javamodule.dependencies;
 
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
@@ -41,9 +40,9 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
-import org.gradlex.javamodule.dependencies.internal.compile.AddSyntheticModulesToCompileClasspathAction;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
+import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoClassCreator;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -385,7 +384,9 @@ public abstract class JavaModuleDependenciesExtension {
      * @return collection of folders containing synthetic module-info.class files
      */
     public FileCollection addRequiresRuntimeSupport(JavaCompile task, SourceSet sourceSet) {
-        return doAddRequiresRuntimeSupport(task, sourceSet);
+        Optional<SourceSet> sourceSetForClasspath = getSourceSets().stream().filter(s -> s.getCompileJavaTaskName().equals(task.getName())).findFirst();
+        sourceSetForClasspath.ifPresent(s -> doAddRequiresRuntimeSupport(sourceSet, s));
+        return getObjects().fileCollection(); // no-op
     }
 
     /**
@@ -397,19 +398,20 @@ public abstract class JavaModuleDependenciesExtension {
      * @return collection of folders containing synthetic module-info.class files
      */
     public FileCollection addRequiresRuntimeSupport(Javadoc task, SourceSet sourceSet) {
-        return doAddRequiresRuntimeSupport(task, sourceSet);
+        return getObjects().fileCollection(); // no-op
     }
 
-    FileCollection doAddRequiresRuntimeSupport(Task task, SourceSet sourceSet) {
-        List<String> requiresRuntime = getModuleInfoCache().get(sourceSet).get(ModuleInfo.Directive.REQUIRES_RUNTIME);
+    void doAddRequiresRuntimeSupport(SourceSet sourceSetForModuleInfo, SourceSet sourceSetForClasspath) {
+        List<String> requiresRuntime = getModuleInfoCache().get(sourceSetForModuleInfo).get(ModuleInfo.Directive.REQUIRES_RUNTIME);
         ConfigurableFileCollection syntheticModuleInfoFolders = getObjects().fileCollection();
         if (!requiresRuntime.isEmpty()) {
-            Provider<Directory> tmpDir = getLayout().getBuildDirectory().dir("tmp/java-module-dependencies/" + task.getName());
+            Provider<Directory> tmpDir = getLayout().getBuildDirectory().dir("tmp/java-module-dependencies");
             requiresRuntime.forEach(moduleName -> syntheticModuleInfoFolders.from(tmpDir.map(dir -> dir.dir(moduleName))));
-            task.doFirst(getObjects().newInstance(AddSyntheticModulesToCompileClasspathAction.class, syntheticModuleInfoFolders));
-            return syntheticModuleInfoFolders;
+            for (File moduleFolder : syntheticModuleInfoFolders) {
+                ModuleInfoClassCreator.createEmpty(moduleFolder);
+            }
+            getDependencies().add(sourceSetForClasspath.getCompileOnlyConfigurationName(), syntheticModuleInfoFolders);
         }
-        return syntheticModuleInfoFolders;
     }
 
     private <T> Provider<T> errorIfNotFound(String moduleName) {

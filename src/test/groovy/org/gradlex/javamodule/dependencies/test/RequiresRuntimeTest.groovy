@@ -36,7 +36,7 @@ class RequiresRuntimeTest extends Specification {
         def cp = printCompileJars()
 
         then:
-        cp.output.contains('[slf4j-api-2.0.3.jar]')
+        cp.output.contains('[org.slf4j.simple, slf4j-api-2.0.3.jar]') // 'org.slf4j.simple' is the folder nam of synthetic 'module-info.class'
     }
 
     def "compiles with runtime only dependencies in module-info"() {
