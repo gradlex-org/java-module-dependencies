@@ -1,5 +1,10 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.5
+* [#67](https://github.com/gradlex-org/java-module-dependencies/issues/67) Support local `modules.properties` for custom mappings
+* [#65](https://github.com/gradlex-org/java-module-dependencies/issues/65) Error if a local Module Name does not match project name
+* [#24](https://github.com/gradlex-org/java-module-dependencies/issues/24) Improve support for `requires /*runtime*/`
+
 ## Version 1.4.3
 * Support '.' to '-' conversion in 'moduleNamePrefixToGroup'
 * Fix issue in integration with 'extra-module-info'
