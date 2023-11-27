@@ -21,7 +21,7 @@ class ModuleInfoParseTest extends Specification {
         ''', new File(''))
 
         expect:
-        moduleInfo.moduleNamePrefix("thing", "main") == "some"
+        moduleInfo.moduleNamePrefix("thing", "main", false) == "some"
         moduleInfo.get(REQUIRES) == []
         moduleInfo.get(REQUIRES_TRANSITIVE) == ["foo.bar.la"]
         moduleInfo.get(REQUIRES_STATIC) == []
@@ -38,7 +38,7 @@ class ModuleInfoParseTest extends Specification {
         ''', new File(''))
 
         expect:
-        moduleInfo.moduleNamePrefix("thing", "main") == "some"
+        moduleInfo.moduleNamePrefix("thing", "main", false) == "some"
         moduleInfo.get(REQUIRES) == []
         moduleInfo.get(REQUIRES_TRANSITIVE) == ["foo.bar.la"]
         moduleInfo.get(REQUIRES_STATIC) == []

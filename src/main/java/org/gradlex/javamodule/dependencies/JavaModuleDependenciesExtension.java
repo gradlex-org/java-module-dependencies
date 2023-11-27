@@ -114,6 +114,12 @@ public abstract class JavaModuleDependenciesExtension {
     public abstract Property<String> getVersionCatalogName();
 
     /**
+     * Fail the build if a Module Name does not fit the corresponding project and source set names;
+     * defaults to 'true'.
+     */
+    public abstract Property<Boolean> getModuleNameCheck();
+
+    /**
      * Set this to true to use the analytic help tasks (like :moduleDependencies) of the plugin without performing
      * the actual dependency calculation.
      *
@@ -126,6 +132,7 @@ public abstract class JavaModuleDependenciesExtension {
         this.moduleInfoCache = getObjects().newInstance(ModuleInfoCache.class);
         getModulesProperties().set(getProject().getRootProject().getLayout().getProjectDirectory().file("gradle/modules.properties"));
         getVersionCatalogName().convention("libs");
+        getModuleNameCheck().convention(true);
         getAnalyseOnly().convention(false);
         getModuleNameToGA().putAll(SharedMappings.mappings);
         getModuleNameToGA().putAll(parsedModulesProperties().orElse(Collections.emptyMap()));
@@ -207,7 +214,7 @@ public abstract class JavaModuleDependenciesExtension {
             Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
 
             ModuleInfo moduleInfo = getModuleInfoCache().get(sourceSetWithModuleInfo);
-            String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(getProject().getName(), sourceSetWithModuleInfo.getName());
+            String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(getProject().getName(), sourceSetWithModuleInfo.getName(), getModuleNameCheck().get());
 
             String moduleNameSuffix = ownModuleNamesPrefix == null ? null :
                     moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) :

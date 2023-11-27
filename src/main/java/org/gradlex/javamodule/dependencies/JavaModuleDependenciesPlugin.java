@@ -215,7 +215,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                 ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get(sourceSet);
 
                 t.getModuleInfoPath().convention(moduleInfo.getFilePath().getAbsolutePath());
-                t.getModuleNamePrefix().convention(moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName()));
+                t.getModuleNamePrefix().convention(moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName(), false));
                 t.getModuleInfo().convention(moduleInfo);
             });
 

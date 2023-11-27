@@ -82,7 +82,7 @@ public class ModuleInfo implements Serializable {
     }
 
     @Nullable
-    public String moduleNamePrefix(String projectName, String sourceSetName) {
+    public String moduleNamePrefix(String projectName, String sourceSetName, boolean fail) {
         if (moduleName.equals(projectName)) {
             return "";
         }
@@ -96,6 +96,10 @@ public class ModuleInfo implements Serializable {
         }
         if (moduleName.endsWith("." + projectName)) {
             return moduleName.substring(0, moduleName.length() - projectName.length() - 1);
+        }
+        if (this != EMPTY && fail) {
+            throw new RuntimeException("Module name '" + moduleName + "' does not fit the project and source set names; " +
+                    "expected name '<optional.prefix.>" + projectPlusSourceSetName + "'.");
         }
         return null;
     }
@@ -115,6 +119,7 @@ public class ModuleInfo implements Serializable {
         List<String> tokens = Arrays.asList(moduleLine
                 .replace(";", "")
                 .replace("{", "")
+                .replace("}", "")
                 .replace(RUNTIME_KEYWORD, "runtime")
                 .replaceAll("/\\*.*?\\*/", " ")
                 .trim().split("\\s+"));
