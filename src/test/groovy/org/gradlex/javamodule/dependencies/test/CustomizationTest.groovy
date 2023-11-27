@@ -34,6 +34,52 @@ class CustomizationTest extends Specification {
         result.output.contains('[jakarta.mail-2.0.1.jar, jakarta.activation-2.0.1.jar]')
     }
 
+    def "can add custom mapping via properties file (default location)"() {
+        given:
+        def customModulesPropertiesFile = file("gradle/modules.properties")
+
+        customModulesPropertiesFile << 'jakarta.mail=com.sun.mail:jakarta.mail'
+        appBuildFile << 'moduleInfo { version("jakarta.mail", "2.0.1") }'
+
+        appModuleInfoFile << '''
+            module org.gradlex.test.app { 
+                requires jakarta.mail;
+            }
+        '''
+
+        when:
+        def result = printRuntimeJars()
+
+        then:
+        result.output.contains('[jakarta.mail-2.0.1.jar, jakarta.activation-2.0.1.jar]')
+    }
+
+    def "can add custom mapping via properties file (custom location)"() {
+        given:
+        def customModulesPropertiesFile = file(".hidden/modules.properties")
+
+        customModulesPropertiesFile << 'jakarta.mail=com.sun.mail:jakarta.mail'
+        appBuildFile << 'moduleInfo { version("jakarta.mail", "2.0.1") }'
+
+        appBuildFile << '''
+            javaModuleDependencies {
+                modulesProperties.set(rootProject.layout.projectDirectory.file(".hidden/modules.properties"))
+            }
+        '''
+
+        appModuleInfoFile << '''
+            module org.gradlex.test.app { 
+                requires jakarta.mail;
+            }
+        '''
+
+        when:
+        def result = printRuntimeJars()
+
+        then:
+        result.output.contains('[jakarta.mail-2.0.1.jar, jakarta.activation-2.0.1.jar]')
+    }
+
     def "can use custom catalog"() {
         given:
         settingsFile << '''

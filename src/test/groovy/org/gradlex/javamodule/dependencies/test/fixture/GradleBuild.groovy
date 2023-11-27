@@ -34,7 +34,11 @@ class GradleBuild {
         appBuildFile << '''
             plugins {
                 id("org.gradlex.java-module-dependencies")
+                id("org.gradlex.java-module-versions")
                 id("application")
+            }
+            javaModuleDependencies {
+                versionsFromPlatformAndConsistentResolution(":app", ":app")
             }
             application {
                 mainModule.set("org.gradlex.test.app")

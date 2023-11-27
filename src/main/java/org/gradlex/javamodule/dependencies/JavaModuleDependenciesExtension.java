@@ -31,6 +31,7 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.ProjectLayout;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
@@ -45,7 +46,9 @@ import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoClassCreator;
 
 import javax.inject.Inject;
+import java.io.CharArrayReader;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,6 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.empty;
@@ -69,6 +73,13 @@ public abstract class JavaModuleDependenciesExtension {
 
     private final VersionCatalogsExtension versionCatalogs;
     private final ModuleInfoCache moduleInfoCache;
+
+    /**
+     * Custom mappings can be defined in a property files in your build.
+     * The default location for this file is 'gradle/modules.properties' (relative to root project).
+     * Here, the location of the file can be changed.
+     */
+    public abstract RegularFileProperty getModulesProperties();
 
     /**
      * Register mapping from Module Name to GA Coordinates (and optionally Capability Coordinates).
@@ -113,9 +124,25 @@ public abstract class JavaModuleDependenciesExtension {
     public JavaModuleDependenciesExtension(VersionCatalogsExtension versionCatalogs) {
         this.versionCatalogs = versionCatalogs;
         this.moduleInfoCache = getObjects().newInstance(ModuleInfoCache.class);
+        getModulesProperties().set(getProject().getRootProject().getLayout().getProjectDirectory().file("gradle/modules.properties"));
         getVersionCatalogName().convention("libs");
         getAnalyseOnly().convention(false);
         getModuleNameToGA().putAll(SharedMappings.mappings);
+        getModuleNameToGA().putAll(parsedModulesProperties().orElse(Collections.emptyMap()));
+    }
+
+    private Provider<Map<String, String>> parsedModulesProperties() {
+        return getProviders().fileContents(getModulesProperties()).getAsText().map(c -> {
+            Properties p = new Properties();
+            try {
+                p.load(new CharArrayReader(c.toCharArray()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            @SuppressWarnings({"rawtypes"})
+            Map<String, String> result = (Map) p;
+            return result;
+        });
     }
 
     /**
