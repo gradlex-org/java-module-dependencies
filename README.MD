@@ -121,7 +121,14 @@ The plugin already knows about Modules available on Maven Central. The informati
 - [modules.properties](src/main/resources/org/gradlex/javamodule/dependencies/modules.properties) - [please open a PR](https://github.com/gradlex-org/extra-java-module-info/pulls) if you miss an entry
 - [unique_modules.properties](src/main/resources/org/gradlex/javamodule/dependencies/unique_modules.properties) - this information is extracted from [modules.properties](https://github.com/sormuras/modules/blob/main/com.github.sormuras.modules/com/github/sormuras/modules/modules.properties) by [@sormuras](https://github.com/sormuras)
 
-You define additional entries (or overwrite entries from the plugin) as follows:
+You define additional entries (or overwrite entries from the plugin) in a `gradle/modules.properties` file in your project:
+
+```
+org.apache.commons.lang3=org.apache.commons:commons-lang3
+org.apache.commons.lang3.test.fixtures=org.apache.commons:commons-lang3|test-fixtures
+```
+
+**Or** as part of the plugin configuration in your convention plugins:
 
 ```
 javaModuleDependencies {
@@ -129,7 +136,7 @@ javaModuleDependencies {
     moduleNameToGA.put("org.apache.commons.lang3", "org.apache.commons:commons-lang3")
 
     // Module Name to Component GA Coordinates & Capability GA Coordinates
-    moduleNameToGA.put("org.apache.commons.lang3.test.fixtures", "org.apache.commons:commons-lang3|org.apache.commons:commons-lang3-test-fixtures")
+    moduleNameToGA.put("org.apache.commons.lang3.test.fixtures", "org.apache.commons:commons-lang3|test-fixtures")
 }
 ```
 
