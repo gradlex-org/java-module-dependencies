@@ -153,15 +153,14 @@ class RequiresRuntimeTest extends Specification {
         // This is typically needed for whitebox testing
         given:
         appBuildFile << '''
+            javaModuleDependencies.addRequiresRuntimeSupport(sourceSets.main.get(), sourceSets.test.get())
             tasks.compileTestJava {
                 classpath += sourceSets.main.get().output
-                
-                val syntheticModules = javaModuleDependencies.addRequiresRuntimeSupport(this, sourceSets.main.get())
                 
                 options.compilerArgumentProviders.add {
                     listOf(
                         "--module-path",
-                        classpath.files.joinToString(":") + ":" + syntheticModules.files.joinToString(":"),
+                        classpath.files.joinToString(":"),
                         "--patch-module",
                         "org.gradlex.test.app=" + sourceSets.test.get().java.sourceDirectories.first()
                     )

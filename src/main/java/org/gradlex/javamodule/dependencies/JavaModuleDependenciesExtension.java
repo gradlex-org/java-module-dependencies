@@ -29,7 +29,6 @@ import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
@@ -39,11 +38,10 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.api.tasks.javadoc.Javadoc;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
-import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoClassCreator;
+import org.gradlex.javamodule.dependencies.tasks.SyntheticModuleInfoFoldersGeneration;
 
 import javax.inject.Inject;
 import java.io.CharArrayReader;
@@ -146,7 +144,7 @@ public abstract class JavaModuleDependenciesExtension {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            @SuppressWarnings({"rawtypes"})
+            @SuppressWarnings({"rawtypes", "unchecked"})
             Map<String, String> result = (Map) p;
             return result;
         });
@@ -413,37 +411,28 @@ public abstract class JavaModuleDependenciesExtension {
      * Adds support for compiling module-info.java in the given source set with the given task,
      * if 'requires runtime' dependencies are used.
      *
-     * @param task      The task that compiles code from the given source set
-     * @param sourceSet The source set that contains the module-info.java
-     * @return collection of folders containing synthetic module-info.class files
+     * @param sourceSetForModuleInfo The source set that contains the module-info.java (e.g. 'main')
+     * @param sourceSetForClasspath  The source set that contains the code that is compiled (e.g. 'test')
      */
-    public FileCollection addRequiresRuntimeSupport(JavaCompile task, SourceSet sourceSet) {
-        Optional<SourceSet> sourceSetForClasspath = getSourceSets().stream().filter(s -> s.getCompileJavaTaskName().equals(task.getName())).findFirst();
-        sourceSetForClasspath.ifPresent(s -> doAddRequiresRuntimeSupport(sourceSet, s));
-        return getObjects().fileCollection(); // no-op
-    }
-
-    /**
-     * Adds support for generating Javadoc for the module-info.java in the given source set with the given task,
-     * if 'requires runtime' dependencies are used.
-     *
-     * @param task      The task that generates Javadoc from the given source set
-     * @param sourceSet The source set that contains the module-info.java
-     * @return collection of folders containing synthetic module-info.class files
-     */
-    public FileCollection addRequiresRuntimeSupport(Javadoc task, SourceSet sourceSet) {
-        return getObjects().fileCollection(); // no-op
+    public void addRequiresRuntimeSupport(SourceSet sourceSetForModuleInfo, SourceSet sourceSetForClasspath) {
+        doAddRequiresRuntimeSupport(sourceSetForModuleInfo, sourceSetForClasspath);
     }
 
     void doAddRequiresRuntimeSupport(SourceSet sourceSetForModuleInfo, SourceSet sourceSetForClasspath) {
         List<String> requiresRuntime = getModuleInfoCache().get(sourceSetForModuleInfo).get(ModuleInfo.Directive.REQUIRES_RUNTIME);
-        ConfigurableFileCollection syntheticModuleInfoFolders = getObjects().fileCollection();
         if (!requiresRuntime.isEmpty()) {
-            Provider<Directory> tmpDir = getLayout().getBuildDirectory().dir("tmp/java-module-dependencies");
-            requiresRuntime.forEach(moduleName -> syntheticModuleInfoFolders.from(tmpDir.map(dir -> dir.dir(moduleName))));
-            for (File moduleFolder : syntheticModuleInfoFolders) {
-                ModuleInfoClassCreator.createEmpty(moduleFolder);
-            }
+            ConfigurableFileCollection syntheticModuleInfoFolders = getObjects().fileCollection();
+            Provider<Directory> moduleInfoFoldersBase = getLayout().getBuildDirectory().dir("tmp/java-module-dependencies/" + sourceSetForClasspath.getName());
+            TaskProvider<SyntheticModuleInfoFoldersGeneration> generatorTask = getProject().getTasks().register(
+                    sourceSetForClasspath.getTaskName("generate", "syntheticModuleInfoFolders"),
+                    SyntheticModuleInfoFoldersGeneration.class, t -> {
+                        t.getModuleNames().set(requiresRuntime);
+                        t.getSyntheticModuleInfoFolder().set(moduleInfoFoldersBase);
+                    });
+
+            List<Provider<Directory>> moduleInfoFolders = requiresRuntime.stream().map(moduleName -> moduleInfoFoldersBase.map(b -> b.dir(moduleName))).collect(Collectors.toList());
+            syntheticModuleInfoFolders.from(moduleInfoFolders);
+            syntheticModuleInfoFolders.builtBy(generatorTask);
             getDependencies().add(sourceSetForClasspath.getCompileOnlyConfigurationName(), syntheticModuleInfoFolders);
         }
     }

@@ -90,7 +90,7 @@ class GradleBuild {
                 .forwardOutput()
                 .withPluginClasspath()
                 .withProjectDir(projectDir)
-                .withArguments(Arrays.asList(args) + '-s')
+                .withArguments(Arrays.asList(args) + '-s' + '--warning-mode' + 'all')
                 .withDebug(ManagementFactory.getRuntimeMXBean().getInputArguments().toString().contains("-agentlib:jdwp")).with {
             gradleVersionUnderTest ? it.withGradleVersion(gradleVersionUnderTest) : it
         }
