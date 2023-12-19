@@ -1,5 +1,9 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.5.1
+* Make `module-info.java` analysis tasks cacheable
+* Further tweak `requires /*runtime*/` support
+
 ## Version 1.5
 * [#67](https://github.com/gradlex-org/java-module-dependencies/issues/67) Support local `modules.properties` for custom mappings
 * [#65](https://github.com/gradlex-org/java-module-dependencies/issues/65) Error if a local Module Name does not match project name
