@@ -24,13 +24,17 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.capabilities.Capability;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -42,6 +46,7 @@ import java.util.stream.Collectors;
 import static org.gradle.api.plugins.JavaPlugin.RUNTIME_ONLY_CONFIGURATION_NAME;
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readModuleNameFromJarFile;
 
+@CacheableTask
 public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingTask {
 
     private static final Map<String, String> SCOPES_TO_DIRECTIVES = new HashMap<>();
@@ -63,8 +68,11 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
     @Internal
     public abstract ListProperty<ArtifactCollection> getModuleArtifacts();
 
+    @OutputFile
+    public abstract RegularFileProperty getReport();
+
     @TaskAction
-    public void analyze() {
+    public void analyze() throws IOException {
         Set<Advice> projectAdvice = projectAdvice().getDependencyAdvice();
 
         StringBuilder message = new StringBuilder();
@@ -113,6 +121,9 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
                 }
             }
         }
+
+        Files.write(getReport().get().getAsFile().toPath(), message.toString().getBytes());
+
         if (message.length() > 0) {
             throw new RuntimeException(message.toString());
         }

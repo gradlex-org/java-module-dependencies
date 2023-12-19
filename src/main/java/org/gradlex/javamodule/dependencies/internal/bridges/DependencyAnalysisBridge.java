@@ -35,7 +35,8 @@ public class DependencyAnalysisBridge {
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
 
         TaskProvider<ModuleDirectivesScopeCheck> checkModuleDirectivesScope =
-                tasks.register("checkModuleDirectivesScope", ModuleDirectivesScopeCheck.class);
+                tasks.register("checkModuleDirectivesScope", ModuleDirectivesScopeCheck.class,
+                        t -> t.getReport().convention(project.getLayout().getBuildDirectory().file("reports/module-info-analysis/scopes.txt")));
 
         sourceSets.all(sourceSet -> checkModuleDirectivesScope.configure(t -> {
             File moduleInfo = new File(sourceSet.getJava().getSrcDirs().iterator().next(), "module-info.java");

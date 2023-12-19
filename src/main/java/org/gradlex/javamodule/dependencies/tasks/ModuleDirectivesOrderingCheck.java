@@ -17,16 +17,22 @@
 package org.gradlex.javamodule.dependencies.tasks;
 
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@CacheableTask
 public abstract class ModuleDirectivesOrderingCheck extends DefaultTask {
 
     @Input
@@ -39,8 +45,11 @@ public abstract class ModuleDirectivesOrderingCheck extends DefaultTask {
     @Input
     public abstract Property<ModuleInfo> getModuleInfo();
 
+    @OutputFile
+    public abstract RegularFileProperty getReport();
+
     @TaskAction
-    public void checkOrder() {
+    public void checkOrder() throws IOException {
         StringBuilder sb = new StringBuilder();
         for (ModuleInfo.Directive directive : ModuleInfo.Directive.values()) {
             List<String> originalOrder = getModuleInfo().get().get(directive).stream().map(name -> name + ";").collect(Collectors.toList());
@@ -67,6 +76,8 @@ public abstract class ModuleDirectivesOrderingCheck extends DefaultTask {
                 p(sb, "");
             }
         }
+
+        Files.write(getReport().get().getAsFile().toPath(), sb.toString().getBytes());
 
         if (sb.length() > 0) {
             throw new RuntimeException(getModuleInfoPath().get() + "\n\n" + sb);
