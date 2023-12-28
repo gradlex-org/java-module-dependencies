@@ -25,6 +25,7 @@ import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPlatformPlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.util.GradleVersion;
 import org.gradlex.javamodule.dependencies.dsl.ModuleVersions;
 
 import static org.gradle.api.attributes.Usage.JAVA_RUNTIME;
@@ -61,8 +62,12 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
             c.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.class, JAVA_RUNTIME));
         });
 
-        // https://github.com/gradle/gradle/issues/26163
-        project.afterEvaluate(p -> platformElements.getOutgoing().capability(project.getGroup() + ":" + project.getName() + "-platform:" + project.getVersion()));
+        if (GradleVersion.current().compareTo(GradleVersion.version("8.6")) < 0) {
+            // https://github.com/gradle/gradle/issues/26163
+            project.afterEvaluate(p -> platformElements.getOutgoing().capability(project.getGroup() + ":" + project.getName() + "-platform:" + project.getVersion()));
+        } else {
+            platformElements.getOutgoing().capability(project.provider(() -> project.getGroup() + ":" + project.getName() + "-platform:" + project.getVersion()));
+        }
 
         setupVersionsDSL(project, versions);
     }
