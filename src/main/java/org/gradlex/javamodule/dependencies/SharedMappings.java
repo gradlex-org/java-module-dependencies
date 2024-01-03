@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Properties;
 
 final public class SharedMappings {
-    static Map<String, String> mappings = loadModuleNameToGAProperties();
+    public static Map<String, String> mappings = loadModuleNameToGAProperties();
 
     static Map<String, String> loadModuleNameToGAProperties() {
         Properties properties = new Properties() {
