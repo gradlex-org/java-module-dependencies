@@ -47,6 +47,6 @@ class WarningsTest extends Specification {
         when:
         def result = fail()
         then:
-        result.output.contains('[WARN] [Java Module Dependencies] javaModuleDependencies.moduleNameToGA.put("commons.math3", "group:artifact") mapping is missing.\n')
+        result.output.contains('[WARN] [Java Module Dependencies] commons.math3=group:artifact missing in')
     }
 }

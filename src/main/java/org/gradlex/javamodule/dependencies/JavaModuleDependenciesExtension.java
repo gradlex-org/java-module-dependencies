@@ -264,7 +264,7 @@ public abstract class JavaModuleDependenciesExtension {
                 return dependency;
             } else {
                 getProject().getLogger().lifecycle(
-                        "[WARN] [Java Module Dependencies] javaModuleDependencies.moduleNameToGA.put(\"" + moduleName + "\", \"group:artifact\") mapping is missing.");
+                        "[WARN] [Java Module Dependencies] " + moduleName + "=group:artifact missing in " + getModulesProperties().get().getAsFile());
                 return null;
             }
         });
@@ -325,6 +325,9 @@ public abstract class JavaModuleDependenciesExtension {
         Optional<VersionConstraint> version = catalog == null ? empty() : catalog.findVersion(moduleName.replace('_', '.'));
         Map<String, Object> gav = new HashMap<>();
         String[] gaSplit = ga.split(":");
+        if (gaSplit.length < 2) {
+            throw new RuntimeException("Invalid mapping: " + moduleName + "="+ ga);
+        }
         gav.put(GAV.GROUP, gaSplit[0]);
         gav.put(GAV.ARTIFACT, gaSplit[1]);
         version.ifPresent(versionConstraint -> gav.put(GAV.VERSION, versionConstraint));
