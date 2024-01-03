@@ -55,6 +55,6 @@ public class DependencyAnalysisBridge {
                 .registerPostProcessingTask(checkModuleDirectivesScope);
 
         checkAllModuleInfo.configure(t -> t.dependsOn(checkModuleDirectivesScope));
-        tasks.withType(ModuleDirectivesOrderingCheck.class).configureEach(t -> t.shouldRunAfter(checkModuleDirectivesScope));
+        tasks.withType(ModuleDirectivesOrderingCheck.class).configureEach(t -> t.mustRunAfter(checkModuleDirectivesScope));
     }
 }
