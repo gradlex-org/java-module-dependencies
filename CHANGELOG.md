@@ -2,6 +2,7 @@
 
 ## Version 1.5.1
 * Make `module-info.java` analysis tasks cacheable
+* Make `recommendModuleVersions` configuration cache compatible
 * Further tweak `requires /*runtime*/` support
 
 ## Version 1.5

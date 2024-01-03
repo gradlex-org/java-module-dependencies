@@ -444,7 +444,9 @@ public abstract class JavaModuleDependenciesExtension {
                     });
 
             List<Provider<Directory>> moduleInfoFolders = requiresRuntime.stream().map(moduleName -> moduleInfoFoldersBase.map(b -> b.dir(moduleName))).collect(Collectors.toList());
-            syntheticModuleInfoFolders.from(moduleInfoFolders);
+            for (Provider<Directory> syntheticModuleInfoFolder : moduleInfoFolders) {
+                syntheticModuleInfoFolders.from(syntheticModuleInfoFolder);
+            }
             syntheticModuleInfoFolders.builtBy(generatorTask);
             getDependencies().add(sourceSetForClasspath.getCompileOnlyConfigurationName(), syntheticModuleInfoFolders);
         }
