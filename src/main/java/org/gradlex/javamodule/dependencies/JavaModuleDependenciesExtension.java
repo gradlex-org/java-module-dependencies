@@ -26,7 +26,11 @@ import org.gradle.api.artifacts.VersionCatalog;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
 import org.gradle.api.artifacts.VersionConstraint;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
+import org.gradle.api.attributes.Bundling;
+import org.gradle.api.attributes.Category;
+import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.attributes.Usage;
+import org.gradle.api.attributes.java.TargetJvmEnvironment;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.ProjectLayout;
@@ -365,10 +369,15 @@ public abstract class JavaModuleDependenciesExtension {
      *
      * @param versionsProvidingProjects projects which runtime classpaths are the runtime classpaths of the applications/services being built.
      */
-    public void versionsFromConsistentResolution(String... versionsProvidingProjects) {
+    public Configuration versionsFromConsistentResolution(String... versionsProvidingProjects) {
+        ObjectFactory objects = getObjects();
         Configuration mainRuntimeClasspath = getConfigurations().create("mainRuntimeClasspath", c -> {
             c.setCanBeConsumed(false);
-            c.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, getObjects().named(Usage.class, Usage.JAVA_RUNTIME));
+            c.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.class, Usage.JAVA_RUNTIME));
+            c.getAttributes().attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.class, Category.LIBRARY));
+            c.getAttributes().attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.class, LibraryElements.JAR));
+            c.getAttributes().attribute(TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE, objects.named(TargetJvmEnvironment.class, TargetJvmEnvironment.STANDARD_JVM));
+            c.getAttributes().attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.class, Bundling.EXTERNAL));
         });
         getConfigurations().configureEach(c -> {
             if (c.isCanBeResolved() && !c.isCanBeConsumed() && c != mainRuntimeClasspath) {
@@ -379,9 +388,10 @@ public abstract class JavaModuleDependenciesExtension {
         for (String versionsProvidingProject : versionsProvidingProjects) {
             getDependencies().add(mainRuntimeClasspath.getName(), createDependency(versionsProvidingProject));
         }
+        return mainRuntimeClasspath;
     }
 
-    public void versionsFromPlatformAndConsistentResolution(String platformProject, String... versionsProvidingProjects) {
+    public Configuration versionsFromPlatformAndConsistentResolution(String platformProject, String... versionsProvidingProjects) {
         boolean platformInJavaProject = Arrays.asList(versionsProvidingProjects).contains(platformProject);
         getSourceSets().configureEach(sourceSet -> getConfigurations().getByName(sourceSet.getImplementationConfigurationName()).withDependencies(d -> {
             Dependency platformDependency = getDependencies().platform(createDependency(platformProject));
@@ -397,7 +407,7 @@ public abstract class JavaModuleDependenciesExtension {
             d.add(platformDependency);
         }));
 
-        versionsFromConsistentResolution(versionsProvidingProjects);
+        return versionsFromConsistentResolution(versionsProvidingProjects);
     }
 
     private Dependency createDependency(String project) {
