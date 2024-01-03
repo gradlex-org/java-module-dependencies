@@ -16,8 +16,6 @@
 
 package org.gradlex.javamodule.dependencies.tasks;
 
-import org.gradle.api.provider.Provider;
-import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -27,28 +25,31 @@ import org.gradle.api.artifacts.component.ComponentSelector;
 import org.gradle.api.artifacts.component.ModuleComponentSelector;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.dsl.ComponentMetadataHandler;
-import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.attributes.Usage;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
+import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 
 import javax.inject.Inject;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public abstract class ModuleVersionRecommendation extends DefaultTask {
 
-    private final ConfigurationContainer configurations;
-    private final ComponentMetadataHandler components;
-    private final SourceSetContainer sourceSets;
-    private final JavaModuleDependenciesExtension javaModuleDependencies;
+    @Input
+    public abstract ListProperty<String> getResolutionResult();
 
     @Input
     public abstract Property<Boolean> getPrintForPlatform();
@@ -56,18 +57,16 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
     @Input
     public abstract Property<Boolean> getPrintForCatalog();
 
+    @InputFile
+    public abstract RegularFileProperty getPrintForPropertiesFile();
+
     @Inject
     public ModuleVersionRecommendation(Project project) {
-        this.configurations = project.getConfigurations();
-        this.components = project.getDependencies().getComponents();
-        this.sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-        this.javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
-    }
+        ConfigurationContainer configurations = project.getConfigurations();
+        ComponentMetadataHandler components = project.getDependencies().getComponents();
+        SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
+        JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
 
-    @TaskAction
-    public void report() {
-        Set<String> moduleVersionsPlatform = new TreeSet<>();
-        Set<String> moduleVersionsCatalog = new TreeSet<>();
         AttributeContainer rtClasspathAttributes = configurations.getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME).getAttributes();
         Configuration latestVersionsClasspath = configurations.create("latestVersionsClasspath", c -> {
             c.setCanBeConsumed(false);
@@ -100,24 +99,40 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
                     || lcVersion.contains("-b")
                     || lcVersion.contains("beta")
                     || lcVersion.contains("cr")
+                    || lcVersion.contains("ea")
                     || lcVersion.contains("m")
                     || lcVersion.contains("rc")) {
 
                 c.setStatus("integration");
             }
         });
+        getResolutionResult().set(project.provider(() -> latestVersionsClasspath.getIncoming().getResolutionResult().getAllComponents().stream().map(
+                result -> {
+                    ModuleVersionIdentifier moduleVersion = result.getModuleVersion();
+                    if (moduleVersion != null && !(result.getId() instanceof ProjectComponentIdentifier)) {
+                        String ga = moduleVersion.getGroup() + ":" + moduleVersion.getName();
+                        String version = moduleVersion.getVersion();
+                        Provider<String> moduleName = javaModuleDependencies.moduleName(ga);
+                        if (moduleName.isPresent()) {
+                            return moduleName.get() + ":" + version;
+                        }
+                    }
+                    return null;
+                }).filter(Objects::nonNull).collect(Collectors.toList())));
+    }
 
-        for (ResolvedComponentResult result : latestVersionsClasspath.getIncoming().getResolutionResult().getAllComponents()) {
-            ModuleVersionIdentifier moduleVersion = result.getModuleVersion();
-            if (moduleVersion != null && !(result.getId() instanceof ProjectComponentIdentifier)) {
-                String ga = moduleVersion.getGroup() + ":" + moduleVersion.getName();
-                String version = moduleVersion.getVersion();
-                Provider<String> moduleName = javaModuleDependencies.moduleName(ga);
-                if (moduleName.isPresent()) {
-                    moduleVersionsPlatform.add("    version(\"" + moduleName.get() + "\", \"" + version + "\")");
-                    moduleVersionsCatalog.add(moduleName.get().replace('.', '_') + " = \"" + version + "\"");
-                }
-            }
+    @TaskAction
+    public void report() {
+        Set<String> moduleVersionsPlatform = new TreeSet<>();
+        Set<String> moduleVersionsCatalog = new TreeSet<>();
+        Set<String> moduleVersionsPropertiesFile = new TreeSet<>();
+
+        for (String result : getResolutionResult().get()) {
+            String moduleName = result.split(":")[0];
+            String version = result.split(":")[1];
+            moduleVersionsPlatform.add("    version(\"" + moduleName + "\", \"" + version + "\")");
+            moduleVersionsCatalog.add(moduleName.replace('.', '_') + " = \"" + version + "\"");
+            moduleVersionsPropertiesFile.add(moduleName + "=" + version);
         }
 
         if (getPrintForPlatform().get()) {
@@ -136,6 +151,15 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
             p("Latest Stable Versions of Java Modules - use in [versions] section of 'gradle/libs.versions.toml'");
             p("=================================================================================================");
             for (String entry : moduleVersionsCatalog) {
+                p(entry);
+            }
+        }
+
+        if (getPrintForCatalog().isPresent()) {
+            p("");
+            p("Latest Stable Versions of Java Modules - use in: " + getPrintForPropertiesFile().get().getAsFile());
+            p("=================================================================================================");
+            for (String entry : moduleVersionsPropertiesFile) {
                 p(entry);
             }
         }
