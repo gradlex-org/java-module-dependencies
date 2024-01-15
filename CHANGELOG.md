@@ -1,7 +1,7 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
 ## Version 1.5.2
-* Fiy for requires /*runtime*/ support
+* Fix for requires /*runtime*/ support
 
 ## Version 1.5.1
 * Make `module-info.java` analysis tasks cacheable
