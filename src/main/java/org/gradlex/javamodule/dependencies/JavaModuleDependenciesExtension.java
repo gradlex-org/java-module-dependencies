@@ -433,11 +433,17 @@ public abstract class JavaModuleDependenciesExtension {
 
     void doAddRequiresRuntimeSupport(SourceSet sourceSetForModuleInfo, SourceSet sourceSetForClasspath) {
         List<String> requiresRuntime = getModuleInfoCache().get(sourceSetForModuleInfo).get(ModuleInfo.Directive.REQUIRES_RUNTIME);
+        String generatorTaskName = sourceSetForClasspath.getTaskName("generate", "syntheticModuleInfoFolders");
+        if (getProject().getTasks().getNames().contains(generatorTaskName)) {
+            // Already active for this source set
+            return;
+        }
+
         if (!requiresRuntime.isEmpty()) {
             ConfigurableFileCollection syntheticModuleInfoFolders = getObjects().fileCollection();
             Provider<Directory> moduleInfoFoldersBase = getLayout().getBuildDirectory().dir("tmp/java-module-dependencies/" + sourceSetForClasspath.getName());
             TaskProvider<SyntheticModuleInfoFoldersGeneration> generatorTask = getProject().getTasks().register(
-                    sourceSetForClasspath.getTaskName("generate", "syntheticModuleInfoFolders"),
+                    generatorTaskName,
                     SyntheticModuleInfoFoldersGeneration.class, t -> {
                         t.getModuleNames().set(requiresRuntime);
                         t.getSyntheticModuleInfoFolder().set(moduleInfoFoldersBase);
