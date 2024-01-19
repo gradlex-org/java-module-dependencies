@@ -72,6 +72,7 @@ import static java.util.Optional.empty;
 @SuppressWarnings("unused")
 public abstract class JavaModuleDependenciesExtension {
     static final String JAVA_MODULE_DEPENDENCIES = "javaModuleDependencies";
+    private static final String INTERNAL = "internal";
 
     private final VersionCatalogsExtension versionCatalogs;
     private final ModuleInfoCache moduleInfoCache;
@@ -396,19 +397,33 @@ public abstract class JavaModuleDependenciesExtension {
 
     public Configuration versionsFromPlatformAndConsistentResolution(String platformProject, String... versionsProvidingProjects) {
         boolean platformInJavaProject = Arrays.asList(versionsProvidingProjects).contains(platformProject);
-        getSourceSets().configureEach(sourceSet -> getConfigurations().getByName(sourceSet.getImplementationConfigurationName()).withDependencies(d -> {
-            Dependency platformDependency = getDependencies().platform(createDependency(platformProject));
-            if (platformInJavaProject) {
-                if (platformProject.startsWith(":")) {
-                    String capability = ((ProjectDependency) platformDependency).getDependencyProject().getGroup() + platformProject + "-platform";
-                    ((ProjectDependency) platformDependency).capabilities(c -> c.requireCapability(capability));
-                } else if (platformDependency instanceof ModuleDependency) {
-                    String capability = platformProject + "-platform";
-                    ((ModuleDependency) platformDependency).capabilities(c -> c.requireCapability(capability));
-                }
-            }
-            d.add(platformDependency);
-        }));
+
+        if (getConfigurations().findByName(INTERNAL) == null) {
+            getConfigurations().create("internal", internal -> {
+                internal.setCanBeResolved(false);
+                internal.setCanBeConsumed(false);
+                internal.withDependencies(d -> {
+                    Dependency platformDependency = getDependencies().platform(createDependency(platformProject));
+                    if (platformInJavaProject) {
+                        if (platformProject.startsWith(":")) {
+                            String capability = ((ProjectDependency) platformDependency).getDependencyProject().getGroup() + platformProject + "-platform";
+                            ((ProjectDependency) platformDependency).capabilities(c -> c.requireCapability(capability));
+                        } else if (platformDependency instanceof ModuleDependency) {
+                            String capability = platformProject + "-platform";
+                            ((ModuleDependency) platformDependency).capabilities(c -> c.requireCapability(capability));
+                        }
+                    }
+                    d.add(platformDependency);
+                });
+            });
+        }
+
+        getSourceSets().configureEach(sourceSet -> {
+            Configuration internal = getConfigurations().getByName(INTERNAL);
+            getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName()).extendsFrom(internal);
+            getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName()).extendsFrom(internal);
+            getConfigurations().getByName(sourceSet.getAnnotationProcessorConfigurationName()).extendsFrom(internal);
+        });
 
         return versionsFromConsistentResolution(versionsProvidingProjects);
     }
