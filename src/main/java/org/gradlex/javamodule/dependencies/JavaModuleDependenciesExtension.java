@@ -52,6 +52,7 @@ import java.io.CharArrayReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -368,12 +369,16 @@ public abstract class JavaModuleDependenciesExtension {
         });
     }
 
+    public Configuration versionsFromConsistentResolution(String... versionsProvidingProjects) {
+        return versionsFromConsistentResolution(Arrays.asList(versionsProvidingProjects));
+    }
+
     /**
      * Use consistent resolution to manage versions consistently through in the main application project(s).
      *
      * @param versionsProvidingProjects projects which runtime classpaths are the runtime classpaths of the applications/services being built.
      */
-    public Configuration versionsFromConsistentResolution(String... versionsProvidingProjects) {
+    public Configuration versionsFromConsistentResolution(Collection<String> versionsProvidingProjects) {
         ObjectFactory objects = getObjects();
         Configuration mainRuntimeClasspath = getConfigurations().create("mainRuntimeClasspath", c -> {
             c.setCanBeConsumed(false);
@@ -396,36 +401,46 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     public Configuration versionsFromPlatformAndConsistentResolution(String platformProject, String... versionsProvidingProjects) {
-        boolean platformInJavaProject = Arrays.asList(versionsProvidingProjects).contains(platformProject);
+        return versionsFromPlatformAndConsistentResolution(platformProject, Arrays.asList(versionsProvidingProjects));
+    }
 
-        if (getConfigurations().findByName(INTERNAL) == null) {
-            getConfigurations().create("internal", internal -> {
-                internal.setCanBeResolved(false);
-                internal.setCanBeConsumed(false);
-                internal.withDependencies(d -> {
-                    Dependency platformDependency = getDependencies().platform(createDependency(platformProject));
-                    if (platformInJavaProject) {
-                        if (platformProject.startsWith(":")) {
-                            String capability = ((ProjectDependency) platformDependency).getDependencyProject().getGroup() + platformProject + "-platform";
-                            ((ProjectDependency) platformDependency).capabilities(c -> c.requireCapability(capability));
-                        } else if (platformDependency instanceof ModuleDependency) {
-                            String capability = platformProject + "-platform";
-                            ((ModuleDependency) platformDependency).capabilities(c -> c.requireCapability(capability));
-                        }
-                    }
-                    d.add(platformDependency);
-                });
-            });
-        }
+    public Configuration versionsFromPlatformAndConsistentResolution(String platformProject, Collection<String> versionsProvidingProjects) {
+        boolean platformInJavaProject = versionsProvidingProjects.contains(platformProject);
+
+        maybeCreateInternalConfiguration().withDependencies(d -> {
+            Dependency platformDependency = getDependencies().platform(createDependency(platformProject));
+            if (platformInJavaProject) {
+                if (platformProject.startsWith(":")) {
+                    String capability = ((ProjectDependency) platformDependency).getDependencyProject().getGroup() + platformProject + "-platform";
+                    ((ProjectDependency) platformDependency).capabilities(c -> c.requireCapability(capability));
+                } else if (platformDependency instanceof ModuleDependency) {
+                    String capability = platformProject + "-platform";
+                    ((ModuleDependency) platformDependency).capabilities(c -> c.requireCapability(capability));
+                }
+            }
+            d.add(platformDependency);
+        });
 
         getSourceSets().configureEach(sourceSet -> {
-            Configuration internal = getConfigurations().getByName(INTERNAL);
-            getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName()).extendsFrom(internal);
-            getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName()).extendsFrom(internal);
-            getConfigurations().getByName(sourceSet.getAnnotationProcessorConfigurationName()).extendsFrom(internal);
+            ConfigurationContainer configurations = getConfigurations();
+            Configuration internal = configurations.getByName(INTERNAL);
+            configurations.getByName(sourceSet.getRuntimeClasspathConfigurationName()).extendsFrom(internal);
+            configurations.getByName(sourceSet.getCompileClasspathConfigurationName()).extendsFrom(internal);
+            configurations.getByName(sourceSet.getAnnotationProcessorConfigurationName()).extendsFrom(internal);
         });
 
         return versionsFromConsistentResolution(versionsProvidingProjects);
+    }
+
+    private Configuration maybeCreateInternalConfiguration() {
+        Configuration internal = getConfigurations().findByName(INTERNAL);
+        if (internal != null) {
+            return internal;
+        }
+        return getConfigurations().create(INTERNAL, i -> {
+            i.setCanBeResolved(false);
+            i.setCanBeConsumed(false);
+        });
     }
 
     private Dependency createDependency(String project) {
