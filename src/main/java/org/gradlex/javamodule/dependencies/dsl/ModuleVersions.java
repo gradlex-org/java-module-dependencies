@@ -39,16 +39,20 @@ abstract public class ModuleVersions {
     }
 
     public void version(String moduleName, String version) {
-        version(moduleName, a -> a.require(version));
+        version(moduleName, version, a -> {});
     }
 
     public void version(String moduleName, Action<? super MutableVersionConstraint> version) {
+        version(moduleName, "", version);
+    }
+
+    public void version(String moduleName, String requiredVersion, Action<? super MutableVersionConstraint> version) {
         getDependencies().getConstraints().add(configuration.getName(), javaModuleDependencies.ga(moduleName).map(ga -> {
             String mainComponentCoordinates;
             if (ga.contains("|")) {
-                mainComponentCoordinates = ga.substring(0, ga.indexOf("|"));
+                mainComponentCoordinates = ga.substring(0, ga.indexOf("|")) + ":" + requiredVersion;
             } else {
-                mainComponentCoordinates = ga;
+                mainComponentCoordinates = ga + ":" + requiredVersion;
             }
             DependencyConstraint dependencyConstraint = getDependencies().getConstraints().create(mainComponentCoordinates);
             dependencyConstraint.version(version);

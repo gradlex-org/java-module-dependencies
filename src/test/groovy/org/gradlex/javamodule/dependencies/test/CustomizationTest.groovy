@@ -108,4 +108,32 @@ class CustomizationTest extends Specification {
         then:
         compile.output.contains('[xmlbeans-5.0.1.jar, jackson-annotations-2.12.5.jar, jackson-core-2.12.5.jar, jackson-databind-2.12.5.jar, log4j-api-2.14.0.jar]')
     }
+
+    def "can define versions in platform with different notations"() {
+        given:
+        def customModulesPropertiesFile = file("gradle/modules.properties")
+
+        customModulesPropertiesFile << 'jakarta.mail=com.sun.mail:jakarta.mail'
+        appBuildFile << '''
+            moduleInfo { 
+                version("jakarta.mail", "2.0.1")
+                version("jakarta.servlet", "6.0.0") { reject("[7.0.0,)") }
+                version("java.inject") { require("1.0.5"); reject("[2.0.0,)") }
+            }
+        '''
+
+        appModuleInfoFile << '''
+            module org.gradlex.test.app { 
+                requires jakarta.mail;
+                requires jakarta.servlet;
+                requires java.inject;
+            }
+        '''
+
+        when:
+        def result = printRuntimeJars()
+
+        then:
+        result.output.contains('[jakarta.mail-2.0.1.jar, jakarta.servlet-api-6.0.0.jar, jakarta.inject-api-1.0.5.jar, jakarta.activation-2.0.1.jar]')
+    }
 }
