@@ -464,28 +464,26 @@ public abstract class JavaModuleDependenciesExtension {
     void doAddRequiresRuntimeSupport(SourceSet sourceSetForModuleInfo, SourceSet sourceSetForClasspath) {
         List<String> requiresRuntime = getModuleInfoCache().get(sourceSetForModuleInfo).get(ModuleInfo.Directive.REQUIRES_RUNTIME);
         String generatorTaskName = sourceSetForClasspath.getTaskName("generate", "syntheticModuleInfoFolders");
-        if (getProject().getTasks().getNames().contains(generatorTaskName)) {
-            // Already active for this source set
+        if (requiresRuntime.isEmpty() || getProject().getTasks().getNames().contains(generatorTaskName)) {
+            // Already active or not needed for this source set
             return;
         }
 
-        if (!requiresRuntime.isEmpty()) {
-            ConfigurableFileCollection syntheticModuleInfoFolders = getObjects().fileCollection();
-            Provider<Directory> moduleInfoFoldersBase = getLayout().getBuildDirectory().dir("tmp/java-module-dependencies/" + sourceSetForClasspath.getName());
-            TaskProvider<SyntheticModuleInfoFoldersGeneration> generatorTask = getProject().getTasks().register(
-                    generatorTaskName,
-                    SyntheticModuleInfoFoldersGeneration.class, t -> {
-                        t.getModuleNames().set(requiresRuntime);
-                        t.getSyntheticModuleInfoFolder().set(moduleInfoFoldersBase);
-                    });
+        ConfigurableFileCollection syntheticModuleInfoFolders = getObjects().fileCollection();
+        Provider<Directory> moduleInfoFoldersBase = getLayout().getBuildDirectory().dir("tmp/java-module-dependencies/" + sourceSetForClasspath.getName());
+        TaskProvider<SyntheticModuleInfoFoldersGeneration> generatorTask = getProject().getTasks().register(
+                generatorTaskName,
+                SyntheticModuleInfoFoldersGeneration.class, t -> {
+                    t.getModuleNames().set(requiresRuntime);
+                    t.getSyntheticModuleInfoFolder().set(moduleInfoFoldersBase);
+                });
 
-            List<Provider<Directory>> moduleInfoFolders = requiresRuntime.stream().map(moduleName -> moduleInfoFoldersBase.map(b -> b.dir(moduleName))).collect(Collectors.toList());
-            for (Provider<Directory> syntheticModuleInfoFolder : moduleInfoFolders) {
-                syntheticModuleInfoFolders.from(syntheticModuleInfoFolder);
-            }
-            syntheticModuleInfoFolders.builtBy(generatorTask);
-            getDependencies().add(sourceSetForClasspath.getCompileOnlyConfigurationName(), syntheticModuleInfoFolders);
+        List<Provider<Directory>> moduleInfoFolders = requiresRuntime.stream().map(moduleName -> moduleInfoFoldersBase.map(b -> b.dir(moduleName))).collect(Collectors.toList());
+        for (Provider<Directory> syntheticModuleInfoFolder : moduleInfoFolders) {
+            syntheticModuleInfoFolders.from(syntheticModuleInfoFolder);
         }
+        syntheticModuleInfoFolders.builtBy(generatorTask);
+        getDependencies().add(sourceSetForClasspath.getCompileOnlyConfigurationName(), syntheticModuleInfoFolders);
     }
 
     private <T> Provider<T> errorIfNotFound(String moduleName) {
