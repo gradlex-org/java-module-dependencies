@@ -65,6 +65,11 @@ dependencies {
 }
 ```
 
+> ⚠️ Due to [this bug](https://github.com/gradle/gradle/issues/21490#issuecomment-1458887481) in Gradle which may affect the plugin, it is recommented to add the following to your `settings.gradle(.kts)` file:
+> ```
+> includeBuild(".")
+> ```
+
 ## Apply the plugin
 
 In your convention plugin, apply the plugin.
