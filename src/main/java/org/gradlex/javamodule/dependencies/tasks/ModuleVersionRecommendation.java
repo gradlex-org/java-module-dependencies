@@ -35,6 +35,7 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
@@ -58,6 +59,7 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
     public abstract Property<Boolean> getPrintForCatalog();
 
     @InputFile
+    @Optional
     public abstract RegularFileProperty getPrintForPropertiesFile();
 
     @Inject
@@ -155,7 +157,7 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
             }
         }
 
-        if (getPrintForCatalog().isPresent()) {
+        if (getPrintForPropertiesFile().isPresent()) {
             p("");
             p("Latest Stable Versions of Java Modules - use in: " + getPrintForPropertiesFile().get().getAsFile());
             p("=================================================================================================");
