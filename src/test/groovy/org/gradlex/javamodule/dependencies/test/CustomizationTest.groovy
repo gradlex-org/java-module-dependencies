@@ -84,8 +84,8 @@ class CustomizationTest extends Specification {
         given:
         settingsFile << '''
             dependencyResolutionManagement.versionCatalogs.create("modules") {
-                version("org_apache_xmlbeans", "5.0.1")
-                version("com_fasterxml_jackson_databind", "2.12.5")
+                version("org.apache.xmlbeans", "5.0.1")
+                version("com.fasterxml.jackson.databind", "2.12.5")
             }
         '''
         appBuildFile << '''
@@ -135,5 +135,43 @@ class CustomizationTest extends Specification {
 
         then:
         result.output.contains('[jakarta.mail-2.0.1.jar, jakarta.servlet-api-6.0.0.jar, jakarta.inject-api-1.0.5.jar, jakarta.activation-2.0.1.jar]')
+    }
+
+    def "can use toml catalog with '_' for '.'"() {
+        given:
+        file('gradle/libs.versions.toml') << '''
+            [versions]
+            org_apache_xmlbeans = "5.0.1"
+        '''.stripIndent()
+        appModuleInfoFile << '''
+            module org.gradlex.test.app { 
+                requires org.apache.xmlbeans;
+            }
+        '''
+
+        when:
+        def result = build()
+
+        then:
+        !result.output.contains('[WARN]')
+    }
+
+    def "can use toml catalog with '-' for '.'"() {
+        given:
+        file('gradle/libs.versions.toml') << '''
+            [versions]
+            org-apache-xmlbeans = "5.0.1"
+        '''.stripIndent()
+        appModuleInfoFile << '''
+            module org.gradlex.test.app { 
+                requires org.apache.xmlbeans;
+            }
+        '''
+
+        when:
+        def result = build()
+
+        then:
+        !result.output.contains('[WARN]')
     }
 }

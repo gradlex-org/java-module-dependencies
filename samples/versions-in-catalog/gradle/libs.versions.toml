@@ -4,5 +4,4 @@ com_fasterxml_jackson_databind = "2.12.5"
 org_slf4j = "1.7.28"
 org_slf4j_simple = "1.7.28"
 
-org_junit_jupiter_api = "5.7.2"
-org_junit_jupiter_engine = "5.7.2"
+org-junit-jupiter-api = "5.7.2"
