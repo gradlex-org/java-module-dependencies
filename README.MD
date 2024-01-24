@@ -233,11 +233,9 @@ org_apache_xmlbeans = "5.0.1"
 com_fasterxml_jackson_databind = "2.12.5"
 org_slf4j = "2.0.7"
 
-org_junit_jupiter_api = "5.7.2"
+org-junit-jupiter-api = "5.7.2"
 ```
-
-- _If_ you use a catalog, the plugin will warn if a version it looks for is missing.
-  You can turn these warnings off using `warnForMissingVersions.set(false)`.
+- Note that the TOML notation does not support `.` as separater in the Module Names, but allows you to use `_` or `-` instead.
 - _If_ you use a catalog with a custom name (not `libs`), you can tell the plugin using `versionCatalogName.set("customName")`.
 
 ## Find the latest stable version of a Module
@@ -266,27 +264,6 @@ moduleInfo {
     version("org.slf4j", "1.7.36")
     version("org.slf4j.simple", "1.7.36")
 }
-```
-
-Or entries for **gradle/libs.versions.toml** (in projects that use a version catalog):
-
-```
-$ ./gradlew :app:recommendModuleVersions -q
-
-Latest Stable Versions of Java Modules - use in [versions] section of 'gradle/libs.versions.toml'
-=================================================================================================
-com_fasterxml_jackson_annotation = "2.13.2"
-com_fasterxml_jackson_core = "2.13.2"
-com_fasterxml_jackson_databind = "2.13.2"
-org_apache_logging_log4j = "2.17.2"
-org_apache_xmlbeans = "5.0.3"
-org_junit_jupiter_api = "5.8.2"
-org_junit_jupiter_engine = "5.8.2"
-org_junit_platform_commons = "1.8.2"
-org_junit_platform_engine = "1.8.2"
-org_opentest4j = "1.2.0"
-org_slf4j = "1.7.36"
-org_slf4j_simple = "1.7.36"
 ```
 
 ## Check module-info.java files
