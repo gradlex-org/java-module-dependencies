@@ -63,6 +63,7 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.empty;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_RUNTIME;
 
 /**
  * - Configure behavior of the 'java-module-dependencies' plugin
@@ -462,7 +463,7 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     void doAddRequiresRuntimeSupport(SourceSet sourceSetForModuleInfo, SourceSet sourceSetForClasspath) {
-        List<String> requiresRuntime = getModuleInfoCache().get(sourceSetForModuleInfo).get(ModuleInfo.Directive.REQUIRES_RUNTIME);
+        List<String> requiresRuntime = getModuleInfoCache().get(sourceSetForModuleInfo).get(REQUIRES_RUNTIME);
         String generatorTaskName = sourceSetForClasspath.getTaskName("generate", "syntheticModuleInfoFolders");
         if (requiresRuntime.isEmpty() || getProject().getTasks().getNames().contains(generatorTaskName)) {
             // Already active or not needed for this source set
