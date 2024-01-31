@@ -45,7 +45,7 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
-import org.gradlex.javamodule.dependencies.tasks.SyntheticModuleInfoFoldersGeneration;
+import org.gradlex.javamodule.dependencies.tasks.SyntheticModuleInfoFoldersGenerate;
 
 import javax.inject.Inject;
 import java.io.CharArrayReader;
@@ -471,9 +471,9 @@ public abstract class JavaModuleDependenciesExtension {
 
         ConfigurableFileCollection syntheticModuleInfoFolders = getObjects().fileCollection();
         Provider<Directory> moduleInfoFoldersBase = getLayout().getBuildDirectory().dir("tmp/java-module-dependencies/" + sourceSetForClasspath.getName());
-        TaskProvider<SyntheticModuleInfoFoldersGeneration> generatorTask = getProject().getTasks().register(
+        TaskProvider<SyntheticModuleInfoFoldersGenerate> generatorTask = getProject().getTasks().register(
                 generatorTaskName,
-                SyntheticModuleInfoFoldersGeneration.class, t -> {
+                SyntheticModuleInfoFoldersGenerate.class, t -> {
                     t.getModuleNames().set(requiresRuntime);
                     t.getSyntheticModuleInfoFolder().set(moduleInfoFoldersBase);
                 });

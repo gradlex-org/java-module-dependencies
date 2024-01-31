@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.*;
 
-public abstract class ModuleInfoGeneration extends DefaultTask {
+public abstract class ModuleInfoGenerate extends DefaultTask {
 
     @Input
     public abstract Property<String> getModuleName();
@@ -65,11 +65,6 @@ public abstract class ModuleInfoGeneration extends DefaultTask {
     @TaskAction
     public void generate() throws IOException {
         File moduleInfo = getModuleInfoFile().get().getAsFile();
-        if (moduleInfo.exists()) {
-            getLogger().lifecycle("Skipping generation of existing file: " + moduleInfo.getPath());
-            return;
-        }
-
         List<String> content = new ArrayList<>();
 
         content.add("module "+ getModuleName().get() + " {");

@@ -28,7 +28,7 @@ import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoClassCreator
 
 @NonNullApi
 @CacheableTask
-public abstract class SyntheticModuleInfoFoldersGeneration extends DefaultTask {
+public abstract class SyntheticModuleInfoFoldersGenerate extends DefaultTask {
 
     @Input
     public abstract ListProperty<String> getModuleNames();

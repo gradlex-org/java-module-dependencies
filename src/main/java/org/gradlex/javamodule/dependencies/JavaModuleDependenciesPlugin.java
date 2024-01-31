@@ -39,7 +39,7 @@ import org.gradlex.javamodule.dependencies.internal.dsl.GradleOnlyDirectivesInte
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDependencyReport;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck;
-import org.gradlex.javamodule.dependencies.tasks.ModuleInfoGeneration;
+import org.gradlex.javamodule.dependencies.tasks.ModuleInfoGenerate;
 import org.gradlex.javamodule.dependencies.tasks.ModulePathAnalysis;
 import org.gradlex.javamodule.dependencies.tasks.ModuleVersionRecommendation;
 
@@ -181,7 +181,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         });
 
         sourceSets.all(sourceSet -> {
-            TaskProvider<ModuleInfoGeneration> generateModuleInfo = project.getTasks().register(sourceSet.getTaskName("generate", "ModuleInfoFile"), ModuleInfoGeneration.class, t -> {
+            TaskProvider<ModuleInfoGenerate> generateModuleInfo = project.getTasks().register(sourceSet.getTaskName("generate", "ModuleInfoFile"), ModuleInfoGenerate.class, t -> {
                 t.setGroup("java modules");
                 t.setDescription("Generate 'module-info.java' in '" + sourceSet.getName() + "' source set");
 
