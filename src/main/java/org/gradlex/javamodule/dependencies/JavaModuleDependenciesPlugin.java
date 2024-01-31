@@ -37,6 +37,7 @@ import org.gradlex.javamodule.dependencies.internal.bridges.ExtraJavaModuleInfoB
 import org.gradlex.javamodule.dependencies.internal.dsl.AllDirectivesInternal;
 import org.gradlex.javamodule.dependencies.internal.dsl.GradleOnlyDirectivesInternal;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
+import org.gradlex.javamodule.dependencies.tasks.BuildFileDependenciesGenerate;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDependencyReport;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck;
 import org.gradlex.javamodule.dependencies.tasks.ModuleInfoGenerate;
@@ -45,6 +46,8 @@ import org.gradlex.javamodule.dependencies.tasks.ModuleVersionRecommendation;
 
 import java.io.File;
 import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
 import static org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP;
@@ -206,6 +209,23 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
             generateAllModuleInfoFiles.configure(t -> t.dependsOn(generateModuleInfo));
         });
+
+        project.getTasks().register("generateBuildFileDependencies", BuildFileDependenciesGenerate.class, t -> {
+            t.setGroup("java modules");
+            t.setDescription("Generate 'dependencies' block in 'build.gradle.kts'");
+
+            t.getOwnProjectGroup().set(project.provider(() -> project.getGroup().toString()));
+            t.getWithCatalog().set(true);
+            sourceSets.all(sourceSet -> t.addDependencies(sourceSet.getName(),
+                    collectDependencies(project, javaModuleDependencies, sourceSet, REQUIRES_TRANSITIVE, sourceSet.getApiConfigurationName()),
+                    collectDependencies(project, javaModuleDependencies, sourceSet, REQUIRES, sourceSet.getImplementationConfigurationName()),
+                    collectDependencies(project, javaModuleDependencies, sourceSet, REQUIRES_STATIC_TRANSITIVE, sourceSet.getCompileOnlyApiConfigurationName()),
+                    collectDependencies(project, javaModuleDependencies, sourceSet, REQUIRES_STATIC, sourceSet.getCompileOnlyConfigurationName()),
+                    collectDependencies(project, javaModuleDependencies, sourceSet, REQUIRES_RUNTIME, sourceSet.getRuntimeOnlyConfigurationName())
+            ));
+
+            t.getBuildFile().set(project.getLayout().getProjectDirectory().file("build.gradle.kts"));
+        });
     }
 
     private void setupOrderingCheckTasks(Project project, TaskProvider<Task> checkAllModuleInfo, JavaModuleDependenciesExtension javaModuleDependencies) {
@@ -260,6 +280,21 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         }
 
         project.getDependencies().addProvider(configuration.getName(), javaModuleDependencies.create(moduleName, sourceSet));
+    }
+
+    private List<BuildFileDependenciesGenerate.DependencyDeclaration> collectDependencies(Project project, JavaModuleDependenciesExtension javaModuleDependencies, SourceSet sourceSet, ModuleInfo.Directive directive, String scope) {
+        ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get(sourceSet);
+        if (moduleInfo == ModuleInfo.EMPTY) {
+            // check if there is a whiltebox module-info we can use isntead
+            File sourceSetDir = sourceSet.getJava().getSrcDirs().iterator().next().getParentFile();
+            File whiteboxModuleInfoFile = new File(sourceSetDir, "java9/module-info.java");
+            if (whiteboxModuleInfoFile.exists()) {
+                moduleInfo = new ModuleInfo(project.getProviders().fileContents(project.getLayout().getProjectDirectory().file(whiteboxModuleInfoFile.getAbsolutePath())).getAsText().get(), whiteboxModuleInfoFile);
+            }
+        }
+        return moduleInfo.get(directive).stream()
+                .map(moduleName -> new BuildFileDependenciesGenerate.DependencyDeclaration(scope, moduleName, javaModuleDependencies.ga(moduleName).get()))
+                .collect(Collectors.toList());
     }
 
 }

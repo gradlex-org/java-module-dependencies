@@ -27,9 +27,22 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.util.GradleVersion;
 import org.gradlex.javamodule.dependencies.dsl.ModuleVersions;
+import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
+import org.gradlex.javamodule.dependencies.tasks.CatalogGenerate;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.gradle.api.attributes.Usage.JAVA_RUNTIME;
 import static org.gradle.api.plugins.JavaPlatformPlugin.API_CONFIGURATION_NAME;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_RUNTIME;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_STATIC;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_TRANSITIVE;
 
 @SuppressWarnings("unused")
 @NonNullApi
@@ -43,6 +56,7 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
 
     private void setupForJavaPlatformProject(Project project) {
         setupVersionsDSL(project, project.getConfigurations().getByName(API_CONFIGURATION_NAME));
+        registerCatalogTask(project);
     }
 
     private void setupForJavaProject(Project project) {
@@ -70,12 +84,55 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
         }
 
         setupVersionsDSL(project, versions);
+        registerCatalogTask(project);
     }
 
     private void setupVersionsDSL(Project project, Configuration configuration) {
         project.getPlugins().apply(JavaModuleDependenciesPlugin.class);
         JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
         project.getExtensions().create("moduleInfo", ModuleVersions.class, configuration, javaModuleDependencies);
+    }
+
+    private void registerCatalogTask(Project project) {
+        JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
+        ModuleVersions moduleVersions = project.getExtensions().getByType(ModuleVersions.class);
+        project.getTasks().register("generateCatalog", CatalogGenerate.class, t -> {
+            t.setGroup("java modules");
+            t.setDescription("Generate 'libs.versions.toml' file");
+
+            t.getOwnProjectGroup().set(project.provider(() -> project.getGroup().toString()));
+
+            t.getEntries().addAll(collectCatalogEntriesFromVersions(javaModuleDependencies, moduleVersions));
+            project.getRootProject().getSubprojects().forEach(sub -> {
+                File[] srcDirs = sub.getLayout().getProjectDirectory().dir("src").getAsFile().listFiles();
+                (srcDirs == null ? Stream.<File>empty() : Arrays.stream(srcDirs)).forEach(srcDirSet -> {
+                    File moduleInfoFile = new File(srcDirSet, "java/module-info.java");
+                    if (!moduleInfoFile.exists()) {
+                        moduleInfoFile = new File(srcDirSet, "java9/module-info.java");
+                    }
+                    if (moduleInfoFile.exists()) {
+                        ModuleInfo moduleInfo = new ModuleInfo(project.getProviders().fileContents(project.getLayout().getProjectDirectory().file(moduleInfoFile.getAbsolutePath())).getAsText().get(), moduleInfoFile);
+                        t.getEntries().addAll(collectCatalogEntriesFromModuleInfos(javaModuleDependencies, moduleInfo.get(REQUIRES_TRANSITIVE)));
+                        t.getEntries().addAll(collectCatalogEntriesFromModuleInfos(javaModuleDependencies, moduleInfo.get(REQUIRES)));
+                        t.getEntries().addAll(collectCatalogEntriesFromModuleInfos(javaModuleDependencies, moduleInfo.get(REQUIRES_STATIC_TRANSITIVE)));
+                        t.getEntries().addAll(collectCatalogEntriesFromModuleInfos(javaModuleDependencies, moduleInfo.get(REQUIRES_STATIC)));
+                        t.getEntries().addAll(collectCatalogEntriesFromModuleInfos(javaModuleDependencies, moduleInfo.get(REQUIRES_RUNTIME)));
+                    }
+                });
+            });
+
+            t.getEntries().addAll();
+
+            t.getCatalogFile().set(project.getRootProject().getLayout().getProjectDirectory().file("gradle/libs.versions.toml"));
+        });
+    }
+
+    private List<CatalogGenerate.CatalogEntry> collectCatalogEntriesFromVersions(JavaModuleDependenciesExtension javaModuleDependencies, ModuleVersions moduleVersions) {
+        return moduleVersions.getDeclaredVersions().entrySet().stream().map(mv -> new CatalogGenerate.CatalogEntry(mv.getKey(), javaModuleDependencies.ga(mv.getKey()).get(), mv.getValue())).collect(Collectors.toList());
+    }
+
+    private List<CatalogGenerate.CatalogEntry> collectCatalogEntriesFromModuleInfos(JavaModuleDependenciesExtension javaModuleDependencies, List<String> moduleNames) {
+        return moduleNames.stream().map(moduleName -> new CatalogGenerate.CatalogEntry(moduleName, javaModuleDependencies.ga(moduleName).get(), null)).collect(Collectors.toList());
     }
 
 }

@@ -24,11 +24,18 @@ import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 
 import javax.inject.Inject;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 abstract public class ModuleVersions {
 
+    private final Map<String, String> declaredVersions = new LinkedHashMap<>();
     private final Configuration configuration;
     protected final JavaModuleDependenciesExtension javaModuleDependencies;
+
+    public Map<String, String> getDeclaredVersions() {
+        return declaredVersions;
+    }
 
     @Inject
     protected abstract DependencyHandler getDependencies();
@@ -58,5 +65,6 @@ abstract public class ModuleVersions {
             dependencyConstraint.version(version);
             return dependencyConstraint;
         }));
+        declaredVersions.put(moduleName, requiredVersion);
     }
 }
