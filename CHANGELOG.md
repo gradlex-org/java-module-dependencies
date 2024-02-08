@@ -1,5 +1,8 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.6.1
+* Fix in setup of new utility tasks
+
 ## Version 1.6
 * Add more utility tasks to migrate from/to module-info based dependencies
 * Additional notation for module version DSL

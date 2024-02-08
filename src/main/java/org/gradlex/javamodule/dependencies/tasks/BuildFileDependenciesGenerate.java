@@ -21,6 +21,7 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
 
@@ -65,9 +66,9 @@ public abstract class BuildFileDependenciesGenerate extends DefaultTask {
     public static class DependencyDeclaration {
         private final String scope;
         private final String moduleName;
-        private final String fullId;
+        private final Provider<String> fullId;
 
-        public DependencyDeclaration(String scope, String moduleName, String fullId) {
+        public DependencyDeclaration(String scope, String moduleName, Provider<String> fullId) {
             this.scope = scope;
             this.moduleName = moduleName;
             this.fullId = fullId;
@@ -113,7 +114,7 @@ public abstract class BuildFileDependenciesGenerate extends DefaultTask {
             content.add("");
         }
 
-        if (!getDependencies().get().isEmpty()) {
+        if (!getDependencies().get().stream().allMatch(SourceSetDependencies::isEmpty)) {
             content.add("dependencies {");
             getDependencies().get().stream().sorted((a, b) -> ("main".equals(a.name)) ? -1 : a.name.compareTo(b.name)).forEach(sourceSetBlock -> {
                 content.addAll(toDeclarationString(sourceSetBlock.getApiDependencies()));
@@ -134,8 +135,8 @@ public abstract class BuildFileDependenciesGenerate extends DefaultTask {
 
     private List<String> toDeclarationString(ListProperty<DependencyDeclaration> dependencies) {
         return dependencies.get().stream().map(d -> {
-            String group = d.fullId.split(":")[0];
-            String artifact = d.fullId.split(":")[1];
+            String group = d.fullId.get().split(":")[0];
+            String artifact = d.fullId.get().split(":")[1];
             String feature = null;
             if (artifact.contains("|")) {
                 feature = artifact.split("\\|")[1];
@@ -145,7 +146,7 @@ public abstract class BuildFileDependenciesGenerate extends DefaultTask {
             String identifier;
             if (group.equals(getOwnProjectGroup().get())) {
                 if (getWithCatalog().get()) {
-                    identifier = "projects." + artifact;
+                    identifier = "projects." + toCamelCase(artifact);
                 } else {
                     identifier = "project(\":" + artifact + "\")";
                 }
@@ -163,5 +164,20 @@ public abstract class BuildFileDependenciesGenerate extends DefaultTask {
                 return "    " + d.scope + "(" + identifier + ") { capabilities { requireCapabilities(\"" + group + ":" + artifact + "-" + feature + "\") } }";
             }
         }).collect(Collectors.toList());
+    }
+
+    private String toCamelCase(String s) {
+        String[] segments = s.split("[\\W_]+");
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < segments.length; i++) {
+            String word = segments[i];
+            if (i == 0) {
+                word = word.isEmpty() ? word : word.toLowerCase();
+            } else {
+                word = word.isEmpty() ? word : Character.toUpperCase(word.charAt(0)) + word.substring(1).toLowerCase();
+            }
+            builder.append(word);
+        }
+        return builder.toString();
     }
 }

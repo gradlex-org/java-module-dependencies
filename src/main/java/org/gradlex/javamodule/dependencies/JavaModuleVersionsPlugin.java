@@ -128,11 +128,11 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
     }
 
     private List<CatalogGenerate.CatalogEntry> collectCatalogEntriesFromVersions(JavaModuleDependenciesExtension javaModuleDependencies, ModuleVersions moduleVersions) {
-        return moduleVersions.getDeclaredVersions().entrySet().stream().map(mv -> new CatalogGenerate.CatalogEntry(mv.getKey(), javaModuleDependencies.ga(mv.getKey()).get(), mv.getValue())).collect(Collectors.toList());
+        return moduleVersions.getDeclaredVersions().entrySet().stream().map(mv -> new CatalogGenerate.CatalogEntry(mv.getKey(), javaModuleDependencies.ga(mv.getKey()), mv.getValue())).collect(Collectors.toList());
     }
 
     private List<CatalogGenerate.CatalogEntry> collectCatalogEntriesFromModuleInfos(JavaModuleDependenciesExtension javaModuleDependencies, List<String> moduleNames) {
-        return moduleNames.stream().map(moduleName -> new CatalogGenerate.CatalogEntry(moduleName, javaModuleDependencies.ga(moduleName).get(), null)).collect(Collectors.toList());
+        return moduleNames.stream().map(moduleName -> new CatalogGenerate.CatalogEntry(moduleName, javaModuleDependencies.ga(moduleName), null)).collect(Collectors.toList());
     }
 
 }

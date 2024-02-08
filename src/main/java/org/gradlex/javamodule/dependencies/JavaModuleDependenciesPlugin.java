@@ -293,7 +293,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
             }
         }
         return moduleInfo.get(directive).stream()
-                .map(moduleName -> new BuildFileDependenciesGenerate.DependencyDeclaration(scope, moduleName, javaModuleDependencies.ga(moduleName).get()))
+                .map(moduleName -> new BuildFileDependenciesGenerate.DependencyDeclaration(scope, moduleName, javaModuleDependencies.ga(moduleName)))
                 .collect(Collectors.toList());
     }
 

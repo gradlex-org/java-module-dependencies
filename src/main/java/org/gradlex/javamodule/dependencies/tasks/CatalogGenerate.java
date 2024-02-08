@@ -20,6 +20,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
@@ -38,10 +39,10 @@ public abstract class CatalogGenerate extends DefaultTask {
 
     public static class CatalogEntry implements Comparator<CatalogEntry> {
         private final String moduleName;
-        private final String fullId;
+        private final Provider<String> fullId;
         private final String version;
 
-        public CatalogEntry(String moduleName, String fullId, @Nullable String version) {
+        public CatalogEntry(String moduleName, Provider<String> fullId, @Nullable String version) {
             this.moduleName = moduleName;
             this.fullId = fullId;
             this.version = version;
@@ -90,15 +91,15 @@ public abstract class CatalogGenerate extends DefaultTask {
 
     @Nullable
     private String toDeclarationString(CatalogEntry entry) {
-        String group = entry.fullId.split(":")[0];
+        String group = entry.fullId.get().split(":")[0];
         if (group.equals(getOwnProjectGroup().get())) {
             return null;
         }
         String notation;
         if (entry.version == null) {
-            notation =  "{ module = \"" + entry.fullId + "\" }";
+            notation =  "{ module = \"" + entry.fullId.get() + "\" }";
         } else {
-            notation =  "{ module = \"" + entry.fullId + "\", version = \"" + entry.version + "\" }";
+            notation =  "{ module = \"" + entry.fullId.get() + "\", version = \"" + entry.version + "\" }";
         }
         return entry.moduleName.replace('.', '-') + " = " + notation;
     }
