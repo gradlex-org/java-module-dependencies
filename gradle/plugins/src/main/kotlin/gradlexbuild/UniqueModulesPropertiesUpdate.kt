@@ -4,6 +4,8 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -15,6 +17,9 @@ abstract class UniqueModulesPropertiesUpdate : DefaultTask() {
     @get:Inject
     abstract val layout: ProjectLayout
 
+    @get:Input
+    abstract val skipUpdate: Property<Boolean>
+
     @get:InputFiles
     abstract val modulesProperties: ConfigurableFileCollection
 
@@ -23,6 +28,10 @@ abstract class UniqueModulesPropertiesUpdate : DefaultTask() {
 
     @TaskAction
     fun convert() {
+        if (skipUpdate.get()) {
+            return
+        }
+
         val modulesToRepoLocation = Properties()
         modulesToRepoLocation.load(modulesProperties.singleFile.inputStream())
         val modulesToCoordinates = modulesToRepoLocation.toSortedMap { e1, e2 -> e1.toString().compareTo(e2.toString()) }.map { entry ->

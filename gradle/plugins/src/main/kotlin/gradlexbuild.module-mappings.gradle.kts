@@ -21,6 +21,7 @@ val dep = detachedResolver.dependencies.add(modulePropertiesConfiguration.name, 
 (dep as ExternalModuleDependency).isChanging = true
 
 val updateUniqueModulesProperties = tasks.register<UniqueModulesPropertiesUpdate>("updateUniqueModulesProperties") {
+    skipUpdate.set(providers.environmentVariable("CI").getOrElse("false").toBoolean())
     modulesProperties.from(modulePropertiesConfiguration)
     uniqueModulesProperties.set(layout.projectDirectory.file(
         "src/main/resources/org/gradlex/javamodule/dependencies/unique_modules.properties")
