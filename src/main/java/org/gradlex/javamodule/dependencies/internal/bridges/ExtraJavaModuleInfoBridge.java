@@ -29,7 +29,7 @@ public class ExtraJavaModuleInfoBridge {
     public static void autoRegisterPatchedModuleMappings(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
         ExtraJavaModuleInfoPluginExtension extraJavaModuleInfo = project.getExtensions().getByType(ExtraJavaModuleInfoPluginExtension.class);
         javaModuleDependencies.getModuleNameToGA().putAll(extraJavaModuleInfo.getModuleSpecs().map(
-                moduleSpecs -> moduleSpecs.entrySet().stream().collect(Collectors.toMap(ExtraJavaModuleInfoBridge::moduleNameKey, Map.Entry::getKey))));
+                moduleSpecs -> moduleSpecs.entrySet().stream().collect(Collectors.toMap(ExtraJavaModuleInfoBridge::moduleNameKey, Map.Entry::getKey, (a, b) -> b))));
     }
 
     private static String moduleNameKey(Map.Entry<String, ModuleSpec> entry) {
