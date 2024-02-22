@@ -183,7 +183,7 @@ public abstract class JavaModuleDependenciesExtension {
         return getModuleNamePrefixToGroup().map(
                 m -> {
                     Optional<Map.Entry<String, String>> prefixToGroup = m.entrySet().stream()
-                            .filter(e -> moduleName.get().startsWith(e.getKey())).findFirst();
+                            .filter(e -> moduleName.get().startsWith(e.getKey())).max(Comparator.comparingInt(e -> e.getKey().length()));
                     if (prefixToGroup.isPresent()) {
                         String group = prefixToGroup.get().getValue();
                         String artifact = toProjectName(moduleName.get().substring(prefixToGroup.get().getKey().length()));
