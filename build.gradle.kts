@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "org.gradlex"
-version = "1.6.2"
+version = "1.6.3"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8

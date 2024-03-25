@@ -1,5 +1,8 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.6.3
+* Update module name mappings
+
 ## Version 1.6.2
 * [#90](https://github.com/gradlex-org/java-module-dependencies/issues/90) Fix: 'moduleNamePrefixToGroup' mapping uses best fit instead of first match
 * [#91](https://github.com/gradlex-org/java-module-dependencies/issues/91) Fix: handle duplicated module names in 'extra-module-info' bridge
