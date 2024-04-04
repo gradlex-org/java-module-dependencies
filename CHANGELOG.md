@@ -1,5 +1,9 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.6.4
+* Enhance output of 'moduleDependencies' task
+* Update 'org.ow2.asm:asm' to 9.7
+
 ## Version 1.6.3
 * Update module name mappings
 

@@ -18,7 +18,9 @@ package org.gradlex.javamodule.dependencies.internal.diagnostics;
 
 import org.gradle.api.NonNullApi;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
+import org.gradle.api.artifacts.component.ComponentSelector;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
+import org.gradle.api.artifacts.component.ModuleComponentSelector;
 import org.gradle.api.artifacts.result.DependencyResult;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.artifacts.result.ResolvedDependencyResult;
@@ -65,6 +67,7 @@ public class RenderableModuleDependencyResult extends RenderableDependencyResult
 
     @Override
     public String getName() {
+        ComponentSelector requested = getRequested();
         ComponentIdentifier selected = getActual();
         ResolvedArtifactResult artifact = resolvedJars.stream().filter(a ->
                 a.getId().getComponentIdentifier().equals(selected)).findFirst().orElse(null);
@@ -78,15 +81,30 @@ public class RenderableModuleDependencyResult extends RenderableDependencyResult
                     return "[CLASSPATH] " + selected.getDisplayName();
                 } else {
                     String version = "";
+                    String coordinates =  selected.getDisplayName();
+                    String jarName = artifact.getFile().getName();
                     if (selected instanceof ModuleComponentIdentifier) {
-                        version = " (" + ((ModuleComponentIdentifier) selected).getVersion() + ")";
+                        String selectedVersion = ((ModuleComponentIdentifier) selected).getVersion();
+                        version = " (" + selectedVersion + ")";
+                        if (requested instanceof ModuleComponentSelector) {
+                            String requestedVersion = ((ModuleComponentSelector) requested).getVersion();
+                            if (!requestedVersion.isEmpty() && !selectedVersion.equals(requestedVersion)) {
+                                version = " (" + requestedVersion + " -> " + selectedVersion + ")";
+                            }
+                        }
+                        coordinates = ((ModuleComponentIdentifier) selected).getModuleIdentifier().toString();
                     }
                     String auto = isRealModule(artifact.getFile()) ? "" : "[AUTO] ";
-                    return auto + actualModuleName + version;
+                    return auto + actualModuleName + version + " | " + coordinates +
+                            (isConstraint() ? "" : " | " + jarName);
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private boolean isConstraint() {
+        return getResolutionState() == ResolutionState.RESOLVED_CONSTRAINT;
     }
 }

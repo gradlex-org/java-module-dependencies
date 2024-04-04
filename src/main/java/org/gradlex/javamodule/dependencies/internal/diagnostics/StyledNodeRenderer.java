@@ -36,7 +36,8 @@ public class StyledNodeRenderer implements NodeRenderer {
         } else if (name.startsWith("[CLASSPATH]")) {
             output.withStyle(Failure).text(name);
         } else {
-            output.text(name);
+            int idx = name.indexOf('|');
+            output.text(name.substring(0, idx)).withStyle(Description).text(name.substring(idx));
         }
         switch (node.getResolutionState()) {
             case FAILED:
