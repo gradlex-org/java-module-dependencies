@@ -7,9 +7,17 @@ plugins {
 group = "org.gradlex"
 version = "1.6.3"
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+tasks.withType<JavaCompile>().configureEach {
+    options.release = 8
+}
+
+tasks.withType<Javadoc>().configureEach {
+    options {
+        this as StandardJavadocDocletOptions
+        encoding = "UTF-8"
+        addStringOption("Xdoclint:all,-missing", "-quiet")
+        addStringOption("Xwerror", "-quiet")
+    }
 }
 
 configurations.compileClasspath {
