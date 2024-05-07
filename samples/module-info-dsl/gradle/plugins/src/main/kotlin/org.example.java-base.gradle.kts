@@ -6,7 +6,7 @@ plugins {
 
 group = "org.example"
 
-java.toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+java.toolchain.languageVersion.set(JavaLanguageVersion.of(11))
 testing.suites.register<JvmTestSuite>("testFunctional")
 tasks.check { dependsOn(tasks.named("testFunctional")) }
 
