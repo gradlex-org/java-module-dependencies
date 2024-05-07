@@ -24,12 +24,14 @@ import org.gradle.api.attributes.Usage;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPlatformPlugin;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.util.GradleVersion;
 import org.gradlex.javamodule.dependencies.dsl.ModuleVersions;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.tasks.CatalogGenerate;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -55,7 +57,9 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
     }
 
     private void setupForJavaPlatformProject(Project project) {
-        setupVersionsDSL(project, project.getConfigurations().getByName(API_CONFIGURATION_NAME));
+        Configuration api = project.getConfigurations().getByName(API_CONFIGURATION_NAME);
+        setupVersionsDSL(project, api);
+        setupConstraintsValidation(project, api);
         registerCatalogTask(project);
     }
 
@@ -84,6 +88,7 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
         }
 
         setupVersionsDSL(project, versions);
+        setupConstraintsValidation(project, versions);
         registerCatalogTask(project);
     }
 
@@ -91,6 +96,22 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
         project.getPlugins().apply(JavaModuleDependenciesPlugin.class);
         JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
         project.getExtensions().create("moduleInfo", ModuleVersions.class, configuration, javaModuleDependencies);
+    }
+
+    private void setupConstraintsValidation(Project project, Configuration configuration) {
+        configuration.getDependencyConstraints().configureEach(d -> {
+            JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
+            String userDefinedReason = d.getReason();
+            String ga = d.getModule().toString();
+            Provider<String> moduleName = javaModuleDependencies.moduleName(ga);
+            if (moduleName.isPresent() && isModuleName(userDefinedReason) && !moduleName.get().equals(userDefinedReason)) {
+                project.getLogger().lifecycle("WARN: Expected module name for '" + ga + "' is '" + moduleName.get() + "' (not '" + userDefinedReason + "')");
+            }
+        });
+    }
+
+    private boolean isModuleName(@Nullable String s) {
+        return s != null && !s.isEmpty() && !s.contains(" ");
     }
 
     private void registerCatalogTask(Project project) {
