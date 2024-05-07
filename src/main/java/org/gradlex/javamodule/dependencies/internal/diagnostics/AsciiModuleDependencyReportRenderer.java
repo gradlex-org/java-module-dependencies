@@ -31,8 +31,7 @@ import org.gradle.internal.graph.GraphRenderer;
 import org.gradle.internal.logging.text.StyledTextOutput;
 
 import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
@@ -40,9 +39,9 @@ import static java.util.Objects.requireNonNull;
 public class AsciiModuleDependencyReportRenderer extends AsciiDependencyReportRenderer {
 
     private DependencyGraphsRenderer dependencyGraphRenderer;
-    private final Provider<List<ArtifactCollection>> resolvedJars;
+    private final Provider<Map<String, ArtifactCollection>> resolvedJars;
 
-    public AsciiModuleDependencyReportRenderer(Provider<List<ArtifactCollection>> resolvedJars) {
+    public AsciiModuleDependencyReportRenderer(Provider<Map<String, ArtifactCollection>> resolvedJars) {
         this.resolvedJars = resolvedJars;
     }
 
@@ -57,7 +56,7 @@ public class AsciiModuleDependencyReportRenderer extends AsciiDependencyReportRe
     public void render(ConfigurationDetails configuration) {
         if (configuration.isCanBeResolved()) {
             ResolvedComponentResult result = requireNonNull(configuration.getResolutionResultRoot()).get();
-            RenderableModuleResult root = new RenderableJavaModuleResult(result, resolvedJars.get().stream().flatMap(c -> c.getArtifacts().stream()).collect(Collectors.toSet()));
+            RenderableModuleResult root = new RenderableJavaModuleResult(result, resolvedJars.get().get(configuration.getName()).getArtifacts());
             renderNow(root);
         } else {
             renderNow(requireNonNull(configuration.getUnresolvableResult()));

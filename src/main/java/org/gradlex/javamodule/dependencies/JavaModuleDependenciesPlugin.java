@@ -132,29 +132,16 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
 
     private void setupModuleDependenciesTask(Project project) {
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-        TaskProvider<ModuleDependencyReport> moduleDependencies = project.getTasks().register("moduleDependencies", ModuleDependencyReport.class, t -> {
-            t.setGroup(HELP_GROUP);
-            if (t.isConfigurationSetByUser()) {
-                Configuration conf = t.getConfigurations().iterator().next();
-                t.getModuleArtifacts().add(project.provider(() -> conf.getIncoming().getArtifacts()));
-            }
-        });
+        TaskProvider<ModuleDependencyReport> moduleDependencies = project.getTasks().register("moduleDependencies", ModuleDependencyReport.class, t -> t.setGroup(HELP_GROUP));
         sourceSets.all(sourceSet -> {
             moduleDependencies.configure(t -> {
-                if (!t.isConfigurationSetByUser()) {
-                    HashSet<Configuration> reportConfigurations = new HashSet<>();
-                    if (t.getConfigurations() != null) {
-                        reportConfigurations.addAll(t.getConfigurations());
-                    }
-                    Configuration cpClasspath = project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
-                    Configuration rtClasspath = project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName());
-                    reportConfigurations.add(cpClasspath);
-                    reportConfigurations.add(rtClasspath);
-                    t.setConfigurations(reportConfigurations);
-
-                    t.getModuleArtifacts().add(project.provider(() -> cpClasspath.getIncoming().getArtifacts()));
-                    t.getModuleArtifacts().add(project.provider(() -> rtClasspath.getIncoming().getArtifacts()));
+                HashSet<Configuration> joined = new HashSet<>();
+                if (t.getConfigurations() != null) {
+                    joined.addAll(t.getConfigurations());
                 }
+                joined.add(project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName()));
+                joined.add(project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName()));
+                t.setConfigurations(joined);
             });
         });
     }
