@@ -39,6 +39,8 @@ abstract class UniqueModulesPropertiesUpdate : DefaultTask() {
             val split = entry.value.toString().split("/")
             val group = split.subList(4, split.size - 3).joinToString(".")
             val name = split[split.size - 3]
+                // Special handling of "wrong" entries
+                .replace("-debug-jdk18on", "-jdk18on")
             val version = split[split.size - 2]
             Module(entry.key.toString(), "$group:$name", version)
         }.groupBy { it.ga }.values.map { moduleList ->
