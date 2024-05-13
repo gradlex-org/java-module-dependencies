@@ -2,7 +2,7 @@ pluginManagement {
     includeBuild("gradle/plugins")
 }
 plugins {
-    id("com.gradle.develocity") version "3.17.2"
+    id("com.gradle.develocity") version "3.17.3"
 }
 
 dependencyResolutionManagement {
