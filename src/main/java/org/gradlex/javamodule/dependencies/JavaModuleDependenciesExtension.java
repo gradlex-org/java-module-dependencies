@@ -17,14 +17,7 @@
 package org.gradlex.javamodule.dependencies;
 
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationContainer;
-import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.ModuleDependency;
-import org.gradle.api.artifacts.ProjectDependency;
-import org.gradle.api.artifacts.VersionCatalog;
-import org.gradle.api.artifacts.VersionCatalogsExtension;
-import org.gradle.api.artifacts.VersionConstraint;
+import org.gradle.api.artifacts.*;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Bundling;
 import org.gradle.api.attributes.Category;
@@ -61,6 +54,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Optional.empty;
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_RUNTIME;
@@ -213,8 +207,9 @@ public abstract class JavaModuleDependenciesExtension {
 
     public Provider<Dependency> create(String moduleName, SourceSet sourceSetWithModuleInfo) {
         return getProviders().provider(() -> {
-            Map<String, String> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream().collect(
-                    Collectors.toMap(Project::getName, p -> (String) p.getGroup()));
+            Map<String, List<Project>> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream()
+                    .collect(Collectors.groupingBy(Project::getName));
+            allProjectNamesAndGroups.values().forEach(x -> x.sort(Comparator.comparing(Project::getPath)));
 
             Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
 
@@ -239,8 +234,17 @@ public abstract class JavaModuleDependenciesExtension {
                 String projectName = existingProjectName.get();
                 ProjectDependency projectDependency = (ProjectDependency) getDependencies().create(getProject().project(parentPath + ":" + projectName));
                 String capabilityName = projectName + moduleNameSuffix.substring(projectName.length()).replace(".", "-");
+                List<Project> projects = allProjectNamesAndGroups.get(projectName);
+                if (projects.size() != 1) {
+                    getProject().getLogger().lifecycle(
+                            "[WARN] [Java Module Dependencies] " +
+                                    moduleName + "in multiple " +
+                                    projects.stream().map(Project::getPath).collect(Collectors.toList()) +
+                                    " and no exact match");
+
+                }
                 projectDependency.capabilities(c -> c.requireCapabilities(
-                        allProjectNamesAndGroups.get(projectName) + ":" + capabilityName));
+                         projects.iterator().next() + ":" + capabilityName));
                 projectDependency.because(moduleName);
                 return projectDependency;
             } else if (coordinates.isPresent()) {
