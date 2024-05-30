@@ -44,15 +44,7 @@ import javax.inject.Inject;
 import java.io.CharArrayReader;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.empty;
@@ -204,8 +196,14 @@ public abstract class JavaModuleDependenciesExtension {
         return moduleNameSuffix;
     }
 
+
     public Provider<Dependency> create(String moduleName, SourceSet sourceSetWithModuleInfo) {
         return getProviders().provider(() -> {
+            Optional<Dependency> project = extensionPluginMatch(moduleName);
+            if (project.isPresent()) {
+                return project.get();
+            }
+
             Map<String, List<Project>> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream()
                     .collect(Collectors.groupingBy(Project::getName));
             allProjectNamesAndGroups.values().forEach(x -> x.sort(Comparator.comparing(Project::getPath)));
@@ -274,6 +272,31 @@ public abstract class JavaModuleDependenciesExtension {
                 return null;
             }
         });
+    }
+
+    private Optional<Dependency> extensionPluginMatch(String moduleName) {
+        List<Project> matchingProjects = getProject().getRootProject().getSubprojects().stream()
+                .filter(x -> hasOurExtensionMatching(x, moduleName))
+                .collect(Collectors.toList());
+        switch (matchingProjects.size()) {
+            case 0:
+                return Optional.empty();
+            case 1:
+                Project value = matchingProjects.get(0);
+                Dependency projectDependency = getDependencies().create(value);
+                projectDependency.because(moduleName);
+                return Optional.of(projectDependency);
+            default:
+                getProject().getLogger().lifecycle("[WARN] [Java Module Dependencies] " + moduleName +" in " +  matchingProjects.stream().map(Project::getPath).collect(Collectors.joining(",")));
+                return Optional.empty();
+
+        }
+    }
+
+    boolean hasOurExtensionMatching(Project project, String moduleName) {
+        return Optional.ofNullable(project.getExtensions().findByType(JavaModuleDependenciesExtension.class))
+                .filter(x -> x.moduleInfoCache.containsModule(moduleName))
+                .isPresent();
     }
 
     /**

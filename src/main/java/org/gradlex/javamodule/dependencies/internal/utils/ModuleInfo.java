@@ -81,6 +81,10 @@ public class ModuleInfo implements Serializable {
         return Collections.emptyList();
     }
 
+    public String getModuleName() {
+        return moduleName;
+    }
+
     @Nullable
     public String moduleNamePrefix(String projectName, String sourceSetName, boolean fail) {
         if (moduleName.equals(projectName)) {
