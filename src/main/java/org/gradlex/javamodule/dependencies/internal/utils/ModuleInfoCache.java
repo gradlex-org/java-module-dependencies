@@ -58,7 +58,7 @@ public abstract class ModuleInfoCache {
         return ModuleInfo.EMPTY;
     }
 
-    public boolean containsModule(String moduleName) {
-        return moduleInfo.values().stream().anyMatch(x -> x.getModuleName().equals(moduleName));
+    public boolean containsModule(SourceSet sourceSet, String moduleName) {
+        return get(sourceSet).getModuleName().equals(moduleName);
     }
 }

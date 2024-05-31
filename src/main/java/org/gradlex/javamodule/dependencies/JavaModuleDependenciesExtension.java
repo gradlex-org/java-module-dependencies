@@ -16,6 +16,7 @@
 
 package org.gradlex.javamodule.dependencies;
 
+import org.gradle.api.NamedDomainObjectProvider;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.*;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
@@ -198,85 +199,85 @@ public abstract class JavaModuleDependenciesExtension {
 
 
     public Provider<Dependency> create(String moduleName, SourceSet sourceSetWithModuleInfo) {
-        return getProviders().provider(() -> {
-            Optional<Dependency> project = extensionPluginMatch(moduleName);
-            if (project.isPresent()) {
-                return project.get();
-            }
-
-            Map<String, List<Project>> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream()
-                    .collect(Collectors.groupingBy(Project::getName));
-            allProjectNamesAndGroups.values().forEach(x -> x.sort(Comparator.comparing(Project::getPath)));
-
-            Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
-
-            ModuleInfo moduleInfo = getModuleInfoCache().get(sourceSetWithModuleInfo);
-            String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(getProject().getName(), sourceSetWithModuleInfo.getName(), getModuleNameCheck().get());
-
-            String moduleNameSuffix = ownModuleNamesPrefix == null ? null :
-                    moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) :
-                            ownModuleNamesPrefix.isEmpty() ? moduleName : null;
-
-            String parentPath = getProject().getParent() == null ? "" : getProject().getParent().getPath();
-            Optional<String> perfectMatch = allProjectNamesAndGroups.keySet().stream().filter(p -> p.replace("-", ".").equals(moduleNameSuffix)).findFirst();
-            Optional<String> existingProjectName = allProjectNamesAndGroups.keySet().stream().filter(p -> moduleNameSuffix != null && moduleNameSuffix.startsWith(p.replace("-", ".") + "."))
-                    .max(Comparator.comparingInt(String::length));
-
-            if (perfectMatch.isPresent()) {
-                Dependency projectDependency = getDependencies().create(getProject().project(parentPath + ":" + perfectMatch.get()));
-                projectDependency.because(moduleName);
-                return projectDependency;
-            } else if (existingProjectName.isPresent()) {
-                // no exact match -> add capability to point at Module in other source set
-                String projectName = existingProjectName.get();
-                ProjectDependency projectDependency = (ProjectDependency) getDependencies().create(getProject().project(parentPath + ":" + projectName));
-                String capabilityName = projectName + moduleNameSuffix.substring(projectName.length()).replace(".", "-");
-                List<Project> projects = allProjectNamesAndGroups.get(projectName);
-                if (projects.size() != 1) {
-                    getProject().getLogger().lifecycle(
-                            "[WARN] [Java Module Dependencies] " +
-                                    moduleName + "in multiple " +
-                                    projects.stream().map(Project::getPath).collect(Collectors.toList()) +
-                                    " and no exact match");
-
-                }
-                projectDependency.capabilities(c -> c.requireCapabilities(
-                         projects.iterator().next() + ":" + capabilityName));
-                projectDependency.because(moduleName);
-                return projectDependency;
-            } else if (coordinates.isPresent()) {
-                Map<String, Object> component;
-                String capability;
-                if (coordinates.get().contains("|")) {
-                    String[] split = coordinates.get().split("\\|");
-                    component = findGav(split[0], moduleName);
-                    if (split[1].contains(":")) {
-                        capability = split[1];
-                    } else {
-                        // only classifier was specified
-                        capability = split[0] + "-" + split[1];
-                    }
-                } else {
-                    component = findGav(coordinates.get(), moduleName);
-                    capability = null;
-                }
-                ModuleDependency dependency = (ModuleDependency) getDependencies().create(component);
-                dependency.because(moduleName);
-                if (capability != null) {
-                    dependency.capabilities(c -> c.requireCapability(capability));
-                }
-                return dependency;
-            } else {
-                getProject().getLogger().lifecycle(
-                        "[WARN] [Java Module Dependencies] " + moduleName + "=group:artifact missing in " + getModulesProperties().get().getAsFile());
-                return null;
-            }
-        });
+        return getProviders().provider(() -> extensionPluginMatch(moduleName, sourceSetWithModuleInfo)
+                .orElseGet(() -> getNameBasedMatch(moduleName, sourceSetWithModuleInfo)));
     }
 
-    private Optional<Dependency> extensionPluginMatch(String moduleName) {
+
+    private Dependency getNameBasedMatch(String moduleName, SourceSet sourceSetWithModuleInfo) {
+        Map<String, List<Project>> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream()
+                .collect(Collectors.groupingBy(Project::getName));
+        allProjectNamesAndGroups.values().forEach(x -> x.sort(Comparator.comparing(Project::getPath)));
+
+        Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
+
+        ModuleInfo moduleInfo = getModuleInfoCache().get(sourceSetWithModuleInfo);
+        String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(getProject().getName(), sourceSetWithModuleInfo.getName(), getModuleNameCheck().get());
+
+        String moduleNameSuffix = ownModuleNamesPrefix == null ? null :
+                moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) :
+                        ownModuleNamesPrefix.isEmpty() ? moduleName : null;
+
+        String parentPath = getProject().getParent() == null ? "" : getProject().getParent().getPath();
+        Optional<String> perfectMatch = allProjectNamesAndGroups.keySet().stream().filter(p -> p.replace("-", ".").equals(moduleNameSuffix)).findFirst();
+        Optional<String> existingProjectName = allProjectNamesAndGroups.keySet().stream().filter(p -> moduleNameSuffix != null && moduleNameSuffix.startsWith(p.replace("-", ".") + "."))
+                .max(Comparator.comparingInt(String::length));
+
+        if (perfectMatch.isPresent()) {
+            Dependency projectDependency = getDependencies().create(getProject().project(parentPath + ":" + perfectMatch.get()));
+            projectDependency.because(moduleName);
+            return projectDependency;
+        } else if (existingProjectName.isPresent()) {
+            // no exact match -> add capability to point at Module in other source set
+            String projectName = existingProjectName.get();
+            ProjectDependency projectDependency = (ProjectDependency) getDependencies().create(getProject().project(parentPath + ":" + projectName));
+            String capabilityName = projectName + moduleNameSuffix.substring(projectName.length()).replace(".", "-");
+            List<Project> projects = allProjectNamesAndGroups.get(projectName);
+            if (projects.size() != 1) {
+                getProject().getLogger().lifecycle(
+                        "[WARN] [Java Module Dependencies] " +
+                                moduleName + "in multiple " +
+                                projects.stream().map(Project::getPath).collect(Collectors.toList()) +
+                                " and no exact match");
+
+            }
+            projectDependency.capabilities(c -> c.requireCapabilities(
+                    projects.iterator().next().getGroup() + ":" + capabilityName));
+            projectDependency.because(moduleName);
+            return projectDependency;
+        } else if (coordinates.isPresent()) {
+            Map<String, Object> component;
+            String capability;
+            if (coordinates.get().contains("|")) {
+                String[] split = coordinates.get().split("\\|");
+                component = findGav(split[0], moduleName);
+                if (split[1].contains(":")) {
+                    capability = split[1];
+                } else {
+                    // only classifier was specified
+                    capability = split[0] + "-" + split[1];
+                }
+            } else {
+                component = findGav(coordinates.get(), moduleName);
+                capability = null;
+            }
+            ModuleDependency dependency = (ModuleDependency) getDependencies().create(component);
+            dependency.because(moduleName);
+            if (capability != null) {
+                dependency.capabilities(c -> c.requireCapability(capability));
+            }
+            return dependency;
+        } else {
+            getProject().getLogger().lifecycle(
+                    "[WARN] [Java Module Dependencies] " + moduleName + "=group:artifact missing in " + getModulesProperties().get().getAsFile());
+            return null;
+        }
+    }
+
+    private Optional<Dependency> extensionPluginMatch(String moduleName, SourceSet sourceSet) {
+
         List<Project> matchingProjects = getProject().getRootProject().getSubprojects().stream()
-                .filter(x -> hasOurExtensionMatching(x, moduleName))
+                .filter(x -> hasOurExtensionMatching(x, moduleName, sourceSet))
                 .collect(Collectors.toList());
         switch (matchingProjects.size()) {
             case 0:
@@ -293,9 +294,16 @@ public abstract class JavaModuleDependenciesExtension {
         }
     }
 
-    boolean hasOurExtensionMatching(Project project, String moduleName) {
+    boolean hasOurExtensionMatching(Project project, String moduleName, SourceSet sourceSet) {
         return Optional.ofNullable(project.getExtensions().findByType(JavaModuleDependenciesExtension.class))
-                .filter(x -> x.moduleInfoCache.containsModule(moduleName))
+                .filter(x -> {
+                    SourceSetContainer byType = project.getExtensions().findByType(SourceSetContainer.class);
+                    if (byType == null) {
+                        return false;
+                    }
+                    SourceSet named = byType.findByName(sourceSet.getName());
+                    return named != null && x.moduleInfoCache.containsModule(named, moduleName);
+                })
                 .isPresent();
     }
 
