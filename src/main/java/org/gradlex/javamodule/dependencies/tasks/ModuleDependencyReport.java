@@ -28,6 +28,7 @@ import org.gradle.api.tasks.diagnostics.DependencyReportTask;
 import org.gradlex.javamodule.dependencies.internal.diagnostics.AsciiModuleDependencyReportRenderer;
 
 import javax.inject.Inject;
+import java.util.Collections;
 import java.util.Set;
 
 @NonNullApi
@@ -64,7 +65,7 @@ public abstract class ModuleDependencyReport extends DependencyReportTask {
 
     private void configurationsChanged() {
         getModulePath().setFrom();
-        getModuleArtifacts().unset();
+        getModuleArtifacts().set(Collections.emptyMap());
         for (Configuration conf : getConfigurations()) {
             getModulePath().from(conf);
             getModuleArtifacts().put(conf.getName(), getProviders().provider(() -> conf.getIncoming().getArtifacts()));
