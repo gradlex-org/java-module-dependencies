@@ -34,7 +34,7 @@ class GroupMappingTest extends Specification {
         '''
 
         when:
-        def result = runner('assemble').build()
+        def result = runner(false, 'assemble').build()
 
         then:
         result.task(":app:compileJava").outcome == TaskOutcome.SUCCESS

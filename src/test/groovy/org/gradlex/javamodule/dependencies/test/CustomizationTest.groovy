@@ -63,7 +63,7 @@ class CustomizationTest extends Specification {
 
         appBuildFile << '''
             javaModuleDependencies {
-                modulesProperties.set(rootProject.layout.projectDirectory.file(".hidden/modules.properties"))
+                modulesProperties.set(File(rootDir,".hidden/modules.properties"))
             }
         '''
 

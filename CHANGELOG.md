@@ -2,6 +2,7 @@
 
 ## Version 1.6.5
 * [#104](https://github.com/gradlex-org/java-module-dependencies/issues/104) Fix: ModuleDependencyReport task does not correctly track inputs
+* [#105](https://github.com/gradlex-org/java-module-dependencies/issues/105) Improve compatibility with Project Isolation
 
 ## Version 1.6.4
 * Enhance output of 'moduleDependencies' task

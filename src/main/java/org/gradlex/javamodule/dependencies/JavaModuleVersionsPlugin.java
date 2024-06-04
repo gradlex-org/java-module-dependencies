@@ -125,7 +125,7 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
 
             t.getEntries().addAll(collectCatalogEntriesFromVersions(javaModuleDependencies, moduleVersions));
             project.getRootProject().getSubprojects().forEach(sub -> {
-                File[] srcDirs = sub.getLayout().getProjectDirectory().dir("src").getAsFile().listFiles();
+                File[] srcDirs = sub.getProjectDir().listFiles();
                 (srcDirs == null ? Stream.<File>empty() : Arrays.stream(srcDirs)).forEach(srcDirSet -> {
                     File moduleInfoFile = new File(srcDirSet, "java/module-info.java");
                     if (!moduleInfoFile.exists()) {
@@ -144,7 +144,7 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
 
             t.getEntries().addAll();
 
-            t.getCatalogFile().set(project.getRootProject().getLayout().getProjectDirectory().file("gradle/libs.versions.toml"));
+            t.getCatalogFile().set(new File(project.getRootDir(), "gradle/libs.versions.toml"));
         });
     }
 

@@ -45,10 +45,12 @@ class GradleBuild {
                 mainClass.set("org.gradlex.test.app.Main")
             }
             tasks.register("printRuntimeJars") {
-                doLast { println(configurations.runtimeClasspath.get().files.map { it.name }) }
+                inputs.files(configurations.runtimeClasspath)
+                doLast { println(inputs.files.map { it.name }) }
             }
             tasks.register("printCompileJars") {
-                doLast { println(configurations.compileClasspath.get().files.map { it.name }) }
+                inputs.files(configurations.compileClasspath)
+                doLast { println(inputs.files.map { it.name }) }
             }
         '''
         libBuildFile << '''
@@ -85,12 +87,18 @@ class GradleBuild {
         runner('build').buildAndFail()
     }
 
-    GradleRunner runner(String... args) {
+    GradleRunner runner(boolean projectIsolation = true, String... args) {
+        List<String> latestFeaturesArgs = gradleVersionUnderTest || !projectIsolation? [] : [
+                '--configuration-cache',
+                '-Dorg.gradle.unsafe.isolated-projects=true',
+                // 'getGroup' in 'JavaModuleDependenciesExtension.create'
+                '--configuration-cache-problems=warn', '-Dorg.gradle.configuration-cache.max-problems=3'
+        ]
         GradleRunner.create()
                 .forwardOutput()
                 .withPluginClasspath()
                 .withProjectDir(projectDir)
-                .withArguments(Arrays.asList(args) + '-s' + '--warning-mode' + 'all')
+                .withArguments(Arrays.asList(args) + latestFeaturesArgs + '-s' + '--warning-mode=all')
                 .withDebug(ManagementFactory.getRuntimeMXBean().getInputArguments().toString().contains("-agentlib:jdwp")).with {
             gradleVersionUnderTest ? it.withGradleVersion(gradleVersionUnderTest) : it
         }
