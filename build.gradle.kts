@@ -63,3 +63,24 @@ tasks.test {
     maxParallelForks = 4
     inputs.dir(layout.projectDirectory.dir("samples"))
 }
+
+testing.suites.named<JvmTestSuite>("test") {
+    useJUnitJupiter()
+    listOf("7.4", "7.6.4", "8.0.2").forEach { gradleVersionUnderTest ->
+        targets.register("test${gradleVersionUnderTest}") {
+            testTask {
+                group = LifecycleBasePlugin.VERIFICATION_GROUP
+                description = "Runs tests against Gradle $gradleVersionUnderTest"
+                systemProperty("gradleVersionUnderTest", gradleVersionUnderTest)
+                exclude("**/*SamplesTest.class") // Not yet cross-version ready
+            }
+        }
+    }
+    targets.all {
+        testTask {
+            maxParallelForks = 4
+            inputs.dir(layout.projectDirectory.dir("samples"))
+            inputs.dir("samples")
+        }
+    }
+}
