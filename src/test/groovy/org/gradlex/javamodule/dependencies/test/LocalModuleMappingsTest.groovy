@@ -53,4 +53,31 @@ class LocalModuleMappingsTest extends Specification {
         then:
         runner(false, 'build').build()
     }
+
+    def "does not fail if there are two project with same name (but different path)"() {
+        when:
+        libModuleInfoFile << '''
+            module org.gradlex.test.lib { 
+                requires org.gradlex.test.anotherlib;
+            }
+        '''
+        settingsFile << 'include("another:lib")'
+        file("another/lib/build.gradle.kts") << '''
+            plugins {
+                id("org.gradlex.java-module-dependencies")
+                id("java-library")
+            }
+            group = "another"
+        '''
+        file("another/lib/src/main/java/module-info.java") << '''
+            module org.gradlex.test.anotherlib { }
+        '''
+
+        file("gradle/modules.properties") << '''
+            org.gradlex.test.anotherlib=another:lib
+        '''
+
+        then:
+        build()
+    }
 }
