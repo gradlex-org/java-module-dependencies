@@ -214,7 +214,7 @@ public abstract class JavaModuleDependenciesExtension {
     public Provider<Dependency> create(String moduleName, SourceSet sourceSetWithModuleInfo) {
         return getProviders().provider(() -> {
             Map<String, String> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream().collect(
-                    Collectors.toMap(Project::getName, p -> (String) p.getGroup()));
+                    Collectors.toMap(Project::getName, p -> (String) p.getGroup(), (a, b) -> a));
 
             Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
 
