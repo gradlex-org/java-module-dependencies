@@ -157,12 +157,13 @@ class RequiresRuntimeTest extends Specification {
             tasks.compileTestJava {
                 classpath += sourceSets.main.get().output
                 
+                val srcDir = sourceSets.test.get().java.sourceDirectories.first()
                 options.compilerArgumentProviders.add {
                     listOf(
                         "--module-path",
                         classpath.files.joinToString(":"),
                         "--patch-module",
-                        "org.gradlex.test.app=" + sourceSets.test.get().java.sourceDirectories.first()
+                        "org.gradlex.test.app=" + srcDir
                     )
                 }
             }
