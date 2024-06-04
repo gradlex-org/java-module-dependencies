@@ -1,8 +1,12 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.6.6
+* [#113](https://github.com/gradlex-org/java-module-dependencies/issues/113) Fix: Do not fail for duplicated project names (Thanks [TheGoesen](https://github.com/TheGoesen))
+* [#111](https://github.com/gradlex-org/java-module-dependencies/issues/111) Fix: Do not use 'MapProperty.unset' (Thanks [TheGoesen](https://github.com/TheGoesen))
+* [#112](https://github.com/gradlex-org/java-module-dependencies/issues/112) Improve compatibility with Project Isolation
+
 ## Version 1.6.5
 * [#104](https://github.com/gradlex-org/java-module-dependencies/issues/104) Fix: ModuleDependencyReport task does not correctly track inputs
-* [#105](https://github.com/gradlex-org/java-module-dependencies/issues/105) Improve compatibility with Project Isolation
 
 ## Version 1.6.4
 * Enhance output of 'moduleDependencies' task
