@@ -78,6 +78,6 @@ class LocalModuleMappingsTest extends Specification {
         '''
 
         then:
-        build()
+        runner(false, 'build')
     }
 }
