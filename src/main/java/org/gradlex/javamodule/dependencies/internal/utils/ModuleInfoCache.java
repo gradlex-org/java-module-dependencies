@@ -16,8 +16,8 @@
 
 package org.gradlex.javamodule.dependencies.internal.utils;
 
-import org.gradle.api.file.ProjectLayout;
-import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
@@ -30,12 +30,11 @@ import java.util.Map;
 public abstract class ModuleInfoCache {
 
     private final Map<File, ModuleInfo> moduleInfo = new HashMap<>();
+    private final Map<String, String> moduleNameToProjectPath = new HashMap<>();
+    private final Map<String, String> moduleNameToGA = new HashMap<>();
 
     @Inject
-    protected abstract ProviderFactory getProviders();
-
-    @Inject
-    protected abstract ProjectLayout getLayout();
+    public abstract ObjectFactory getObjects();
 
     /**
      * Returns the module-info.java for the given SourceSet. If the SourceSet has multiple source folders with multiple
@@ -44,17 +43,42 @@ public abstract class ModuleInfoCache {
      * @param sourceSet the SourceSet representing a module
      * @return parsed module-info.java for the given SourceSet
      */
-    public ModuleInfo get(SourceSet sourceSet) {
+    public ModuleInfo get(SourceSet sourceSet, ProviderFactory providers) {
         for (File folder : sourceSet.getJava().getSrcDirs()) {
-            Provider<RegularFile> moduleInfoFile = getLayout().file(getProviders().provider(() -> new File(folder, "module-info.java")));
-            Provider<String> moduleInfoContent = getProviders().fileContents(moduleInfoFile).getAsText();
-            if (moduleInfoContent.isPresent()) {
-                if (!moduleInfo.containsKey(folder)) {
-                    moduleInfo.put(folder, new ModuleInfo(moduleInfoContent.get(), moduleInfoFile.get().getAsFile()));
-                }
+            if (maybePutModuleInfo(folder, providers)) {
                 return moduleInfo.get(folder);
             }
         }
         return ModuleInfo.EMPTY;
+    }
+
+    /**
+     * @param projectRoot the project that should hold a Java module
+     * @return parsed module-info.java for the given project assuming a standard Java project layout
+     */
+    public ModuleInfo get(File projectRoot, String moduleInfoPath, String artifact, Provider<String> group, ProviderFactory providers) {
+        File folder = new File(projectRoot, moduleInfoPath);
+        if (maybePutModuleInfo(folder, providers)) {
+            ModuleInfo thisModuleInfo = moduleInfo.get(folder);
+            moduleNameToProjectPath.put(thisModuleInfo.getModuleName(), ":" + artifact);
+            if (group.isPresent()) {
+                moduleNameToGA.put(thisModuleInfo.getModuleName(), group.get() + ":" + artifact);
+            }
+            return thisModuleInfo;
+        }
+        return ModuleInfo.EMPTY;
+    }
+
+    private boolean maybePutModuleInfo(File folder, ProviderFactory providers) {
+        RegularFileProperty moduleInfoFile = getObjects().fileProperty();
+        moduleInfoFile.set(new File(folder, "module-info.java"));
+        Provider<String> moduleInfoContent = providers.fileContents(moduleInfoFile).getAsText();
+        if (moduleInfoContent.isPresent()) {
+            if (!moduleInfo.containsKey(folder)) {
+                moduleInfo.put(folder, new ModuleInfo(moduleInfoContent.get(), moduleInfoFile.get().getAsFile()));
+            }
+            return true;
+        }
+        return false;
     }
 }

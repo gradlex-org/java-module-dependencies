@@ -218,7 +218,7 @@ public abstract class JavaModuleDependenciesExtension {
 
             Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
 
-            ModuleInfo moduleInfo = getModuleInfoCache().get(sourceSetWithModuleInfo);
+            ModuleInfo moduleInfo = getModuleInfoCache().get(sourceSetWithModuleInfo, getProviders());
             String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(getProject().getName(), sourceSetWithModuleInfo.getName(), getModuleNameCheck().get());
 
             String moduleNameSuffix = ownModuleNamesPrefix == null ? null :
@@ -478,7 +478,7 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     void doAddRequiresRuntimeSupport(SourceSet sourceSetForModuleInfo, SourceSet sourceSetForClasspath) {
-        List<String> requiresRuntime = getModuleInfoCache().get(sourceSetForModuleInfo).get(REQUIRES_RUNTIME);
+        List<String> requiresRuntime = getModuleInfoCache().get(sourceSetForModuleInfo, getProviders()).get(REQUIRES_RUNTIME);
         String generatorTaskName = sourceSetForClasspath.getTaskName("generate", "syntheticModuleInfoFolders");
         if (requiresRuntime.isEmpty() || getProject().getTasks().getNames().contains(generatorTaskName)) {
             // Already active or not needed for this source set
