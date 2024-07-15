@@ -220,7 +220,7 @@ public abstract class JavaModuleDependenciesExtension {
         }
     }
 
-    public Provider<Dependency> createPrecise(String moduleName, SourceSet sourceSetWithModuleInfo) {
+    private Provider<Dependency> createPrecise(String moduleName, SourceSet sourceSetWithModuleInfo) {
         return getProviders().provider(() -> {
             String projectPath = getModuleInfoCache().get().getProjectPath(moduleName);
             String capability = getModuleInfoCache().get().getCapability(moduleName);
@@ -239,7 +239,7 @@ public abstract class JavaModuleDependenciesExtension {
         });
     }
 
-    public Provider<Dependency> createWithGuessing(String moduleName, SourceSet sourceSetWithModuleInfo) {
+    private Provider<Dependency> createWithGuessing(String moduleName, SourceSet sourceSetWithModuleInfo) {
         return getProviders().provider(() -> {
             Map<String, String> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream().collect(
                     Collectors.toMap(Project::getName, p -> (String) p.getGroup(), (a, b) -> a));

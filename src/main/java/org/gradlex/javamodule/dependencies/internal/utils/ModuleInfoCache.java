@@ -17,10 +17,12 @@
 package org.gradlex.javamodule.dependencies.internal.utils;
 
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.logging.Logger;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -31,6 +33,7 @@ import java.util.Map;
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToCapabilitySuffix;
 
 public abstract class ModuleInfoCache {
+    private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(ModuleInfoCache.class);
 
     private final boolean initializedInSettings;
     private final Map<File, ModuleInfo> moduleInfo = new HashMap<>();
@@ -74,9 +77,14 @@ public abstract class ModuleInfoCache {
         if (maybePutModuleInfo(folder, providers)) {
             ModuleInfo thisModuleInfo = moduleInfo.get(folder);
             moduleNameToProjectPath.put(thisModuleInfo.getModuleName(), ":" + artifact);
-            String capabilitySuffix = sourceSetToCapabilitySuffix(Paths.get(moduleInfoPath).getFileName().toString());
-            if (group.isPresent() && capabilitySuffix != null) {
-                moduleNameToCapability.put(thisModuleInfo.getModuleName(), group.get() + ":" + artifact + "-" + capabilitySuffix);
+            String capabilitySuffix = sourceSetToCapabilitySuffix(Paths.get(moduleInfoPath).getParent().getFileName().toString());
+            if (capabilitySuffix != null) {
+                if (group.isPresent()) {
+                    moduleNameToCapability.put(thisModuleInfo.getModuleName(), group.get() + ":" + artifact + "-" + capabilitySuffix);
+                } else {
+                    LOGGER.lifecycle(
+                            "[WARN] [Java Module Dependencies] " + thisModuleInfo.getModuleName() + " - 'group' not defined!");
+                }
             }
             return thisModuleInfo;
         }

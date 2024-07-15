@@ -26,7 +26,7 @@ import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public abstract class Modules {
+public abstract class Directory {
 
     private final File root;
     final Map<String, Module> customizedModules = new LinkedHashMap<>();
@@ -38,7 +38,7 @@ public abstract class Modules {
     public abstract ObjectFactory getObjects();
 
     @Inject
-    public Modules(File root) {
+    public Directory(File root) {
         this.root = root;
     }
 
@@ -54,7 +54,7 @@ public abstract class Modules {
 
     Module addModule(String moduleFolder) {
         Module module = getObjects().newInstance(Module.class, root);
-        module.getFolder().convention(moduleFolder);
+        module.getDirectory().convention(moduleFolder);
         module.getGroup().convention(getGroup());
         module.getPlugins().addAll(getPlugins());
         return module;

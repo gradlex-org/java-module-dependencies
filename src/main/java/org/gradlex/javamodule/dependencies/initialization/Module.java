@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class Module {
-    public abstract Property<String> getFolder();
+    public abstract Property<String> getDirectory();
     public abstract Property<String> getArtifact();
     public abstract Property<String> getGroup();
     public abstract ListProperty<String> getModuleInfoPaths();
@@ -35,8 +35,8 @@ public abstract class Module {
 
     @Inject
     public Module(File root) {
-        getArtifact().convention(getFolder().map(f -> Paths.get(f).getFileName().toString()));
-        getModuleInfoPaths().convention(getFolder().map(projectDir -> listChildren(root, projectDir + "/src")
+        getArtifact().convention(getDirectory().map(f -> Paths.get(f).getFileName().toString()));
+        getModuleInfoPaths().convention(getDirectory().map(projectDir -> listChildren(root, projectDir + "/src")
                 .map(srcDir -> new File(srcDir, "java/module-info.java"))
                 .filter(File::exists)
                 .map(moduleInfo -> "src/" + moduleInfo.getParentFile().getParentFile().getName() + "/java")

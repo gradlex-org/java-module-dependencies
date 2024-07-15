@@ -56,43 +56,43 @@ public abstract class JavaModulesExtension {
         this.moduleInfoCache = getObjects().newInstance(ModuleInfoCache.class, true);
     }
 
-    public void module(String folder) {
-        module(folder, m -> {});
+    public void module(String path) {
+        module(path, m -> {});
     }
 
-    public void module(String folder, Action<Module> action) {
+    public void module(String path, Action<Module> action) {
         Module module = getObjects().newInstance(Module.class, settings.getRootDir());
-        module.getFolder().set(folder);
+        module.getDirectory().set(path);
         action.execute(module);
-        includeModule(module, new File(settings.getRootDir(), module.getFolder().get()));
+        includeModule(module, new File(settings.getRootDir(), module.getDirectory().get()));
     }
 
-    public void modules(String folder) {
-        modules(folder, m -> {});
+    public void directory(String path) {
+        directory(path, m -> {});
     }
 
-    public void modules(String folder, Action<Modules> action) {
-        Modules moduleGroup = getObjects().newInstance(Modules.class, new File(settings.getRootDir(), folder));
-        action.execute(moduleGroup);
+    public void directory(String path, Action<Directory> action) {
+        Directory directory = getObjects().newInstance(Directory.class, new File(settings.getRootDir(), path));
+        action.execute(directory);
 
-        File[] projectFolders = new File(settings.getRootDir(), folder).listFiles();
-        if (projectFolders == null) {
-            throw new RuntimeException("Failed to inspect: " + new File(settings.getRootDir(), folder));
+        File[] projectDirs = new File(settings.getRootDir(), path).listFiles();
+        if (projectDirs == null) {
+            throw new RuntimeException("Failed to inspect: " + new File(settings.getRootDir(), path));
         }
 
-        for (File projectFolder : projectFolders) {
-            if (moduleGroup.customizedModules.containsKey(projectFolder.getName())) {
-                includeModule(moduleGroup.customizedModules.get(projectFolder.getName()), projectFolder);
+        for (File projectDir : projectDirs) {
+            if (directory.customizedModules.containsKey(projectDir.getName())) {
+                includeModule(directory.customizedModules.get(projectDir.getName()), projectDir);
             } else {
-                includeModule(moduleGroup.addModule(projectFolder.getName()), projectFolder);
+                includeModule(directory.addModule(projectDir.getName()), projectDir);
             }
         }
     }
 
-    public void versions(String folder) {
-        String projectName = Paths.get(folder).getFileName().toString();
+    public void versions(String directory) {
+        String projectName = Paths.get(directory).getFileName().toString();
         settings.include(projectName);
-        settings.project(":" + projectName).setProjectDir(new File(settings.getRootDir(), folder));
+        settings.project(":" + projectName).setProjectDir(new File(settings.getRootDir(), directory));
         if (SUPPORT_PROJECT_ISOLATION) {
             settings.getGradle().getLifecycle().beforeProject(new ApplyJavaModuleVersionsPluginAction(projectName));
         } else {
