@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,7 +78,8 @@ public abstract class ModuleInfoCache {
         if (maybePutModuleInfo(folder, providers)) {
             ModuleInfo thisModuleInfo = moduleInfo.get(folder);
             moduleNameToProjectPath.put(thisModuleInfo.getModuleName(), ":" + artifact);
-            String capabilitySuffix = sourceSetToCapabilitySuffix(Paths.get(moduleInfoPath).getParent().getFileName().toString());
+            Path parentDirectory = Paths.get(moduleInfoPath).getParent();
+            String capabilitySuffix = parentDirectory == null ? null : sourceSetToCapabilitySuffix(parentDirectory.getFileName().toString());
             if (capabilitySuffix != null) {
                 if (group.isPresent()) {
                     moduleNameToCapability.put(thisModuleInfo.getModuleName(), group.get() + ":" + artifact + "-" + capabilitySuffix);

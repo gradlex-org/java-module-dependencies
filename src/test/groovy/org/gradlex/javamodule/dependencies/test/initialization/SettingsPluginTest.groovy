@@ -24,7 +24,10 @@ class SettingsPluginTest extends Specification {
         settingsFile << '''
             javaModules {
                 module("app") { plugin("application") }
-                module("lib") { plugin("java-library") }
+                module("lib") {
+                    plugin("java-library")
+                    artifact = "lib-x"
+                }
             }
         '''
         libModuleInfoFile << 'module abc.lib { }'
@@ -39,7 +42,7 @@ class SettingsPluginTest extends Specification {
 
         then:
         result.task(":app:compileJava").outcome == SUCCESS
-        result.task(":lib:compileJava").outcome == SUCCESS
+        result.task(":lib-x:compileJava").outcome == SUCCESS
     }
 
     def "finds all modules in a directory"() {
@@ -133,6 +136,33 @@ class SettingsPluginTest extends Specification {
 
         then:
         result.task(":compileJava").outcome == NO_SOURCE
+    }
+
+    def 'can have module-info in custom location'() {
+        given:
+        settingsFile << '''
+            javaModules {
+                module("app") { plugin("application") }
+                module("lib") {
+                    plugin("java-library")
+                    moduleInfoPaths.add("src")
+                }
+            }
+        '''
+        libBuildFile << 'sourceSets.main { java.setSrcDirs(listOf("src")) }'
+        file("lib/src/module-info.java") << 'module abc.lib { }'
+        appModuleInfoFile << '''
+            module org.gradlex.test.app {
+                requires abc.lib;
+            }
+        '''
+
+        when:
+        def result = runner(':app:compileJava').build()
+
+        then:
+        result.task(":app:compileJava").outcome == SUCCESS
+        result.task(":lib:compileJava").outcome == SUCCESS
     }
 
 }
