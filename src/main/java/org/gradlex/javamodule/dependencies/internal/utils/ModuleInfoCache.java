@@ -32,12 +32,22 @@ import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUti
 
 public abstract class ModuleInfoCache {
 
+    private final boolean initializedInSettings;
     private final Map<File, ModuleInfo> moduleInfo = new HashMap<>();
     private final Map<String, String> moduleNameToProjectPath = new HashMap<>();
     private final Map<String, String> moduleNameToCapability = new HashMap<>();
 
     @Inject
     public abstract ObjectFactory getObjects();
+
+    @Inject
+    public ModuleInfoCache(boolean initializedInSettings) {
+        this.initializedInSettings = initializedInSettings;
+    }
+
+    public boolean isInitializedInSettings() {
+        return initializedInSettings;
+    }
 
     /**
      * Returns the module-info.java for the given SourceSet. If the SourceSet has multiple source folders with multiple
@@ -91,10 +101,6 @@ public abstract class ModuleInfoCache {
             }
             return true;
         }
-        return false;
-    }
-
-    public boolean initializedInSettings() {
         return false;
     }
 }

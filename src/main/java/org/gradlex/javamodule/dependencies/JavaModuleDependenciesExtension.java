@@ -77,7 +77,8 @@ public abstract class JavaModuleDependenciesExtension {
     private static final String INTERNAL = "internal";
 
     private final VersionCatalogsExtension versionCatalogs;
-    private final ModuleInfoCache moduleInfoCache;
+
+    public abstract Property<ModuleInfoCache> getModuleInfoCache();
 
     /**
      * Custom mappings can be defined in a property files in your build.
@@ -134,7 +135,7 @@ public abstract class JavaModuleDependenciesExtension {
 
     public JavaModuleDependenciesExtension(VersionCatalogsExtension versionCatalogs) {
         this.versionCatalogs = versionCatalogs;
-        this.moduleInfoCache = getObjects().newInstance(ModuleInfoCache.class);
+        getModuleInfoCache().convention(getProviders().provider(() -> getObjects().newInstance(ModuleInfoCache.class, false)));
         getModulesProperties().set(new File(getProject().getRootDir(), "gradle/modules.properties"));
         getVersionCatalogName().convention("libs");
         getModuleNameCheck().convention(true);
@@ -212,7 +213,7 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     public Provider<Dependency> create(String moduleName, SourceSet sourceSetWithModuleInfo) {
-        if (moduleInfoCache.initializedInSettings()) {
+        if (getModuleInfoCache().get().isInitializedInSettings()) {
             return createPrecise(moduleName, sourceSetWithModuleInfo);
         } else {
             return createWithGuessing(moduleName, sourceSetWithModuleInfo);
@@ -221,8 +222,8 @@ public abstract class JavaModuleDependenciesExtension {
 
     public Provider<Dependency> createPrecise(String moduleName, SourceSet sourceSetWithModuleInfo) {
         return getProviders().provider(() -> {
-            String projectPath = moduleInfoCache.getProjectPath(moduleName);
-            String capability = moduleInfoCache.getCapability(moduleName);
+            String projectPath = getModuleInfoCache().get().getProjectPath(moduleName);
+            String capability = getModuleInfoCache().get().getCapability(moduleName);
 
             if (projectPath != null) {
                 // local project
@@ -243,7 +244,7 @@ public abstract class JavaModuleDependenciesExtension {
             Map<String, String> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream().collect(
                     Collectors.toMap(Project::getName, p -> (String) p.getGroup(), (a, b) -> a));
 
-            ModuleInfo moduleInfo = moduleInfoCache.get(sourceSetWithModuleInfo, getProviders());
+            ModuleInfo moduleInfo = getModuleInfoCache().get().get(sourceSetWithModuleInfo, getProviders());
             String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(getProject().getName(), sourceSetWithModuleInfo.getName(), getModuleNameCheck().get());
 
             String moduleNameSuffix = ownModuleNamesPrefix == null ? null :
@@ -510,7 +511,7 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     void doAddRequiresRuntimeSupport(SourceSet sourceSetForModuleInfo, SourceSet sourceSetForClasspath) {
-        List<String> requiresRuntime = getModuleInfoCache().get(sourceSetForModuleInfo, getProviders()).get(REQUIRES_RUNTIME);
+        List<String> requiresRuntime = getModuleInfoCache().get().get(sourceSetForModuleInfo, getProviders()).get(REQUIRES_RUNTIME);
         String generatorTaskName = sourceSetForClasspath.getTaskName("generate", "syntheticModuleInfoFolders");
         if (requiresRuntime.isEmpty() || getProject().getTasks().getNames().contains(generatorTaskName)) {
             // Already active or not needed for this source set
@@ -573,8 +574,4 @@ public abstract class JavaModuleDependenciesExtension {
 
     @Inject
     protected abstract SourceSetContainer getSourceSets();
-
-    ModuleInfoCache getModuleInfoCache() {
-        return moduleInfoCache;
-    }
 }

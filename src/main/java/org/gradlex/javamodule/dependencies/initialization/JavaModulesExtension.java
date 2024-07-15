@@ -27,6 +27,7 @@ import org.gradle.api.plugins.ApplicationPlugin;
 import org.gradle.api.plugins.JavaApplication;
 import org.gradle.api.plugins.JavaPlatformPlugin;
 import org.gradle.util.GradleVersion;
+import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesPlugin;
 import org.gradlex.javamodule.dependencies.JavaModuleVersionsPlugin;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
@@ -52,7 +53,7 @@ public abstract class JavaModulesExtension {
     @Inject
     public JavaModulesExtension(Settings settings) {
         this.settings = settings;
-        this.moduleInfoCache = getObjects().newInstance(ModuleInfoCache.class);
+        this.moduleInfoCache = getObjects().newInstance(ModuleInfoCache.class, true);
     }
 
     public void module(String folder) {
@@ -122,9 +123,9 @@ public abstract class JavaModulesExtension {
         String group = module.getGroup().getOrNull();
         List<String> plugins = module.getPlugins().get();
         if (SUPPORT_PROJECT_ISOLATION) {
-            settings.getGradle().getLifecycle().beforeProject(new ApplyPluginsAction(artifact, group, plugins, mainModuleName));
+            settings.getGradle().getLifecycle().beforeProject(new ApplyPluginsAction(artifact, group, plugins, mainModuleName, moduleInfoCache));
         } else {
-            settings.getGradle().beforeProject(new ApplyPluginsAction(artifact, group, plugins, mainModuleName));
+            settings.getGradle().beforeProject(new ApplyPluginsAction(artifact, group, plugins, mainModuleName, moduleInfoCache));
         }
     }
 
@@ -135,12 +136,14 @@ public abstract class JavaModulesExtension {
         private final String group;
         private final List<String> plugins;
         private final String mainModuleName;
+        private final ModuleInfoCache moduleInfoCache;
 
-        public ApplyPluginsAction(String artifact, @Nullable String group, List<String> plugins, @Nullable String mainModuleName) {
+        public ApplyPluginsAction(String artifact, @Nullable String group, List<String> plugins, @Nullable String mainModuleName, ModuleInfoCache moduleInfoCache) {
             this.artifact = artifact;
             this.group = group;
             this.plugins = plugins;
             this.mainModuleName = mainModuleName;
+            this.moduleInfoCache = moduleInfoCache;
         }
 
         @Override
@@ -148,6 +151,7 @@ public abstract class JavaModulesExtension {
             if (project.getName().equals(artifact)) {
                 if (group != null) project.setGroup(group);
                 project.getPlugins().apply(JavaModuleDependenciesPlugin.class);
+                project.getExtensions().getByType(JavaModuleDependenciesExtension.class).getModuleInfoCache().set(moduleInfoCache);
                 plugins.forEach(id -> project.getPlugins().apply(id));
                 if (mainModuleName != null) {
                     project.getPlugins().withType(ApplicationPlugin.class, p ->

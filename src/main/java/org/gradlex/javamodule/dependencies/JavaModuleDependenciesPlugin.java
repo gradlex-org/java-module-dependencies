@@ -234,7 +234,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
                 t.setGroup("java modules");
                 t.setDescription("Check order of directives in 'module-info.java' in '" + sourceSet.getName() + "' source set");
 
-                ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get(sourceSet, project.getProviders());
+                ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get().get(sourceSet, project.getProviders());
 
                 t.getModuleInfoPath().convention(moduleInfo.getFilePath().getAbsolutePath());
                 t.getModuleNamePrefix().convention(moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName(), false));
@@ -264,7 +264,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
         if (javaModuleDependenciesExtension.getAnalyseOnly().get()) {
             return;
         }
-        ModuleInfo moduleInfo = javaModuleDependenciesExtension.getModuleInfoCache().get(sourceSet, project.getProviders());
+        ModuleInfo moduleInfo = javaModuleDependenciesExtension.getModuleInfoCache().get().get(sourceSet, project.getProviders());
         for (String moduleName : moduleInfo.get(moduleDirective)) {
             declareDependency(moduleName, moduleInfo.getFilePath(), project, sourceSet, configuration, javaModuleDependenciesExtension);
         }
@@ -280,7 +280,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
     }
 
     private List<BuildFileDependenciesGenerate.DependencyDeclaration> collectDependencies(Project project, JavaModuleDependenciesExtension javaModuleDependencies, SourceSet sourceSet, ModuleInfo.Directive directive, String scope) {
-        ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get(sourceSet, project.getProviders());
+        ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get().get(sourceSet, project.getProviders());
         if (moduleInfo == ModuleInfo.EMPTY) {
             // check if there is a whiltebox module-info we can use isntead
             File sourceSetDir = sourceSet.getJava().getSrcDirs().iterator().next().getParentFile();
