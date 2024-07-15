@@ -60,7 +60,7 @@ public abstract class JavaModulesExtension {
     }
 
     public void module(String folder, Action<Module> action) {
-        Module module = getObjects().newInstance(Module.class);
+        Module module = getObjects().newInstance(Module.class, settings.getRootDir());
         module.getFolder().set(folder);
         action.execute(module);
         includeModule(module, new File(settings.getRootDir(), module.getFolder().get()));
@@ -71,7 +71,7 @@ public abstract class JavaModulesExtension {
     }
 
     public void modules(String folder, Action<Modules> action) {
-        Modules moduleGroup = getObjects().newInstance(Modules.class);
+        Modules moduleGroup = getObjects().newInstance(Modules.class, new File(settings.getRootDir(), folder));
         action.execute(moduleGroup);
 
         File[] projectFolders = new File(settings.getRootDir(), folder).listFiles();
@@ -100,9 +100,8 @@ public abstract class JavaModulesExtension {
     }
 
     private void includeModule(Module module, File projectDir) {
-        ModuleInfo moduleInfo = moduleInfoCache.get(projectDir, module.getModuleInfoPath().get(),
-                module.getArtifact().get(), module.getGroup(), settings.getProviders());
-        if (moduleInfo == ModuleInfo.EMPTY) {
+        List<String> modulePaths = module.getModuleInfoPaths().get();
+        if (modulePaths.isEmpty()) {
             return;
         }
 
@@ -111,13 +110,21 @@ public abstract class JavaModulesExtension {
         ProjectDescriptor project = settings.project(":" + artifact);
         project.setProjectDir(projectDir);
 
-        String group = module.getGroup().getOrNull();
+        String mainModuleName = null;
+        for (String path : modulePaths) {
+            ModuleInfo moduleInfo = moduleInfoCache.put(projectDir, path,
+                    module.getArtifact().get(), module.getGroup(), settings.getProviders());
+            if (path.contains("/main/")) {
+                mainModuleName = moduleInfo.getModuleName();
+            }
+        }
 
+        String group = module.getGroup().getOrNull();
         List<String> plugins = module.getPlugins().get();
         if (SUPPORT_PROJECT_ISOLATION) {
-            settings.getGradle().getLifecycle().beforeProject(new ApplyPluginsAction(artifact, group, plugins, moduleInfo.getModuleName()));
+            settings.getGradle().getLifecycle().beforeProject(new ApplyPluginsAction(artifact, group, plugins, mainModuleName));
         } else {
-            settings.getGradle().beforeProject(new ApplyPluginsAction(artifact, group, plugins, moduleInfo.getModuleName()));
+            settings.getGradle().beforeProject(new ApplyPluginsAction(artifact, group, plugins, mainModuleName));
         }
     }
 
@@ -127,13 +134,13 @@ public abstract class JavaModulesExtension {
         private final String artifact;
         private final String group;
         private final List<String> plugins;
-        private final String modueName;
+        private final String mainModuleName;
 
-        public ApplyPluginsAction(String artifact, @Nullable String group, List<String> plugins, String modueName) {
+        public ApplyPluginsAction(String artifact, @Nullable String group, List<String> plugins, @Nullable String mainModuleName) {
             this.artifact = artifact;
             this.group = group;
             this.plugins = plugins;
-            this.modueName = modueName;
+            this.mainModuleName = mainModuleName;
         }
 
         @Override
@@ -142,8 +149,10 @@ public abstract class JavaModulesExtension {
                 if (group != null) project.setGroup(group);
                 project.getPlugins().apply(JavaModuleDependenciesPlugin.class);
                 plugins.forEach(id -> project.getPlugins().apply(id));
-                project.getPlugins().withType(ApplicationPlugin.class, p ->
-                        project.getExtensions().getByType(JavaApplication.class).getMainModule().set(modueName));
+                if (mainModuleName != null) {
+                    project.getPlugins().withType(ApplicationPlugin.class, p ->
+                            project.getExtensions().getByType(JavaApplication.class).getMainModule().set(mainModuleName));
+                }
             }
         }
     }

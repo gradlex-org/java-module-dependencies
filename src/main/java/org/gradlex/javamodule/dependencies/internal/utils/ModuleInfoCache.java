@@ -24,14 +24,17 @@ import org.gradle.api.tasks.SourceSet;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToCapabilitySuffix;
 
 public abstract class ModuleInfoCache {
 
     private final Map<File, ModuleInfo> moduleInfo = new HashMap<>();
     private final Map<String, String> moduleNameToProjectPath = new HashMap<>();
-    private final Map<String, String> moduleNameToGA = new HashMap<>();
+    private final Map<String, String> moduleNameToCapability = new HashMap<>();
 
     @Inject
     public abstract ObjectFactory getObjects();
@@ -56,17 +59,26 @@ public abstract class ModuleInfoCache {
      * @param projectRoot the project that should hold a Java module
      * @return parsed module-info.java for the given project assuming a standard Java project layout
      */
-    public ModuleInfo get(File projectRoot, String moduleInfoPath, String artifact, Provider<String> group, ProviderFactory providers) {
+    public ModuleInfo put(File projectRoot, String moduleInfoPath, String artifact, Provider<String> group, ProviderFactory providers) {
         File folder = new File(projectRoot, moduleInfoPath);
         if (maybePutModuleInfo(folder, providers)) {
             ModuleInfo thisModuleInfo = moduleInfo.get(folder);
             moduleNameToProjectPath.put(thisModuleInfo.getModuleName(), ":" + artifact);
-            if (group.isPresent()) {
-                moduleNameToGA.put(thisModuleInfo.getModuleName(), group.get() + ":" + artifact);
+            String capabilitySuffix = sourceSetToCapabilitySuffix(Paths.get(moduleInfoPath).getFileName().toString());
+            if (group.isPresent() && capabilitySuffix != null) {
+                moduleNameToCapability.put(thisModuleInfo.getModuleName(), group.get() + ":" + artifact + "-" + capabilitySuffix);
             }
             return thisModuleInfo;
         }
         return ModuleInfo.EMPTY;
+    }
+
+    public String getProjectPath(String moduleName) {
+        return moduleNameToProjectPath.get(moduleName);
+    }
+
+    public String getCapability(String moduleName) {
+        return moduleNameToCapability.get(moduleName);
     }
 
     private boolean maybePutModuleInfo(File folder, ProviderFactory providers) {
@@ -79,6 +91,10 @@ public abstract class ModuleInfoCache {
             }
             return true;
         }
+        return false;
+    }
+
+    public boolean initializedInSettings() {
         return false;
     }
 }

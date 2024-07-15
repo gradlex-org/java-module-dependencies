@@ -212,13 +212,38 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     public Provider<Dependency> create(String moduleName, SourceSet sourceSetWithModuleInfo) {
+        if (moduleInfoCache.initializedInSettings()) {
+            return createPrecise(moduleName, sourceSetWithModuleInfo);
+        } else {
+            return createWithGuessing(moduleName, sourceSetWithModuleInfo);
+        }
+    }
+
+    public Provider<Dependency> createPrecise(String moduleName, SourceSet sourceSetWithModuleInfo) {
+        return getProviders().provider(() -> {
+            String projectPath = moduleInfoCache.getProjectPath(moduleName);
+            String capability = moduleInfoCache.getCapability(moduleName);
+
+            if (projectPath != null) {
+                // local project
+                ProjectDependency projectDependency = (ProjectDependency) getDependencies().create(getProject().project(projectPath));
+                projectDependency.because(moduleName);
+                if (capability != null) {
+                    projectDependency.capabilities(c -> c.requireCapabilities(capability));
+                }
+                return projectDependency;
+            } else {
+                return createExternalDependency(moduleName);
+            }
+        });
+    }
+
+    public Provider<Dependency> createWithGuessing(String moduleName, SourceSet sourceSetWithModuleInfo) {
         return getProviders().provider(() -> {
             Map<String, String> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream().collect(
                     Collectors.toMap(Project::getName, p -> (String) p.getGroup(), (a, b) -> a));
 
-            Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
-
-            ModuleInfo moduleInfo = getModuleInfoCache().get(sourceSetWithModuleInfo, getProviders());
+            ModuleInfo moduleInfo = moduleInfoCache.get(sourceSetWithModuleInfo, getProviders());
             String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(getProject().getName(), sourceSetWithModuleInfo.getName(), getModuleNameCheck().get());
 
             String moduleNameSuffix = ownModuleNamesPrefix == null ? null :
@@ -243,34 +268,41 @@ public abstract class JavaModuleDependenciesExtension {
                         allProjectNamesAndGroups.get(projectName) + ":" + capabilityName));
                 projectDependency.because(moduleName);
                 return projectDependency;
-            } else if (coordinates.isPresent()) {
-                Map<String, Object> component;
-                String capability;
-                if (coordinates.get().contains("|")) {
-                    String[] split = coordinates.get().split("\\|");
-                    component = findGav(split[0], moduleName);
-                    if (split[1].contains(":")) {
-                        capability = split[1];
-                    } else {
-                        // only classifier was specified
-                        capability = split[0] + "-" + split[1];
-                    }
-                } else {
-                    component = findGav(coordinates.get(), moduleName);
-                    capability = null;
-                }
-                ModuleDependency dependency = (ModuleDependency) getDependencies().create(component);
-                dependency.because(moduleName);
-                if (capability != null) {
-                    dependency.capabilities(c -> c.requireCapability(capability));
-                }
-                return dependency;
-            } else {
-                getProject().getLogger().lifecycle(
-                        "[WARN] [Java Module Dependencies] " + moduleName + "=group:artifact missing in " + getModulesProperties().get().getAsFile());
-                return null;
             }
+
+            return createExternalDependency(moduleName);
         });
+    }
+
+    private ModuleDependency createExternalDependency(String moduleName) {
+        Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
+        if (coordinates.isPresent()) {
+            Map<String, Object> component;
+            String capability;
+            if (coordinates.get().contains("|")) {
+                String[] split = coordinates.get().split("\\|");
+                component = findGav(split[0], moduleName);
+                if (split[1].contains(":")) {
+                    capability = split[1];
+                } else {
+                    // only classifier was specified
+                    capability = split[0] + "-" + split[1];
+                }
+            } else {
+                component = findGav(coordinates.get(), moduleName);
+                capability = null;
+            }
+            ModuleDependency dependency = (ModuleDependency) getDependencies().create(component);
+            dependency.because(moduleName);
+            if (capability != null) {
+                dependency.capabilities(c -> c.requireCapability(capability));
+            }
+            return dependency;
+        } else {
+            getProject().getLogger().lifecycle(
+                    "[WARN] [Java Module Dependencies] " + moduleName + "=group:artifact missing in " + getModulesProperties().get().getAsFile());
+            return null;
+        }
     }
 
     /**

@@ -30,6 +30,13 @@ public abstract class ModuleNamingUtil {
         return toDottedCase(projectName) + "." + toDottedCase(sourceSetName);
     }
 
+    public static String sourceSetToCapabilitySuffix(String sourceSetName) {
+        if (sourceSetName.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
+            return null;
+        }
+        return toKebabCase(sourceSetName);
+    }
+
     /**
      * Converts 'camelCase' and 'kebab-case' to 'dotted.case'.
      */
@@ -37,5 +44,14 @@ public abstract class ModuleNamingUtil {
         return Arrays.stream(sourceSetName.replace("-", ".")
                 .split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])"))
                 .map(String::toLowerCase).collect(Collectors.joining("."));
+    }
+
+    /**
+     * Converts 'camelCase' to 'kebab-case'.
+     */
+    private static String toKebabCase(String sourceSetName) {
+        return Arrays.stream(sourceSetName
+                        .split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])"))
+                .map(String::toLowerCase).collect(Collectors.joining("-"));
     }
 }

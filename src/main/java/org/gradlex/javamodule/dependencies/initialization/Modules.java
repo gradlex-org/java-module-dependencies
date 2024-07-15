@@ -6,22 +6,24 @@ import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 
 import javax.inject.Inject;
+import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public abstract class Modules {
 
+    private final File root;
     final Map<String, Module> customizedModules = new LinkedHashMap<>();
 
     public abstract Property<String> getGroup();
-    public abstract Property<String> getModuleInfoPath();
     public abstract ListProperty<String> getPlugins();
 
     @Inject
     public abstract ObjectFactory getObjects();
 
-    public Modules() {
-        getModuleInfoPath().convention("src/main/java");
+    @Inject
+    public Modules(File root) {
+        this.root = root;
     }
 
     public void plugin(String id) {
@@ -35,11 +37,10 @@ public abstract class Modules {
     }
 
     Module addModule(String moduleFolder) {
-        Module module = getObjects().newInstance(Module.class);
+        Module module = getObjects().newInstance(Module.class, root);
         module.getFolder().convention(moduleFolder);
         module.getGroup().convention(getGroup());
         module.getPlugins().addAll(getPlugins());
-        module.getModuleInfoPath().convention(getModuleInfoPath());
         return module;
     }
 }
