@@ -41,9 +41,6 @@ import java.util.List;
 
 public abstract class JavaModulesExtension {
 
-    static final boolean SUPPORT_PROJECT_ISOLATION =
-            GradleVersion.current().compareTo(GradleVersion.version("8.8")) >= 0;
-
     private final Settings settings;
     private final ModuleInfoCache moduleInfoCache;
 
@@ -93,11 +90,7 @@ public abstract class JavaModulesExtension {
         String projectName = Paths.get(directory).getFileName().toString();
         settings.include(projectName);
         settings.project(":" + projectName).setProjectDir(new File(settings.getRootDir(), directory));
-        if (SUPPORT_PROJECT_ISOLATION) {
-            settings.getGradle().getLifecycle().beforeProject(new ApplyJavaModuleVersionsPluginAction(projectName));
-        } else {
-            settings.getGradle().beforeProject(new ApplyJavaModuleVersionsPluginAction(projectName));
-        }
+        settings.getGradle().getLifecycle().beforeProject(new ApplyJavaModuleVersionsPluginAction(projectName));
     }
 
     private void includeModule(Module module, File projectDir) {
@@ -122,11 +115,7 @@ public abstract class JavaModulesExtension {
 
         String group = module.getGroup().getOrNull();
         List<String> plugins = module.getPlugins().get();
-        if (SUPPORT_PROJECT_ISOLATION) {
-            settings.getGradle().getLifecycle().beforeProject(new ApplyPluginsAction(artifact, group, plugins, mainModuleName, moduleInfoCache));
-        } else {
-            settings.getGradle().beforeProject(new ApplyPluginsAction(artifact, group, plugins, mainModuleName, moduleInfoCache));
-        }
+        settings.getGradle().getLifecycle().beforeProject(new ApplyPluginsAction(artifact, group, plugins, mainModuleName, moduleInfoCache));
     }
 
     @NonNullApi

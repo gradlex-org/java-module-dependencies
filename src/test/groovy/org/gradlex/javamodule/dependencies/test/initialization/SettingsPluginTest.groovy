@@ -1,4 +1,4 @@
-package org.gradlex.javamodule.dependencies.test
+package org.gradlex.javamodule.dependencies.test.initialization
 
 import org.gradlex.javamodule.dependencies.test.fixture.GradleBuild
 import spock.lang.Specification

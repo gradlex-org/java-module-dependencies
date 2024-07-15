@@ -24,8 +24,6 @@ import org.gradle.api.initialization.Settings;
 
 import javax.inject.Inject;
 
-import static org.gradlex.javamodule.dependencies.initialization.JavaModulesExtension.SUPPORT_PROJECT_ISOLATION;
-
 public abstract class RootPluginsExtension {
 
     private final Settings settings;
@@ -36,11 +34,7 @@ public abstract class RootPluginsExtension {
     }
 
     public void id(String id) {
-        if (SUPPORT_PROJECT_ISOLATION) {
-            settings.getGradle().getLifecycle().beforeProject(new ApplyPluginAction(id));
-        } else {
-            settings.getGradle().beforeProject(new ApplyPluginAction(id));
-        }
+        settings.getGradle().getLifecycle().beforeProject(new ApplyPluginAction(id));
     }
 
     @NonNullApi

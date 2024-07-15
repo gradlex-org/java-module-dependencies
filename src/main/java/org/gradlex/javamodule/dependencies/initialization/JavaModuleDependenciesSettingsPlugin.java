@@ -16,15 +16,20 @@
 
 package org.gradlex.javamodule.dependencies.initialization;
 
+import org.gradle.api.GradleException;
 import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
 import org.gradle.api.initialization.Settings;
+import org.gradle.util.GradleVersion;
 
 @NonNullApi
 public abstract class JavaModuleDependenciesSettingsPlugin implements Plugin<Settings> {
 
     @Override
     public void apply(Settings settings) {
+        if (GradleVersion.current().compareTo(GradleVersion.version("8.8")) < 0) {
+            throw new GradleException("This settings plugin requires Gradle 8.8+");
+        }
         registerExtension(settings);
     }
 
