@@ -77,7 +77,8 @@ public abstract class JavaModuleDependenciesExtension {
     private static final String INTERNAL = "internal";
 
     private final VersionCatalogsExtension versionCatalogs;
-    private final ModuleInfoCache moduleInfoCache;
+
+    public abstract Property<ModuleInfoCache> getModuleInfoCache();
 
     /**
      * Custom mappings can be defined in a property files in your build.
@@ -134,7 +135,7 @@ public abstract class JavaModuleDependenciesExtension {
 
     public JavaModuleDependenciesExtension(VersionCatalogsExtension versionCatalogs) {
         this.versionCatalogs = versionCatalogs;
-        this.moduleInfoCache = getObjects().newInstance(ModuleInfoCache.class);
+        getModuleInfoCache().convention(getProviders().provider(() -> getObjects().newInstance(ModuleInfoCache.class, false)));
         getModulesProperties().set(new File(getProject().getRootDir(), "gradle/modules.properties"));
         getVersionCatalogName().convention("libs");
         getModuleNameCheck().convention(true);
@@ -212,13 +213,38 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     public Provider<Dependency> create(String moduleName, SourceSet sourceSetWithModuleInfo) {
+        if (getModuleInfoCache().get().isInitializedInSettings()) {
+            return createPrecise(moduleName, sourceSetWithModuleInfo);
+        } else {
+            return createWithGuessing(moduleName, sourceSetWithModuleInfo);
+        }
+    }
+
+    private Provider<Dependency> createPrecise(String moduleName, SourceSet sourceSetWithModuleInfo) {
+        return getProviders().provider(() -> {
+            String projectPath = getModuleInfoCache().get().getProjectPath(moduleName);
+            String capability = getModuleInfoCache().get().getCapability(moduleName);
+
+            if (projectPath != null) {
+                // local project
+                ProjectDependency projectDependency = (ProjectDependency) getDependencies().create(getProject().project(projectPath));
+                projectDependency.because(moduleName);
+                if (capability != null) {
+                    projectDependency.capabilities(c -> c.requireCapabilities(capability));
+                }
+                return projectDependency;
+            } else {
+                return createExternalDependency(moduleName);
+            }
+        });
+    }
+
+    private Provider<Dependency> createWithGuessing(String moduleName, SourceSet sourceSetWithModuleInfo) {
         return getProviders().provider(() -> {
             Map<String, String> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream().collect(
                     Collectors.toMap(Project::getName, p -> (String) p.getGroup(), (a, b) -> a));
 
-            Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
-
-            ModuleInfo moduleInfo = getModuleInfoCache().get(sourceSetWithModuleInfo);
+            ModuleInfo moduleInfo = getModuleInfoCache().get().get(sourceSetWithModuleInfo, getProviders());
             String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(getProject().getName(), sourceSetWithModuleInfo.getName(), getModuleNameCheck().get());
 
             String moduleNameSuffix = ownModuleNamesPrefix == null ? null :
@@ -243,34 +269,41 @@ public abstract class JavaModuleDependenciesExtension {
                         allProjectNamesAndGroups.get(projectName) + ":" + capabilityName));
                 projectDependency.because(moduleName);
                 return projectDependency;
-            } else if (coordinates.isPresent()) {
-                Map<String, Object> component;
-                String capability;
-                if (coordinates.get().contains("|")) {
-                    String[] split = coordinates.get().split("\\|");
-                    component = findGav(split[0], moduleName);
-                    if (split[1].contains(":")) {
-                        capability = split[1];
-                    } else {
-                        // only classifier was specified
-                        capability = split[0] + "-" + split[1];
-                    }
-                } else {
-                    component = findGav(coordinates.get(), moduleName);
-                    capability = null;
-                }
-                ModuleDependency dependency = (ModuleDependency) getDependencies().create(component);
-                dependency.because(moduleName);
-                if (capability != null) {
-                    dependency.capabilities(c -> c.requireCapability(capability));
-                }
-                return dependency;
-            } else {
-                getProject().getLogger().lifecycle(
-                        "[WARN] [Java Module Dependencies] " + moduleName + "=group:artifact missing in " + getModulesProperties().get().getAsFile());
-                return null;
             }
+
+            return createExternalDependency(moduleName);
         });
+    }
+
+    private ModuleDependency createExternalDependency(String moduleName) {
+        Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
+        if (coordinates.isPresent()) {
+            Map<String, Object> component;
+            String capability;
+            if (coordinates.get().contains("|")) {
+                String[] split = coordinates.get().split("\\|");
+                component = findGav(split[0], moduleName);
+                if (split[1].contains(":")) {
+                    capability = split[1];
+                } else {
+                    // only classifier was specified
+                    capability = split[0] + "-" + split[1];
+                }
+            } else {
+                component = findGav(coordinates.get(), moduleName);
+                capability = null;
+            }
+            ModuleDependency dependency = (ModuleDependency) getDependencies().create(component);
+            dependency.because(moduleName);
+            if (capability != null) {
+                dependency.capabilities(c -> c.requireCapability(capability));
+            }
+            return dependency;
+        } else {
+            getProject().getLogger().lifecycle(
+                    "[WARN] [Java Module Dependencies] " + moduleName + "=group:artifact missing in " + getModulesProperties().get().getAsFile());
+            return null;
+        }
     }
 
     /**
@@ -478,7 +511,7 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     void doAddRequiresRuntimeSupport(SourceSet sourceSetForModuleInfo, SourceSet sourceSetForClasspath) {
-        List<String> requiresRuntime = getModuleInfoCache().get(sourceSetForModuleInfo).get(REQUIRES_RUNTIME);
+        List<String> requiresRuntime = getModuleInfoCache().get().get(sourceSetForModuleInfo, getProviders()).get(REQUIRES_RUNTIME);
         String generatorTaskName = sourceSetForClasspath.getTaskName("generate", "syntheticModuleInfoFolders");
         if (requiresRuntime.isEmpty() || getProject().getTasks().getNames().contains(generatorTaskName)) {
             // Already active or not needed for this source set
@@ -541,8 +574,4 @@ public abstract class JavaModuleDependenciesExtension {
 
     @Inject
     protected abstract SourceSetContainer getSourceSets();
-
-    ModuleInfoCache getModuleInfoCache() {
-        return moduleInfoCache;
-    }
 }

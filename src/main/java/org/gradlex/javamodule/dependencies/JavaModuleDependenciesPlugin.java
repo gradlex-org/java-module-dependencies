@@ -24,6 +24,8 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
+import org.gradle.api.initialization.Settings;
+import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.SourceSet;
@@ -32,6 +34,7 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.util.GradleVersion;
 import org.gradlex.javamodule.dependencies.dsl.AllDirectives;
 import org.gradlex.javamodule.dependencies.dsl.GradleOnlyDirectives;
+import org.gradlex.javamodule.dependencies.initialization.JavaModuleDependenciesSettingsPlugin;
 import org.gradlex.javamodule.dependencies.internal.bridges.DependencyAnalysisBridge;
 import org.gradlex.javamodule.dependencies.internal.bridges.ExtraJavaModuleInfoBridge;
 import org.gradlex.javamodule.dependencies.internal.dsl.AllDirectivesInternal;
@@ -62,16 +65,23 @@ import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUti
 
 @SuppressWarnings("unused")
 @NonNullApi
-public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
+public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAware> {
 
     private static final String EXTRA_JAVA_MODULE_INFO_PLUGIN_ID = "org.gradlex.extra-java-module-info";
 
     @Override
-    public void apply(Project project) {
+    public void apply(ExtensionAware projectOrSettings) {
         if (GradleVersion.current().compareTo(GradleVersion.version("7.4")) < 0) {
             throw new GradleException("This plugin requires Gradle 7.4+");
         }
+        if (projectOrSettings instanceof Project) {
+            applyProject((Project) projectOrSettings);
+        } else if (projectOrSettings instanceof Settings) {
+            ((Settings) projectOrSettings).getPlugins().apply(JavaModuleDependenciesSettingsPlugin.class);
+        }
+    }
 
+    private void applyProject(Project project) {
         VersionCatalogsExtension versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
         JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().create(
                 JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class, versionCatalogs);
@@ -224,7 +234,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
                 t.setGroup("java modules");
                 t.setDescription("Check order of directives in 'module-info.java' in '" + sourceSet.getName() + "' source set");
 
-                ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get(sourceSet);
+                ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get().get(sourceSet, project.getProviders());
 
                 t.getModuleInfoPath().convention(moduleInfo.getFilePath().getAbsolutePath());
                 t.getModuleNamePrefix().convention(moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName(), false));
@@ -254,7 +264,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
         if (javaModuleDependenciesExtension.getAnalyseOnly().get()) {
             return;
         }
-        ModuleInfo moduleInfo = javaModuleDependenciesExtension.getModuleInfoCache().get(sourceSet);
+        ModuleInfo moduleInfo = javaModuleDependenciesExtension.getModuleInfoCache().get().get(sourceSet, project.getProviders());
         for (String moduleName : moduleInfo.get(moduleDirective)) {
             declareDependency(moduleName, moduleInfo.getFilePath(), project, sourceSet, configuration, javaModuleDependenciesExtension);
         }
@@ -270,7 +280,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<Project> {
     }
 
     private List<BuildFileDependenciesGenerate.DependencyDeclaration> collectDependencies(Project project, JavaModuleDependenciesExtension javaModuleDependencies, SourceSet sourceSet, ModuleInfo.Directive directive, String scope) {
-        ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get(sourceSet);
+        ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get().get(sourceSet, project.getProviders());
         if (moduleInfo == ModuleInfo.EMPTY) {
             // check if there is a whiltebox module-info we can use isntead
             File sourceSetDir = sourceSet.getJava().getSrcDirs().iterator().next().getParentFile();

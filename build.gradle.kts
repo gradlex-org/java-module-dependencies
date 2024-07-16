@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "org.gradlex"
-version = "1.6.6"
+version = "1.7"
 
 tasks.withType<JavaCompile>().configureEach {
     options.release = 8
@@ -73,6 +73,7 @@ testing.suites.named<JvmTestSuite>("test") {
                 description = "Runs tests against Gradle $gradleVersionUnderTest"
                 systemProperty("gradleVersionUnderTest", gradleVersionUnderTest)
                 exclude("**/*SamplesTest.class") // Not yet cross-version ready
+                exclude("**/initialization/**") // Settings plugin only for Gradle 8.8+
             }
         }
     }

@@ -62,6 +62,10 @@ public class ModuleInfo implements Serializable {
         }
     }
 
+    public String getModuleName() {
+        return moduleName;
+    }
+
     public List<String> get(Directive directive) {
         if (directive == Directive.REQUIRES) {
             return requires;
