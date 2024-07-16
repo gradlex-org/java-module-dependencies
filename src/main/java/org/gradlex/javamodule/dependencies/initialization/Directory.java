@@ -31,25 +31,43 @@ public abstract class Directory {
     private final File root;
     final Map<String, Module> customizedModules = new LinkedHashMap<>();
 
+    /**
+     * {@link Module#getGroup()}
+     */
     public abstract Property<String> getGroup();
+
+    /**
+     * {@link Module#plugin(String)}
+     */
     public abstract ListProperty<String> getPlugins();
 
     @Inject
-    public abstract ObjectFactory getObjects();
+    protected abstract ObjectFactory getObjects();
 
     @Inject
     public Directory(File root) {
         this.root = root;
     }
 
+    /**
+     * {@link Module#plugin(String)}
+     */
     public void plugin(String id) {
         getPlugins().add(id);
     }
 
+    /**
+     * {@link Directory#module(String, Action)}
+     */
     public void module(String subDirectory) {
         module(subDirectory, m -> {});
     }
 
+    /**
+     * Configure details of a Module in a subdirectory of this directory.
+     * Note that Modules that are located in direct children of this directory are discovered automatically and
+     * do not need to be explicitly mentioned.
+     */
     public void module(String subDirectory, Action<Module> action) {
         Module module = addModule(subDirectory);
         action.execute(module);

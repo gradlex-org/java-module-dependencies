@@ -25,8 +25,8 @@ import org.gradle.api.initialization.Settings;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.ApplicationPlugin;
 import org.gradle.api.plugins.JavaApplication;
+import org.gradle.api.plugins.JavaPlatformExtension;
 import org.gradle.api.plugins.JavaPlatformPlugin;
-import org.gradle.util.GradleVersion;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesPlugin;
 import org.gradlex.javamodule.dependencies.JavaModuleVersionsPlugin;
@@ -38,7 +38,6 @@ import javax.inject.Inject;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 
 public abstract class JavaModulesExtension {
 
@@ -54,42 +53,61 @@ public abstract class JavaModulesExtension {
         this.moduleInfoCache = getObjects().newInstance(ModuleInfoCache.class, true);
     }
 
-    public void module(String path) {
-        module(path, m -> {});
+    /**
+     * {@link JavaModulesExtension#module(String, Action)}
+     */
+    public void module(String directory) {
+        module(directory, m -> {});
     }
 
-    public void module(String path, Action<Module> action) {
+    /**
+     * Register and configure Module located in the given folder, relative to the build root directory.
+     */
+    public void module(String directory, Action<Module> action) {
         Module module = getObjects().newInstance(Module.class, settings.getRootDir());
-        module.getDirectory().set(path);
+        module.getDirectory().set(directory);
         action.execute(module);
         includeModule(module, new File(settings.getRootDir(), module.getDirectory().get()));
     }
 
-    public void directory(String path) {
-        directory(path, m -> {});
+    /**
+     * {@link JavaModulesExtension#directory(String, Action)}
+     */
+    public void directory(String directory) {
+        directory(directory, m -> {});
     }
 
-    public void directory(String path, Action<Directory> action) {
-        File modulesDirectory = new File(settings.getRootDir(), path);
-        Directory directory = getObjects().newInstance(Directory.class, modulesDirectory);
-        action.execute(directory);
+    /**
+     * Register and configure ALL Modules located in direct subfolders of the given folder.
+     */
+    public void directory(String directory, Action<Directory> action) {
+        File modulesDirectory = new File(settings.getRootDir(), directory);
+        Directory moduleDirectory = getObjects().newInstance(Directory.class, modulesDirectory);
+        action.execute(moduleDirectory);
 
         File[] projectDirs = modulesDirectory.listFiles();
         if (projectDirs == null) {
             throw new RuntimeException("Failed to inspect: " + modulesDirectory);
         }
 
-        for (Module module : directory.customizedModules.values()) {
+        for (Module module : moduleDirectory.customizedModules.values()) {
             includeModule(module, new File(modulesDirectory, module.getDirectory().get()));
         }
 
         for (File projectDir : projectDirs) {
-            if (!directory.customizedModules.containsKey(projectDir.getName())) {
-                includeModule(directory.addModule(projectDir.getName()), projectDir);
+            if (!moduleDirectory.customizedModules.containsKey(projectDir.getName())) {
+                Module module = moduleDirectory.addModule(projectDir.getName());
+                if (!module.getModuleInfoPaths().get().isEmpty()) {
+                    // only auto-include if there is at least one module-info.java
+                    includeModule(module, projectDir);
+                }
             }
         }
     }
 
+    /**
+     * Configure a subproject as Platform for defining Module versions.
+     */
     public void versions(String directory) {
         String projectName = Paths.get(directory).getFileName().toString();
         settings.include(projectName);
@@ -98,18 +116,13 @@ public abstract class JavaModulesExtension {
     }
 
     private void includeModule(Module module, File projectDir) {
-        List<String> modulePaths = module.getModuleInfoPaths().get();
-        if (modulePaths.isEmpty()) {
-            return;
-        }
-
         String artifact = module.getArtifact().get();
         settings.include(artifact);
         ProjectDescriptor project = settings.project(":" + artifact);
         project.setProjectDir(projectDir);
 
         String mainModuleName = null;
-        for (String path : modulePaths) {
+        for (String path : module.getModuleInfoPaths().get()) {
             ModuleInfo moduleInfo = moduleInfoCache.put(projectDir, path,
                     module.getArtifact().get(), module.getGroup(), settings.getProviders());
             if (path.contains("/main/")) {
@@ -168,6 +181,7 @@ public abstract class JavaModulesExtension {
             if (projectName.equals(project.getName())) {
                 project.getPlugins().apply(JavaPlatformPlugin.class);
                 project.getPlugins().apply(JavaModuleVersionsPlugin.class);
+                project.getExtensions().getByType(JavaPlatformExtension.class).allowDependencies();
             }
         }
     }

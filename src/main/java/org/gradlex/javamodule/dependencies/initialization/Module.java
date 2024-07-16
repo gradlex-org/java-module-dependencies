@@ -27,10 +27,35 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class Module {
+
+    /**
+     * The directory, relative to the build root directory, in which the Module is located.
+     */
     public abstract Property<String> getDirectory();
+
+    /**
+     * The 'artifact' name of the Module. This corresponds to the Gradle subproject name. If the Module is published
+     * to a Maven repository, this is the 'artifact' in the 'group:artifact' identifier to address the published Jar.
+     */
     public abstract Property<String> getArtifact();
+
+    /**
+     * The 'group' of the Module. This corresponds to setting the 'group' property in a build.gradle file. If the
+     * Module is published to a Maven repository, this is the 'group' in the 'group:artifact' identifier to address
+     * the published Jar. The group needs to be configured here (rather than in build.gradle files) for the plugin
+     * to support additional Modules inside a subproject that other modules depend on, such as a 'testFixtures' module.
+     */
     public abstract Property<String> getGroup();
+
+    /**
+     * The paths of the module-info.java files inside the project directory. Usually, this does not need to be adjusted.
+     * By default, it contains all 'src/$sourceSetName/java/module-info.java' files that exist.
+     */
     public abstract ListProperty<String> getModuleInfoPaths();
+
+    /**
+     * {@link Module#plugin(String)}
+     */
     public abstract ListProperty<String> getPlugins();
 
     @Inject
@@ -43,12 +68,16 @@ public abstract class Module {
                 .collect(Collectors.toList())));
     }
 
+    /**
+     * Apply a plugin to the Module project. This is the same as using the 'plugins { }' block in the Module's
+     * build.gradle file. Applying plugins here allows you to omit build.gradle files completely.
+     */
+    public void plugin(String id) {
+        getPlugins().add(id);
+    }
+
     private Stream<File> listChildren(File root, String projectDir) {
         File[] children = new File(root, projectDir).listFiles();
         return children == null ? Stream.empty() : Arrays.stream(children);
-    }
-
-    public void plugin(String id) {
-        getPlugins().add(id);
     }
 }

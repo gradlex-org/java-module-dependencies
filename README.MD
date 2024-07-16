@@ -3,11 +3,15 @@
 [![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fgradlex-org%2Fjava-module-dependencies%2Fbadge%3Fref%3Dmain&style=flat)](https://actions-badge.atrox.dev/gradlex-org/java-module-dependencies/goto?ref=main)
 [![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v?label=Plugin%20Portal&metadataUrl=https%3A%2F%2Fplugins.gradle.org%2Fm2%2Forg%2Fgradlex%2Fjava-module-dependencies%2Forg.gradlex.java-module-dependencies.gradle.plugin%2Fmaven-metadata.xml)](https://plugins.gradle.org/plugin/org.gradlex.java-module-dependencies)
 
-A Gradle 7.4+ plugin to make Gradle use dependencies from _module-info.java_ files automatically.
+A Gradle plugin to make Gradle use dependencies from _module-info.java_ files automatically.
 If you have a project that fully uses Java Modules, you do **not** need to declare dependencies in the `dependencies { }` block anymore.
 Gradle will use the information from your `module-info.java` directly.
 
-To manage the versions of Java Modules, the plugin conveniently integrates with
+Minimal required Gradle version:
+- **Gradle 7.4** if you **not** use the plugin in `settings.gradle.kts`
+- **Gradle 8.8** to use the plugin in `settings.gradle.kts` and the [additional functionality](#project-structure-definition-when-using-this-plugin-as-settings-plugin) that comes with it.
+
+To manage the versions of Java Modules, the plugin integrates with
 [Platform Projects](https://docs.gradle.org/current/userguide/java_platform_plugin.html#sec:java_platform_usage) and 
 [Dependency Versions Constraints](https://docs.gradle.org/current/userguide/dependency_constraints.html#sec:adding-constraints-transitive-deps) in general
 as well as [Version Catalogs](https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog).
@@ -22,36 +26,28 @@ There is a [CHANGELOG.md](CHANGELOG.md).
 
 # Java Modules with Gradle
 
-If you plan to build Java Modules with Gradle, you should consider using these plugins on top of Gradle core:
+If you build Java Modules with Gradle, you should consider using these plugins on top of Gradle core:
 
-- [`id("org.gradlex.java-module-dependencies")`](https://github.com/gradlex-org/java-module-dependencies)  
+- [`id("org.gradlex.java-module-dependencies")`](https://github.com/gradlex-org/java-module-dependencies) (this plugin)
   Avoid duplicated dependency definitions and get your Module Path under control
 - [`id("org.gradlex.java-module-testing")`](https://github.com/gradlex-org/java-module-testing)  
   Proper test setup for Java Modules
 - [`id("org.gradlex.extra-java-module-info")`](https://github.com/gradlex-org/extra-java-module-info)  
-  Only if your (existing) project cannot avoid using non-module legacy Jars
-
-[Here is a sample](https://github.com/gradlex-org/java-module-testing/tree/main/samples/use-all-java-module-plugins)
-that shows all plugins in combination.
+  Only if you cannot avoid using non-module legacy Jars
 
 [In episodes 31, 32, 33 of Understanding Gradle](https://github.com/jjohannes/understanding-gradle) I explain what these plugins do and why they are needed.
 [<img src="https://onepiecesoftware.github.io/img/videos/31.png" width="260">](https://www.youtube.com/watch?v=X9u1taDwLSA&list=PLWQK2ZdV4Yl2k2OmC_gsjDpdIBTN0qqkE)
 [<img src="https://onepiecesoftware.github.io/img/videos/32.png" width="260">](https://www.youtube.com/watch?v=T9U0BOlVc-c&list=PLWQK2ZdV4Yl2k2OmC_gsjDpdIBTN0qqkE)
 [<img src="https://onepiecesoftware.github.io/img/videos/33.png" width="260">](https://www.youtube.com/watch?v=6rFEDcP8Noc&list=PLWQK2ZdV4Yl2k2OmC_gsjDpdIBTN0qqkE)
 
-[Full Java Module System Project Setup](https://github.com/jjohannes/gradle-project-setup-howto/tree/java_module_system) is a full-fledged Java Module System project setup using these plugins.  
-[<img src="https://onepiecesoftware.github.io/img/videos/15-3.png" width="260">](https://www.youtube.com/watch?v=uRieSnovlVc&list=PLWQK2ZdV4Yl2k2OmC_gsjDpdIBTN0qqkE)
-
 # How to use?
 
-For a quick start, you can find some samples here:
-* [samples/versions-in-platform](samples/versions-in-platform)
-* [samples/versions-in-catalog](samples/versions-in-catalog)
-* [samples/module-info-dsl](samples/module-info-dsl)
-* [samples/module-info-dsl-no-platform](samples/module-info-dsl-no-platform)
-* [samples/kotlin](samples/kotlin)
+Working (example) projects to inspect:
+- [java-module-system](https://github.com/jjohannes/java-module-system) contains a compact sample and further documentation
+- [gradle-project-setup-howto](https://github.com/jjohannes/gradle-project-setup-howto/tree/java_module_system) is a full-fledged Java Module System project setup
+- [hedera-services](https://github.com/hashgraph/hedera-services) is an open-source Java project using this plugin large scale
 
-For general information about how to structure Gradle builds and apply community plugins like this one to all subprojects
+For general information about how to structure Gradle builds and apply community plugins like this one
 you can check out my [Understanding Gradle video series](https://www.youtube.com/playlist?list=PLWQK2ZdV4Yl2k2OmC_gsjDpdIBTN0qqkE). 
 
 ## Plugin dependency
@@ -61,7 +57,7 @@ Add this to the build file of your convention plugin's build
 
 ```
 dependencies {
-    implementation("org.gradlex:java-module-dependencies:1.6.6")
+  implementation("org.gradlex:java-module-dependencies:1.7")
 }
 ```
 
@@ -72,12 +68,14 @@ dependencies {
 
 ## Apply the plugin
 
-In your convention plugin, apply the plugin.
+The plugin can be used in two ways:
+
+1. As _Settings Plugin_ in `settings.gradle(.kts)` file **(recommended)**
+2. As _Project Plugin_ in `build.gradle(.kts)` files (sometimes easier to add to existing setups)
 
 ```
 plugins {
-    ...
-    id("org.gradlex.java-module-dependencies")
+  id("org.gradlex.java-module-dependencies")
 }
 ```
 
@@ -87,14 +85,53 @@ Once the plugin is applied, dependencies are automatically determined based on t
 
 ```
 module org.example.mymodule {
-    requires com.fasterxml.jackson.core;   // -> implementation("com.fasterxml.jackson.core:jackson-core")
-    requires transitive org.slf4j;         // -> api("org.slf4j:slf4j-api")
-    requires static jakarta.servlet;       // -> compileOnly("jakarta.servlet:jakarta.servlet-api")
-    requires /*runtime*/ org.slf4j.simple; // -> runtimeOnly("org.slf4j:slf4j-simple")
+  requires com.fasterxml.jackson.core;   // -> implementation("com.fasterxml.jackson.core:jackson-core")
+  requires transitive org.slf4j;     // -> api("org.slf4j:slf4j-api")
+  requires static jakarta.servlet;     // -> compileOnly("jakarta.servlet:jakarta.servlet-api")
+  requires /*runtime*/ org.slf4j.simple; // -> runtimeOnly("org.slf4j:slf4j-simple")
 }
 ```
 
 Note that `requires /*runtime*/` is a directive specifically supported by this plugin to allow the specification of _runtime only_ dependencies.
+
+## Project structure definition when using this plugin as Settings Plugin
+
+The plugin offers a Gradle DSL extension to configure the location of _Java Modules_ in the project structure to be used
+in the `settings.gradle(.kts)` file. It is an alternative to Gradle's native `include(...)` statement to configure
+subprojects. The advantage of using this is that it is more compact than Gradle's `include(...)` and allows the plugin
+to pick up more information during the [initialization phase](https://docs.gradle.org/current/userguide/build_lifecycle.html#sec:initialization).
+By this, the plugin is later able to establish dependencies between your own modules without making assumptions about
+how they need to be named (which is different when you use the plugin as
+[Project Plugin](#project-structure-definition-when-using-this-plugin-as-project-plugin)).
+
+```
+// settings.gradle(.kts)
+javaModules { // use instead of 'include(...)'
+  module("module-a") // Module in directory, discovers 'src/*/java/module-info.java' files
+  
+  module("module-b") {
+    group = "org.example"  // define group early so that all subprojects know all groups
+    artifact = "lib-x"     // Gradle subproject name (if differnt than directory)
+    plugin("java-library") // apply plugin to the Module's subproject to omit 'build.gradle'
+  }
+
+  directory("modules") {   // Auto-include all Modules in subfolders of 'modules' 
+    group = "org.example"  // group for all Modules
+    plugin("java-library") // apply plugin to all Modules' subprojects
+    module("app") { ... }  // individualise Module (only if needed)
+  }
+  
+  versions("gradle/versions") // subproject configured as Platform Project
+}
+```
+
+## Project structure definition when using this plugin as Project Plugin
+
+In this setup, subprojects with Java Modules are configured as in any traditional Gradle build: by using the
+`include(...)` statement in `settings.gradle(.kts)`. The plugin is then applied in all subprojects with Java Modules,
+ideally through a convention plugin. If you use the plugin like this, it needs to [make some assumption](#naming-patterns-for-modules-in-the-build-if-used-as-project-plugin) 
+due to missing information and thus, for example, requires you to have the Gradle _project names_, _groups_ and _Java Module Names_ align.
+The preferred way to use the plugin is to use it as [Settings Plugin](#project-structure-definition-when-using-this-plugin-as-settings-plugin).
 
 ## Define additional module dependencies in build files
 
@@ -104,8 +141,8 @@ For this, the plugin offers an extension of Gradle's DSL to be used in `build.gr
 
 ```
 mainModuleInfo {
-    runtimeOnly("org.slf4j.simple") // runtime only dependency for the 'main' module
-    annotationProcessor("dagger.compiler")  // annotation processor dependency for the 'main' module
+  runtimeOnly("org.slf4j.simple") // runtime only dependency for the 'main' module
+  annotationProcessor("dagger.compiler")  // annotation processor dependency for the 'main' module
 }
 ```
 
@@ -116,9 +153,9 @@ The only case where this should be used is for whitebox testing activated via th
 
 ```
 testModuleInfo {
-    requires("org.assertj.core")
-    requires("org.hamcrest")
-    requires("org.junit.jupiter.api")
+  requires("org.assertj.core")
+  requires("org.hamcrest")
+  requires("org.junit.jupiter.api")
 }
 ```
 
@@ -142,18 +179,18 @@ org.apache.commons.lang3.test.fixtures=org.apache.commons:commons-lang3|test-fix
 
 ```
 javaModuleDependencies {
-    // Module Name to Component GA Coordinates
-    moduleNameToGA.put("org.apache.commons.lang3", "org.apache.commons:commons-lang3")
+  // Module Name to Component GA Coordinates
+  moduleNameToGA.put("org.apache.commons.lang3", "org.apache.commons:commons-lang3")
 
-    // Module Name to Component GA Coordinates & Capability GA Coordinates
-    moduleNameToGA.put("org.apache.commons.lang3.test.fixtures", "org.apache.commons:commons-lang3|test-fixtures")
+  // Module Name to Component GA Coordinates & Capability GA Coordinates
+  moduleNameToGA.put("org.apache.commons.lang3.test.fixtures", "org.apache.commons:commons-lang3|test-fixtures")
 }
 ```
 
 There is also the option to register a mapping for all Modules that share a common _name prefix_ and _group_.
 For example: `moduleNamePrefixToGroup.put("com.example.product.module.", "com.example.product")`.
 
-## Naming patterns for Modules in the build
+## Naming patterns for Modules in the build (if used as Project Plugin)
 
 This plugin makes the following assumption about _Module Names_ of your own Modules in the build to establish dependencies between them:
 
@@ -177,22 +214,22 @@ For libraries that consist of multiple components and have a BOM for version man
 
 ```
 plugins {
-    id("java-platform")
-    id("org.gradlex.java-module-versions")
+  id("java-platform")
+  id("org.gradlex.java-module-versions")
 }
 
 // Define versions for Modules via the Module Name
 moduleInfo {
-    version("org.apache.xmlbeans", "5.0.1")
-    version("org.slf4j", "2.0.7")
-    version("org.slf4j.simple", "2.0.7")
+  version("org.apache.xmlbeans", "5.0.1")
+  version("org.slf4j", "2.0.7")
+  version("org.slf4j.simple", "2.0.7")
 }
 
 // Use BOMs for Modules that are part of a library of multiple Modules
 javaPlatform.allowDependencies()
 dependencies {
-    api(platform("com.fasterxml.jackson:jackson-bom:2.13.2"))
-    api(platform("org.junit:junit-bom:5.8.2"))
+  api(platform("com.fasterxml.jackson:jackson-bom:2.13.2"))
+  api(platform("org.junit:junit-bom:5.8.2"))
 }
 ```
 
@@ -201,9 +238,9 @@ For example:
 
 ```
 dependencies {
-    javaModuleDependencies {
-        testRuntimeOnly(ga("org.junit.jupiter.engine"))
-    }
+  javaModuleDependencies {
+    testRuntimeOnly(ga("org.junit.jupiter.engine"))
+  }
 }
 ```
 
@@ -216,13 +253,13 @@ Alternatively, versions can be defined in the `[version]` block of a [version ca
 
 ```
 dependencyResolutionManagement {
-    versionCatalogs.create("libs") {
-        version("org.apache.xmlbeans", "5.0.1")
-        version("com.fasterxml.jackson.databind", "2.12.5")
-        version("org.slf4j", "2.0.7")
-        
-        version("org.junit.jupiter.api", "5.8.2")
-    }
+  versionCatalogs.create("libs") {
+    version("org.apache.xmlbeans", "5.0.1")
+    version("com.fasterxml.jackson.databind", "2.12.5")
+    version("org.slf4j", "2.0.7")
+    
+    version("org.junit.jupiter.api", "5.8.2")
+  }
 }
 ```
 
@@ -250,19 +287,19 @@ $ ./gradlew :app:recommendModuleVersions -q
 Latest Stable Versions of Java Modules - use in your platform project's build.gradle(.kts)
 ==========================================================================================
 moduleInfo {
-    version("com.fasterxml.jackson.annotation", "2.13.2")
-    version("com.fasterxml.jackson.core", "2.13.2")
-    version("com.fasterxml.jackson.databind", "2.13.2.2")
-    version("org.apache.logging.log4j", "2.17.2")
-    version("org.apache.xmlbeans", "5.0.3")
-    version("org.junit.jupiter.api", "5.8.2")
-    version("org.junit.jupiter.engine", "5.8.2")
-    version("org.junit.platform.commons", "1.8.2")
-    version("org.junit.platform.engine", "1.8.2")
-    version("org.junit.platform.launcher", "1.8.2")
-    version("org.opentest4j", "1.2.0")
-    version("org.slf4j", "1.7.36")
-    version("org.slf4j.simple", "1.7.36")
+  version("com.fasterxml.jackson.annotation", "2.13.2")
+  version("com.fasterxml.jackson.core", "2.13.2")
+  version("com.fasterxml.jackson.databind", "2.13.2.2")
+  version("org.apache.logging.log4j", "2.17.2")
+  version("org.apache.xmlbeans", "5.0.3")
+  version("org.junit.jupiter.api", "5.8.2")
+  version("org.junit.jupiter.engine", "5.8.2")
+  version("org.junit.platform.commons", "1.8.2")
+  version("org.junit.platform.engine", "1.8.2")
+  version("org.junit.platform.launcher", "1.8.2")
+  version("org.opentest4j", "1.2.0")
+  version("org.slf4j", "1.7.36")
+  version("org.slf4j.simple", "1.7.36")
 }
 ```
 
@@ -391,14 +428,14 @@ Module Name mappings for Jars that were patched with extra module info will be a
 
 ```
 plugins {
-    id("org.gradlex.extra-java-module-info")
-    id("org.gradlex.java-module-dependencies")
+  id("org.gradlex.extra-java-module-info")
+  id("org.gradlex.java-module-dependencies")
 }
 
 extraJavaModuleInfo {
-    automaticModule("org.apache.commons:commons-math3", "commons.math3")
-    // Module Dependencies plugin automatically knows that 
-    // 'commons.math3' now maps to 'org.apache.commons:commons-math3'
+  automaticModule("org.apache.commons:commons-math3", "commons.math3")
+  // Module Dependencies plugin automatically knows that 
+  // 'commons.math3' now maps to 'org.apache.commons:commons-math3'
 }
 ```
 
