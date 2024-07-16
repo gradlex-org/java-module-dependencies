@@ -86,8 +86,8 @@ Once the plugin is applied, dependencies are automatically determined based on t
 ```
 module org.example.mymodule {
   requires com.fasterxml.jackson.core;   // -> implementation("com.fasterxml.jackson.core:jackson-core")
-  requires transitive org.slf4j;     // -> api("org.slf4j:slf4j-api")
-  requires static jakarta.servlet;     // -> compileOnly("jakarta.servlet:jakarta.servlet-api")
+  requires transitive org.slf4j;         // -> api("org.slf4j:slf4j-api")
+  requires static jakarta.servlet;       // -> compileOnly("jakarta.servlet:jakarta.servlet-api")
   requires /*runtime*/ org.slf4j.simple; // -> runtimeOnly("org.slf4j:slf4j-simple")
 }
 ```
