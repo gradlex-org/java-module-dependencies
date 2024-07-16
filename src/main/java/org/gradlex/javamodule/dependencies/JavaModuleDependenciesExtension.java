@@ -370,6 +370,10 @@ public abstract class JavaModuleDependenciesExtension {
         });
     }
 
+    /**
+     * @deprecated use the 'org.gradlex.jvm-dependency-conflict-resolution' plugin instead.
+     */
+    @Deprecated
     public Configuration versionsFromConsistentResolution(String... versionsProvidingProjects) {
         return versionsFromConsistentResolution(Arrays.asList(versionsProvidingProjects));
     }
@@ -378,7 +382,10 @@ public abstract class JavaModuleDependenciesExtension {
      * Use consistent resolution to manage versions consistently through in the main application project(s).
      *
      * @param versionsProvidingProjects projects which runtime classpaths are the runtime classpaths of the applications/services being built.
+     *
+     * @deprecated use the 'org.gradlex.jvm-dependency-conflict-resolution' plugin instead.
      */
+    @Deprecated
     public Configuration versionsFromConsistentResolution(Collection<String> versionsProvidingProjects) {
         ObjectFactory objects = getObjects();
         Configuration mainRuntimeClasspath = getConfigurations().create("mainRuntimeClasspath", c -> {
@@ -401,10 +408,18 @@ public abstract class JavaModuleDependenciesExtension {
         return mainRuntimeClasspath;
     }
 
+    /**
+     * @deprecated use the 'org.gradlex.jvm-dependency-conflict-resolution' plugin instead.
+     */
+    @Deprecated
     public Configuration versionsFromPlatformAndConsistentResolution(String platformProject, String... versionsProvidingProjects) {
         return versionsFromPlatformAndConsistentResolution(platformProject, Arrays.asList(versionsProvidingProjects));
     }
 
+    /**
+     * @deprecated use the 'org.gradlex.jvm-dependency-conflict-resolution' plugin instead.
+     */
+    @Deprecated
     public Configuration versionsFromPlatformAndConsistentResolution(String platformProject, Collection<String> versionsProvidingProjects) {
         boolean platformInJavaProject = versionsProvidingProjects.contains(platformProject);
 
