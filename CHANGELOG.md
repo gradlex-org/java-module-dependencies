@@ -1,5 +1,8 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.7
+* [#112](https://github.com/gradlex-org/java-module-dependencies/issues/114) Settings plugin to configure module locations and identity
+
 ## Version 1.6.6
 * [#113](https://github.com/gradlex-org/java-module-dependencies/issues/113) Fix: Do not fail for duplicated project names (Thanks [TheGoesen](https://github.com/TheGoesen))
 * [#111](https://github.com/gradlex-org/java-module-dependencies/issues/111) Fix: Do not use 'MapProperty.unset' (Thanks [TheGoesen](https://github.com/TheGoesen))
