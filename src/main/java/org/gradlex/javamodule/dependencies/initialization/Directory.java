@@ -46,15 +46,19 @@ public abstract class Directory {
         getPlugins().add(id);
     }
 
-    public void module(String moduleFolder, Action<Module> action) {
-        Module module = addModule(moduleFolder);
-        action.execute(module);
-        customizedModules.put(moduleFolder, module);
+    public void module(String subDirectory) {
+        module(subDirectory, m -> {});
     }
 
-    Module addModule(String moduleFolder) {
+    public void module(String subDirectory, Action<Module> action) {
+        Module module = addModule(subDirectory);
+        action.execute(module);
+        customizedModules.put(subDirectory, module);
+    }
+
+    Module addModule(String subDirectory) {
         Module module = getObjects().newInstance(Module.class, root);
-        module.getDirectory().convention(moduleFolder);
+        module.getDirectory().convention(subDirectory);
         module.getGroup().convention(getGroup());
         module.getPlugins().addAll(getPlugins());
         return module;

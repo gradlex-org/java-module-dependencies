@@ -38,6 +38,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 public abstract class JavaModulesExtension {
 
@@ -69,18 +70,21 @@ public abstract class JavaModulesExtension {
     }
 
     public void directory(String path, Action<Directory> action) {
-        Directory directory = getObjects().newInstance(Directory.class, new File(settings.getRootDir(), path));
+        File modulesDirectory = new File(settings.getRootDir(), path);
+        Directory directory = getObjects().newInstance(Directory.class, modulesDirectory);
         action.execute(directory);
 
-        File[] projectDirs = new File(settings.getRootDir(), path).listFiles();
+        File[] projectDirs = modulesDirectory.listFiles();
         if (projectDirs == null) {
-            throw new RuntimeException("Failed to inspect: " + new File(settings.getRootDir(), path));
+            throw new RuntimeException("Failed to inspect: " + modulesDirectory);
+        }
+
+        for (Module module : directory.customizedModules.values()) {
+            includeModule(module, new File(modulesDirectory, module.getDirectory().get()));
         }
 
         for (File projectDir : projectDirs) {
-            if (directory.customizedModules.containsKey(projectDir.getName())) {
-                includeModule(directory.customizedModules.get(projectDir.getName()), projectDir);
-            } else {
+            if (!directory.customizedModules.containsKey(projectDir.getName())) {
                 includeModule(directory.addModule(projectDir.getName()), projectDir);
             }
         }
