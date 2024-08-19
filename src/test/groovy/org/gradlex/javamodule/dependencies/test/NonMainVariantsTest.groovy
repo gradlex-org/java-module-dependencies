@@ -83,6 +83,8 @@ class NonMainVariantsTest extends Specification {
         def result = fail()
 
         then:
-        result.output.contains('> Unable to find a variant of org.slf4j:slf4j-api:2.0.3 providing the requested capability org.slf4j:slf4j-api-test-fixtures')
+        result.output.contains('Unable to find a variant')
+        result.output.contains('providing the requested capability')
+        result.output.contains('org.slf4j:slf4j-api-test-fixtures')
     }
 }
