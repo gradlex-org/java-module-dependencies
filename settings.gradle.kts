@@ -10,8 +10,6 @@ dependencyResolutionManagement {
     repositories.gradlePluginPortal()
 }
 
-//includeBuild("samples/configuration-cache")
-
 rootProject.name = "java-module-dependencies"
 
 develocity {
