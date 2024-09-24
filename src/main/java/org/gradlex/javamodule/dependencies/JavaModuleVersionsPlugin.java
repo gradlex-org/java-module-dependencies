@@ -132,7 +132,7 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
                         moduleInfoFile = new File(srcDirSet, "java9/module-info.java");
                     }
                     if (moduleInfoFile.exists()) {
-                        ModuleInfo moduleInfo = new ModuleInfo(project.getProviders().fileContents(project.getLayout().getProjectDirectory().file(moduleInfoFile.getAbsolutePath())).getAsText().get(), moduleInfoFile);
+                        ModuleInfo moduleInfo = new ModuleInfo(project.getProviders().fileContents(project.getLayout().getProjectDirectory().file(moduleInfoFile.getAbsolutePath())).getAsText().get());
                         t.getEntries().addAll(collectCatalogEntriesFromModuleInfos(javaModuleDependencies, moduleInfo.get(REQUIRES_TRANSITIVE)));
                         t.getEntries().addAll(collectCatalogEntriesFromModuleInfos(javaModuleDependencies, moduleInfo.get(REQUIRES)));
                         t.getEntries().addAll(collectCatalogEntriesFromModuleInfos(javaModuleDependencies, moduleInfo.get(REQUIRES_STATIC_TRANSITIVE)));

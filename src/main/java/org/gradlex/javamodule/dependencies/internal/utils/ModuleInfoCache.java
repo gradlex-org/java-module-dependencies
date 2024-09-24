@@ -16,11 +16,14 @@
 
 package org.gradlex.javamodule.dependencies.internal.utils;
 
+import org.gradle.api.Action;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
+import org.gradle.api.provider.ValueSourceSpec;
 import org.gradle.api.tasks.SourceSet;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +31,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToCapabilitySuffix;
 
@@ -102,15 +104,29 @@ public abstract class ModuleInfoCache {
     }
 
     private boolean maybePutModuleInfo(File folder, ProviderFactory providers) {
-        RegularFileProperty moduleInfoFile = getObjects().fileProperty();
-        moduleInfoFile.set(new File(folder, "module-info.java"));
-        Provider<String> moduleInfoContent = providers.fileContents(moduleInfoFile).getAsText();
-        if (moduleInfoContent.isPresent()) {
+        Provider<ModuleInfo> moduleInfoProvider = provideModuleInfo(folder, providers);
+        if (moduleInfoProvider.isPresent()) {
             if (!moduleInfo.containsKey(folder)) {
-                moduleInfo.put(folder, new ModuleInfo(moduleInfoContent.get(), moduleInfoFile.get().getAsFile()));
+                moduleInfo.put(folder, moduleInfoProvider.get() );
             }
             return true;
         }
         return false;
+    }
+
+    private Provider<ModuleInfo> provideModuleInfo(File folder, ProviderFactory providers) {
+        return providers.of(ValueSourceModuleInfo.class, new Action<ValueSourceSpec<ValueSourceModuleInfo.ModuleInfoSourceP>>() {
+            @Override
+            public void execute(ValueSourceSpec<ValueSourceModuleInfo.ModuleInfoSourceP> moduleInfoSourcePValueSourceSpec) {
+                moduleInfoSourcePValueSourceSpec.parameters(new Action<ValueSourceModuleInfo.ModuleInfoSourceP>() {
+                    @Override
+                    public void execute(ValueSourceModuleInfo.ModuleInfoSourceP moduleInfoSourceP) {
+                        ConfigurableFileCollection from = getObjects().fileCollection().from(folder);
+                        moduleInfoSourceP.getLocations().set(from);
+                    }
+                });
+
+            }
+        });
     }
 }
