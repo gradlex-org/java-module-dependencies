@@ -17,8 +17,6 @@
 package org.gradlex.javamodule.dependencies.internal.utils;
 
 import org.gradle.api.Action;
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
@@ -31,7 +29,8 @@ import javax.inject.Inject;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToCapabilitySuffix;
 
@@ -70,6 +69,16 @@ public abstract class ModuleInfoCache {
         }
         return ModuleInfo.EMPTY;
     }
+
+    public File getFolder(SourceSet sourceSet, ProviderFactory providers) {
+        for (File folder : sourceSet.getJava().getSrcDirs()) {
+            if (maybePutModuleInfo(folder, providers)) {
+                return folder;
+            }
+        }
+        return null;
+    }
+
 
     /**
      * @param projectRoot the project that should hold a Java module
@@ -121,8 +130,7 @@ public abstract class ModuleInfoCache {
                 moduleInfoSourcePValueSourceSpec.parameters(new Action<ValueSourceModuleInfo.ModuleInfoSourceP>() {
                     @Override
                     public void execute(ValueSourceModuleInfo.ModuleInfoSourceP moduleInfoSourceP) {
-                        ConfigurableFileCollection from = getObjects().fileCollection().from(folder);
-                        moduleInfoSourceP.getLocations().set(from);
+                        moduleInfoSourceP.getDir().set(folder);
                     }
                 });
 
