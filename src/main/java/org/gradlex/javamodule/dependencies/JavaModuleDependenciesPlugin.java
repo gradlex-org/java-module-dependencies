@@ -216,14 +216,14 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         ConfigurationContainer configurations = project.getConfigurations();
 
-        sourceSets.all(sourceSet -> {
+        sourceSets.configureEach(sourceSet -> {
             TaskProvider<ModuleDirectivesOrderingCheck> checkModuleInfo = project.getTasks().register(sourceSet.getTaskName("check", "ModuleInfo"), ModuleDirectivesOrderingCheck.class, t -> {
                 t.setGroup("java modules");
                 t.setDescription("Check order of directives in 'module-info.java' in '" + sourceSet.getName() + "' source set");
 
                 ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get().get(sourceSet, project.getProviders());
                 File folder = javaModuleDependencies.getModuleInfoCache().get().getFolder(sourceSet, project.getProviders());
-                t.getModuleInfoPath().convention(folder == null ? null : new File(folder, "module-info.java").getAbsolutePath());
+                t.getModuleInfoPath().convention(folder == null ? "<hasNOModuleInfo>" : new File(folder, "module-info.java").getAbsolutePath());
                 t.getModuleNamePrefix().convention(moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName(), false));
                 t.getModuleInfo().convention(moduleInfo);
 
