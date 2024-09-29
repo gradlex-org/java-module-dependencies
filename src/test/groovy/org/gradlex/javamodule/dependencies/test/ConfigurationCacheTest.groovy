@@ -59,7 +59,7 @@ class ConfigurationCacheTest extends Specification {
         result.getOutput().contains("Reusing configuration cache.")
     }
 
-    def "configurationCacheHitRelevantChange"() {
+    def "configurationCacheMissRelevantChange"() {
         given:
         libModuleInfoFile << 'module abc.lib { }'
         appModuleInfoFile << '''

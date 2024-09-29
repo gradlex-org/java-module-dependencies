@@ -162,7 +162,7 @@ class SettingsPluginTest extends Specification {
         result.getOutput().contains("Reusing configuration cache.")
     }
 
-    def "configurationCacheHitRelevantChange"() {
+    def "configurationCacheMissRelevantChange"() {
         given:
         settingsFile << '''
             javaModules {
