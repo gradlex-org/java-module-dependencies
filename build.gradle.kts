@@ -73,6 +73,10 @@ testing.suites.named<JvmTestSuite>("test") {
                 description = "Runs tests against Gradle $gradleVersionUnderTest"
                 systemProperty("gradleVersionUnderTest", gradleVersionUnderTest)
                 exclude("**/*SamplesTest.class") // Not yet cross-version ready
+                if (gradleVersionUnderTest == "7.4") {
+                    // affected by long since bugs in gradle
+                    exclude("**/*ConfigurationCacheTest.class")
+                }
                 exclude("**/initialization/**") // Settings plugin only for Gradle 8.8+
             }
         }
