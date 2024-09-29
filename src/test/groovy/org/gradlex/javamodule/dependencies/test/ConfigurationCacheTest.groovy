@@ -1,5 +1,6 @@
 package org.gradlex.javamodule.dependencies.test
 
+import org.gradle.util.GradleVersion
 import org.gradlex.javamodule.dependencies.test.fixture.GradleBuild
 import spock.lang.Specification
 
@@ -11,6 +12,7 @@ class ConfigurationCacheTest extends Specification {
     def "configurationCacheHit"() {
         given:
         libModuleInfoFile << 'module abc.lib { }'
+
         appModuleInfoFile << '''
             module abc.app {
                 requires abc.lib;
@@ -18,18 +20,35 @@ class ConfigurationCacheTest extends Specification {
         '''
 
 
-        def runner = runner(':app:compileJava')
+        def runner = runner('--configuration-cache',':app:compileJava')
         when:
         def result = runner.build()
 
         then:
-        result.getOutput().contains("Calculating task graph as no cached configuration is available for tasks: :app:compileJava")
+        result.getOutput().contains(getNoCacheMessage() )
 
         when:
         result = runner.build()
 
         then:
         result.getOutput().contains("Reusing configuration cache.")
+    }
+
+    private String getNoCacheMessage() {
+        if (getVersionTest() >= GradleVersion.version("8.8")) {
+            return "Calculating task graph as no cached configuration is available for tasks: :app:compileJava"
+        } else {
+            return "Calculating task graph as no configuration cache is available for tasks: :app:compileJava"
+        }
+
+
+    }
+
+    private GradleVersion getVersionTest() {
+        if (gradleVersionUnderTest == null) {
+            return GradleVersion.current()
+        }
+        return GradleVersion.version(gradleVersionUnderTest)
     }
 
     def "configurationCacheHitIrrelevantChange"() {
@@ -40,12 +59,12 @@ class ConfigurationCacheTest extends Specification {
             }
         '''
 
-        def runner = runner(':app:compileJava')
+        def runner = runner('--configuration-cache',':app:compileJava')
         when:
         def result = runner.build()
 
         then:
-        result.getOutput().contains("Calculating task graph as no cached configuration is available for tasks: :app:compileJava")
+        result.getOutput().contains(getNoCacheMessage())
 
         when:
         appModuleInfoFile.write('''
@@ -68,12 +87,12 @@ class ConfigurationCacheTest extends Specification {
             }
         '''
 
-        def runner = runner(':app:compileJava')
+        def runner = runner('--configuration-cache',':app:compileJava')
         when:
         def result = runner.build()
 
         then:
-        result.getOutput().contains("Calculating task graph as no cached configuration is available for tasks: :app:compileJava")
+        result.getOutput().contains(getNoCacheMessage())
 
         when:
         appModuleInfoFile.write('''
