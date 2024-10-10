@@ -16,11 +16,7 @@
 
 package org.gradlex.javamodule.dependencies;
 
-import org.gradle.api.GradleException;
-import org.gradle.api.NonNullApi;
-import org.gradle.api.Plugin;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
+import org.gradle.api.*;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
@@ -40,12 +36,7 @@ import org.gradlex.javamodule.dependencies.internal.bridges.ExtraJavaModuleInfoB
 import org.gradlex.javamodule.dependencies.internal.dsl.AllDirectivesInternal;
 import org.gradlex.javamodule.dependencies.internal.dsl.GradleOnlyDirectivesInternal;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
-import org.gradlex.javamodule.dependencies.tasks.BuildFileDependenciesGenerate;
-import org.gradlex.javamodule.dependencies.tasks.ModuleDependencyReport;
-import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck;
-import org.gradlex.javamodule.dependencies.tasks.ModuleInfoGenerate;
-import org.gradlex.javamodule.dependencies.tasks.ModulePathAnalysis;
-import org.gradlex.javamodule.dependencies.tasks.ModuleVersionRecommendation;
+import org.gradlex.javamodule.dependencies.tasks.*;
 
 import java.io.File;
 import java.util.HashSet;
@@ -56,11 +47,7 @@ import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
 import static org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP;
 import static org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension.JAVA_MODULE_DEPENDENCIES;
 import static org.gradlex.javamodule.dependencies.internal.utils.DependencyDeclarationsUtil.declaredDependencies;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_RUNTIME;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_STATIC;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_TRANSITIVE;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.*;
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
 
 @SuppressWarnings("unused")
@@ -229,14 +216,14 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         ConfigurationContainer configurations = project.getConfigurations();
 
-        sourceSets.all(sourceSet -> {
+        sourceSets.configureEach(sourceSet -> {
             TaskProvider<ModuleDirectivesOrderingCheck> checkModuleInfo = project.getTasks().register(sourceSet.getTaskName("check", "ModuleInfo"), ModuleDirectivesOrderingCheck.class, t -> {
                 t.setGroup("java modules");
                 t.setDescription("Check order of directives in 'module-info.java' in '" + sourceSet.getName() + "' source set");
 
                 ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get().get(sourceSet, project.getProviders());
-
-                t.getModuleInfoPath().convention(moduleInfo.getFilePath().getAbsolutePath());
+                File folder = javaModuleDependencies.getModuleInfoCache().get().getFolder(sourceSet, project.getProviders());
+                t.getModuleInfoPath().convention(folder == null ? "<hasNOModuleInfo>" : new File(folder, "module-info.java").getAbsolutePath());
                 t.getModuleNamePrefix().convention(moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName(), false));
                 t.getModuleInfo().convention(moduleInfo);
 
@@ -266,11 +253,11 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
         }
         ModuleInfo moduleInfo = javaModuleDependenciesExtension.getModuleInfoCache().get().get(sourceSet, project.getProviders());
         for (String moduleName : moduleInfo.get(moduleDirective)) {
-            declareDependency(moduleName, moduleInfo.getFilePath(), project, sourceSet, configuration, javaModuleDependenciesExtension);
+            declareDependency(moduleName,  project, sourceSet, configuration, javaModuleDependenciesExtension);
         }
     }
 
-    private void declareDependency(String moduleName, File moduleInfoFile, Project project, SourceSet sourceSet, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependencies) {
+    private void declareDependency(String moduleName, Project project, SourceSet sourceSet, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependencies) {
         if (JDKInfo.MODULES.contains(moduleName)) {
             // The module is part of the JDK, no dependency required
             return;
@@ -286,7 +273,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
             File sourceSetDir = sourceSet.getJava().getSrcDirs().iterator().next().getParentFile();
             File whiteboxModuleInfoFile = new File(sourceSetDir, "java9/module-info.java");
             if (whiteboxModuleInfoFile.exists()) {
-                moduleInfo = new ModuleInfo(project.getProviders().fileContents(project.getLayout().getProjectDirectory().file(whiteboxModuleInfoFile.getAbsolutePath())).getAsText().get(), whiteboxModuleInfoFile);
+                moduleInfo = new ModuleInfo(project.getProviders().fileContents(project.getLayout().getProjectDirectory().file(whiteboxModuleInfoFile.getAbsolutePath())).getAsText().get());
             }
         }
         return moduleInfo.get(directive).stream()

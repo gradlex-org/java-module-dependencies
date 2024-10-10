@@ -18,7 +18,7 @@ class ModuleInfoParseTest extends Specification {
                 // requires com.bla.blub;
                 requires transitive foo.bar.la;
             }
-        ''', new File(''))
+        ''')
 
         expect:
         moduleInfo.moduleNamePrefix("thing", "main", false) == "some"
@@ -35,7 +35,7 @@ class ModuleInfoParseTest extends Specification {
             module some.thing { // module some.thing.else
                 requires transitive foo.bar.la;
             }
-        ''', new File(''))
+        ''')
 
         expect:
         moduleInfo.moduleNamePrefix("thing", "main", false) == "some"
@@ -55,7 +55,7 @@ class ModuleInfoParseTest extends Specification {
                 */
                 requires static foo.bar.la;
             }
-        ''', new File(''))
+        ''')
 
         expect:
         moduleInfo.get(REQUIRES) == []
@@ -75,7 +75,7 @@ class ModuleInfoParseTest extends Specification {
                     requires only.a.comment
                 */
             }
-        ''', new File(''))
+        ''')
 
         expect:
         moduleInfo.get(REQUIRES) == ["foo.bar.li"]
@@ -91,7 +91,7 @@ class ModuleInfoParseTest extends Specification {
             module some.thing {
                 requires /*runtime*/ foo.bar.lo;
             }
-        ''', new File(''))
+        ''')
 
         expect:
         moduleInfo.get(REQUIRES) == []
