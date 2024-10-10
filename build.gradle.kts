@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "org.gradlex"
-version = "1.7"
+version = "1.7.1"
 
 tasks.withType<JavaCompile>().configureEach {
     options.release = 8
