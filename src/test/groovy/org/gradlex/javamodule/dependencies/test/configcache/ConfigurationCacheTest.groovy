@@ -3,13 +3,16 @@ package org.gradlex.javamodule.dependencies.test.configcache
 import org.gradlex.javamodule.dependencies.test.fixture.GradleBuild
 import spock.lang.Specification
 
-class ConfigurationCacheTest extends Specification {
+import static org.gradle.util.GradleVersion.version
 
-    static final NO_CACHE_MESSAGE =
-            "Calculating task graph as no cached configuration is available for tasks: :app:compileJava"
+class ConfigurationCacheTest extends Specification {
 
     @Delegate
     GradleBuild build = new GradleBuild()
+
+    final noCacheMessage = version(gradleVersionUnderTest) >= version("8.8")
+            ? "Calculating task graph as no cached configuration is available for tasks: :app:compileJava"
+            : "Calculating task graph as no configuration cache is available for tasks: :app:compileJava"
 
     def "configurationCacheHit"() {
         given:
@@ -26,7 +29,7 @@ class ConfigurationCacheTest extends Specification {
         def result = runner.build()
 
         then:
-        result.output.contains(NO_CACHE_MESSAGE)
+        result.output.contains(noCacheMessage)
 
         when:
         result = runner.build()
@@ -48,7 +51,7 @@ class ConfigurationCacheTest extends Specification {
         def result = runner.build()
 
         then:
-        result.output.contains(NO_CACHE_MESSAGE)
+        result.output.contains(noCacheMessage)
 
         when:
         appModuleInfoFile.write('''
@@ -76,7 +79,7 @@ class ConfigurationCacheTest extends Specification {
         def result = runner.build()
 
         then:
-        result.output.contains(NO_CACHE_MESSAGE)
+        result.output.contains(noCacheMessage)
 
         when:
         appModuleInfoFile.write('''
