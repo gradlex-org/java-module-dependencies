@@ -17,12 +17,12 @@
 package org.gradlex.javamodule.dependencies.internal.utils;
 
 import javax.annotation.Nullable;
-import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
 
@@ -43,7 +43,7 @@ public class ModuleInfo implements Serializable {
 
     public static final String RUNTIME_KEYWORD = "/*runtime*/";
 
-    public static final ModuleInfo EMPTY = new ModuleInfo("", new File(""));
+    public static final ModuleInfo EMPTY = new ModuleInfo("");
 
     private String moduleName = "";
     private final List<String> requires = new ArrayList<>();
@@ -52,12 +52,10 @@ public class ModuleInfo implements Serializable {
     private final List<String> requiresStaticTransitive = new ArrayList<>();
     private final List<String> requiresRuntime = new ArrayList<>();
 
-    private final File filePath;
 
-    public ModuleInfo(String moduleInfoFileContent, File filePath) {
-        this.filePath = filePath;
+    public ModuleInfo(String moduleInfoFileContent) {
         boolean insideComment = false;
-        for(String line: moduleInfoFileContent.split("\n")) {
+        for (String line : moduleInfoFileContent.split("\n")) {
             insideComment = parse(line, insideComment);
         }
     }
@@ -108,10 +106,6 @@ public class ModuleInfo implements Serializable {
         return null;
     }
 
-    public File getFilePath() {
-        return filePath;
-    }
-
     /**
      * @return true, if we are inside a multi-line comment after this line
      */
@@ -149,5 +143,30 @@ public class ModuleInfo implements Serializable {
             }
         }
         return moduleLine.lastIndexOf("/*") > moduleLine.lastIndexOf("*/");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ModuleInfo that = (ModuleInfo) o;
+        return Objects.equals(moduleName, that.moduleName)
+                && Objects.equals(requires, that.requires)
+                && Objects.equals(requiresTransitive, that.requiresTransitive)
+                && Objects.equals(requiresStatic, that.requiresStatic)
+                && Objects.equals(requiresStaticTransitive, that.requiresStaticTransitive)
+                && Objects.equals(requiresRuntime, that.requiresRuntime);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                moduleName,
+                requires,
+                requiresTransitive,
+                requiresStatic,
+                requiresStaticTransitive,
+                requiresRuntime
+        );
     }
 }

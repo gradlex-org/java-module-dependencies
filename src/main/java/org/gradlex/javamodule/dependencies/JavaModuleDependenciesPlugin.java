@@ -229,14 +229,16 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         ConfigurationContainer configurations = project.getConfigurations();
 
-        sourceSets.all(sourceSet -> {
+        sourceSets.configureEach(sourceSet -> {
             TaskProvider<ModuleDirectivesOrderingCheck> checkModuleInfo = project.getTasks().register(sourceSet.getTaskName("check", "ModuleInfo"), ModuleDirectivesOrderingCheck.class, t -> {
                 t.setGroup("java modules");
                 t.setDescription("Check order of directives in 'module-info.java' in '" + sourceSet.getName() + "' source set");
 
                 ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get().get(sourceSet, project.getProviders());
-
-                t.getModuleInfoPath().convention(moduleInfo.getFilePath().getAbsolutePath());
+                File folder = javaModuleDependencies.getModuleInfoCache().get().getFolder(sourceSet, project.getProviders());
+                if (folder != null) {
+                    t.getModuleInfoPath().convention(new File(folder, "module-info.java").getAbsolutePath());
+                }
                 t.getModuleNamePrefix().convention(moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName(), false));
                 t.getModuleInfo().convention(moduleInfo);
 
@@ -266,11 +268,11 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
         }
         ModuleInfo moduleInfo = javaModuleDependenciesExtension.getModuleInfoCache().get().get(sourceSet, project.getProviders());
         for (String moduleName : moduleInfo.get(moduleDirective)) {
-            declareDependency(moduleName, moduleInfo.getFilePath(), project, sourceSet, configuration, javaModuleDependenciesExtension);
+            declareDependency(moduleName,  project, sourceSet, configuration, javaModuleDependenciesExtension);
         }
     }
 
-    private void declareDependency(String moduleName, File moduleInfoFile, Project project, SourceSet sourceSet, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependencies) {
+    private void declareDependency(String moduleName, Project project, SourceSet sourceSet, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependencies) {
         if (JDKInfo.MODULES.contains(moduleName)) {
             // The module is part of the JDK, no dependency required
             return;
@@ -286,7 +288,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
             File sourceSetDir = sourceSet.getJava().getSrcDirs().iterator().next().getParentFile();
             File whiteboxModuleInfoFile = new File(sourceSetDir, "java9/module-info.java");
             if (whiteboxModuleInfoFile.exists()) {
-                moduleInfo = new ModuleInfo(project.getProviders().fileContents(project.getLayout().getProjectDirectory().file(whiteboxModuleInfoFile.getAbsolutePath())).getAsText().get(), whiteboxModuleInfoFile);
+                moduleInfo = new ModuleInfo(project.getProviders().fileContents(project.getLayout().getProjectDirectory().file(whiteboxModuleInfoFile.getAbsolutePath())).getAsText().get());
             }
         }
         return moduleInfo.get(directive).stream()

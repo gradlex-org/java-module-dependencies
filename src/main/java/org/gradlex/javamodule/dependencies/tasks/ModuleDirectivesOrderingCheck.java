@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 public abstract class ModuleDirectivesOrderingCheck extends DefaultTask {
 
     @Input
+    @Optional
     public abstract Property<String> getModuleInfoPath();
 
     @Input

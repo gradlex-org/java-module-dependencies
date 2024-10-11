@@ -67,6 +67,104 @@ class SettingsPluginTest extends Specification {
         result.task(":lib:compileJava").outcome == SUCCESS
     }
 
+    def "configurationCacheHit"() {
+        given:
+        settingsFile << '''
+            javaModules {
+                directory(".") { plugin("java-library") }
+            }
+        '''
+        libModuleInfoFile << 'module abc.lib { }'
+        appModuleInfoFile << '''
+            module org.gradlex.test.app {
+                requires abc.lib;
+            }
+        '''
+
+
+        def runner = runner(':app:compileJava')
+        when:
+        def result = runner.build()
+
+        then:
+        result.getOutput().contains("Calculating task graph as no cached configuration is available for tasks: :app:compileJava")
+
+        when:
+        runner.build() // https://github.com/gradlex-org/java-module-dependencies/issues/128
+        result = runner.build()
+
+        then:
+        result.getOutput().contains("Reusing configuration cache.")
+    }
+
+    def "configurationCacheHitIrrelevantChange"() {
+        given:
+        settingsFile << '''
+            javaModules {
+                directory(".") { plugin("java-library") }
+            }
+        '''
+        libModuleInfoFile << 'module abc.lib { }'
+        appModuleInfoFile << '''
+            module org.gradlex.test.app {
+                requires abc.lib;
+            }
+        '''
+
+        def runner = runner(':app:compileJava')
+        when:
+        def result = runner.build()
+
+        then:
+        result.getOutput().contains("Calculating task graph as no cached configuration is available for tasks: :app:compileJava")
+
+        when:
+        runner.build() // https://github.com/gradlex-org/java-module-dependencies/issues/128
+        appModuleInfoFile.write('''
+            module org.gradlex.test.app {
+                requires abc.lib; //This is a comment and should not break the configurationCache
+            }
+        ''')
+        result = runner.build()
+
+        then:
+        result.getOutput().contains("Reusing configuration cache.")
+    }
+
+    def "configurationCacheMissRelevantChange"() {
+        given:
+        settingsFile << '''
+            javaModules {
+                directory(".") { plugin("java-library") }
+            }
+        '''
+        libModuleInfoFile << 'module abc.lib { }'
+        appModuleInfoFile << '''
+            module org.gradlex.test.app {
+                requires abc.lib;
+            }
+        '''
+
+        def runner = runner(':app:compileJava')
+        when:
+        def result = runner.build()
+
+        then:
+        result.getOutput().contains("Calculating task graph as no cached configuration is available for tasks: :app:compileJava")
+
+        when:
+        runner.build() // https://github.com/gradlex-org/java-module-dependencies/issues/128
+        appModuleInfoFile.write('''
+            module org.gradlex.test.app {
+               //dependency removed; so thats indeed a configuration change
+            }
+        ''')
+        result = runner.build()
+
+        then:
+        result.output.contains("Calculating task graph as configuration cache cannot be reused because a build logic input of type 'ValueSourceModuleInfo' has changed.\n")
+    }
+
     def "automatically sets module for application plugin"() {
         given:
         settingsFile << '''
