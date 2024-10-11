@@ -10,7 +10,7 @@ class ConfigurationCacheTest extends Specification {
     @Delegate
     GradleBuild build = new GradleBuild()
 
-    final noCacheMessage = version(gradleVersionUnderTest) >= version("8.8")
+    final noCacheMessage = !gradleVersionUnderTest || version(gradleVersionUnderTest) >= version("8.8")
             ? "Calculating task graph as no cached configuration is available for tasks: :app:compileJava"
             : "Calculating task graph as no configuration cache is available for tasks: :app:compileJava"
 
