@@ -122,8 +122,6 @@ public abstract class ModuleInfoCache {
     }
 
     private Provider<ModuleInfo> provideModuleInfo(File folder, ProviderFactory providers) {
-        return providers.of(ModuleInfoValueSource.class,
-                moduleInfoSourcePValueSourceSpec -> moduleInfoSourcePValueSourceSpec.parameters(
-                        moduleInfoSourceP -> moduleInfoSourceP.getDir().set(folder)));
+        return providers.of(ValueSourceModuleInfo.class, spec -> spec.parameters(param -> param.getDir().set(folder)));
     }
 }

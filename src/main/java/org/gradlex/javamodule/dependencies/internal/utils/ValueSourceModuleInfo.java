@@ -25,15 +25,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
 
-public abstract class ModuleInfoValueSource implements ValueSource<ModuleInfo, ModuleInfoValueSource.ModuleInfoValueSourceParameter> {
+public abstract class ValueSourceModuleInfo implements ValueSource<ModuleInfo, ValueSourceModuleInfo.Parameter> {
 
-    interface ModuleInfoValueSourceParameter extends ValueSourceParameters {
+    interface Parameter extends ValueSourceParameters {
         DirectoryProperty getDir();
     }
 
     @Override
     public @Nullable ModuleInfo obtain() {
-        ModuleInfoValueSourceParameter parameters = getParameters();
+        Parameter parameters = getParameters();
         File file = new File(parameters.getDir().get().getAsFile(), "module-info.java");
         if (file.isFile()) {
             try {
