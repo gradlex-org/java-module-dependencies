@@ -55,7 +55,7 @@ public class ModuleInfo implements Serializable {
 
     public ModuleInfo(String moduleInfoFileContent) {
         boolean insideComment = false;
-        for(String line: moduleInfoFileContent.split("\n")) {
+        for (String line : moduleInfoFileContent.split("\n")) {
             insideComment = parse(line, insideComment);
         }
     }
@@ -150,11 +150,23 @@ public class ModuleInfo implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ModuleInfo that = (ModuleInfo) o;
-        return Objects.equals(moduleName, that.moduleName) && Objects.equals(requires, that.requires) && Objects.equals(requiresTransitive, that.requiresTransitive) && Objects.equals(requiresStatic, that.requiresStatic) && Objects.equals(requiresStaticTransitive, that.requiresStaticTransitive) && Objects.equals(requiresRuntime, that.requiresRuntime);
+        return Objects.equals(moduleName, that.moduleName)
+                && Objects.equals(requires, that.requires)
+                && Objects.equals(requiresTransitive, that.requiresTransitive)
+                && Objects.equals(requiresStatic, that.requiresStatic)
+                && Objects.equals(requiresStaticTransitive, that.requiresStaticTransitive)
+                && Objects.equals(requiresRuntime, that.requiresRuntime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(moduleName, requires, requiresTransitive, requiresStatic, requiresStaticTransitive, requiresRuntime);
+        return Objects.hash(
+                moduleName,
+                requires,
+                requiresTransitive,
+                requiresStatic,
+                requiresStaticTransitive,
+                requiresRuntime
+        );
     }
 }
