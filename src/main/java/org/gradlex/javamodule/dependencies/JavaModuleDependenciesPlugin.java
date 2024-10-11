@@ -236,7 +236,9 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
 
                 ModuleInfo moduleInfo = javaModuleDependencies.getModuleInfoCache().get().get(sourceSet, project.getProviders());
                 File folder = javaModuleDependencies.getModuleInfoCache().get().getFolder(sourceSet, project.getProviders());
-                t.getModuleInfoPath().convention(folder == null ? "<hasNOModuleInfo>" : new File(folder, "module-info.java").getAbsolutePath());
+                if (folder != null) {
+                    t.getModuleInfoPath().convention(new File(folder, "module-info.java").getAbsolutePath());
+                }
                 t.getModuleNamePrefix().convention(moduleInfo.moduleNamePrefix(project.getName(), sourceSet.getName(), false));
                 t.getModuleInfo().convention(moduleInfo);
 

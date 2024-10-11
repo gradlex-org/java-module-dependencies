@@ -16,12 +16,10 @@
 
 package org.gradlex.javamodule.dependencies.internal.utils;
 
-import org.gradle.api.Action;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
-import org.gradle.api.provider.ValueSourceSpec;
 import org.gradle.api.tasks.SourceSet;
 import org.slf4j.LoggerFactory;
 
@@ -124,17 +122,8 @@ public abstract class ModuleInfoCache {
     }
 
     private Provider<ModuleInfo> provideModuleInfo(File folder, ProviderFactory providers) {
-        return providers.of(ValueSourceModuleInfo.class, new Action<ValueSourceSpec<ValueSourceModuleInfo.ModuleInfoSourceP>>() {
-            @Override
-            public void execute(ValueSourceSpec<ValueSourceModuleInfo.ModuleInfoSourceP> moduleInfoSourcePValueSourceSpec) {
-                moduleInfoSourcePValueSourceSpec.parameters(new Action<ValueSourceModuleInfo.ModuleInfoSourceP>() {
-                    @Override
-                    public void execute(ValueSourceModuleInfo.ModuleInfoSourceP moduleInfoSourceP) {
-                        moduleInfoSourceP.getDir().set(folder);
-                    }
-                });
-
-            }
-        });
+        return providers.of(ModuleInfoValueSource.class,
+                moduleInfoSourcePValueSourceSpec -> moduleInfoSourcePValueSourceSpec.parameters(
+                        moduleInfoSourceP -> moduleInfoSourceP.getDir().set(folder)));
     }
 }
