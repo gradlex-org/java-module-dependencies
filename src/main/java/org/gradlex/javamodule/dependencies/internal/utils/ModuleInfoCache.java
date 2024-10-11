@@ -77,7 +77,6 @@ public abstract class ModuleInfoCache {
         return null;
     }
 
-
     /**
      * @param projectRoot the project that should hold a Java module
      * @return parsed module-info.java for the given project assuming a standard Java project layout
