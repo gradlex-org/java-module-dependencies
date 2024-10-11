@@ -1,5 +1,8 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.7.1
+* Update module name mappings
+
 ## Version 1.7
 * [#112](https://github.com/gradlex-org/java-module-dependencies/issues/112) Settings plugin to configure module locations and identity
 

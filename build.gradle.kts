@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "org.gradlex"
-version = "1.7"
+version = "1.7.1"
 
 tasks.withType<JavaCompile>().configureEach {
     options.release = 8
@@ -26,10 +26,10 @@ configurations.compileClasspath {
 }
 
 dependencies {
-    implementation("org.ow2.asm:asm:9.7")
+    implementation("org.ow2.asm:asm:9.7.1")
 
     compileOnly("org.gradlex:extra-java-module-info:1.8")
-    compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:2.0.2")
+    compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:2.1.4")
 
     testImplementation("org.spockframework:spock-core:2.1-groovy-3.0")
     testImplementation("org.gradle.exemplar:samples-check:1.0.2")
