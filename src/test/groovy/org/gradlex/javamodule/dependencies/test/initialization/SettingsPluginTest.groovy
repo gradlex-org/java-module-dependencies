@@ -165,7 +165,6 @@ class SettingsPluginTest extends Specification {
         result.output.contains("Calculating task graph as configuration cache cannot be reused because a build logic input of type 'ValueSourceModuleInfo' has changed.\n")
     }
 
-
     def "automatically sets module for application plugin"() {
         given:
         settingsFile << '''
