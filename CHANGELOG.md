@@ -1,5 +1,8 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.8
+* [#127](https://github.com/gradlex-org/java-module-dependencies/issues/127) Less configuration cache misses when modifying `module-info.java` (Thanks [TheGoesen](https://github.com/TheGoesen))
+
 ## Version 1.7.1
 * Update module name mappings
 
