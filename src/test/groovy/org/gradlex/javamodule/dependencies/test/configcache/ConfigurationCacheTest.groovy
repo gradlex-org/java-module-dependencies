@@ -1,10 +1,12 @@
-package org.gradlex.javamodule.dependencies.test
+package org.gradlex.javamodule.dependencies.test.configcache
 
-import org.gradle.util.GradleVersion
 import org.gradlex.javamodule.dependencies.test.fixture.GradleBuild
 import spock.lang.Specification
 
 class ConfigurationCacheTest extends Specification {
+
+    static final NO_CACHE_MESSAGE =
+            "Calculating task graph as no cached configuration is available for tasks: :app:compileJava"
 
     @Delegate
     GradleBuild build = new GradleBuild()
@@ -19,36 +21,18 @@ class ConfigurationCacheTest extends Specification {
             }
         '''
 
-
         def runner = runner('--configuration-cache',':app:compileJava')
         when:
         def result = runner.build()
 
         then:
-        result.getOutput().contains(getNoCacheMessage() )
+        result.output.contains(NO_CACHE_MESSAGE)
 
         when:
         result = runner.build()
 
         then:
-        result.getOutput().contains("Reusing configuration cache.")
-    }
-
-    private String getNoCacheMessage() {
-        if (getVersionTest() >= GradleVersion.version("8.8")) {
-            return "Calculating task graph as no cached configuration is available for tasks: :app:compileJava"
-        } else {
-            return "Calculating task graph as no configuration cache is available for tasks: :app:compileJava"
-        }
-
-
-    }
-
-    private GradleVersion getVersionTest() {
-        if (gradleVersionUnderTest == null) {
-            return GradleVersion.current()
-        }
-        return GradleVersion.version(gradleVersionUnderTest)
+        result.output.contains("Reusing configuration cache.")
     }
 
     def "configurationCacheHitIrrelevantChange"() {
@@ -64,7 +48,7 @@ class ConfigurationCacheTest extends Specification {
         def result = runner.build()
 
         then:
-        result.getOutput().contains(getNoCacheMessage())
+        result.output.contains(NO_CACHE_MESSAGE)
 
         when:
         appModuleInfoFile.write('''
@@ -75,7 +59,7 @@ class ConfigurationCacheTest extends Specification {
         result = runner.build()
 
         then:
-        result.getOutput().contains("Reusing configuration cache.")
+        result.output.contains("Reusing configuration cache.")
     }
 
     def "configurationCacheMissRelevantChange"() {
@@ -92,7 +76,7 @@ class ConfigurationCacheTest extends Specification {
         def result = runner.build()
 
         then:
-        result.getOutput().contains(getNoCacheMessage())
+        result.output.contains(NO_CACHE_MESSAGE)
 
         when:
         appModuleInfoFile.write('''

@@ -73,11 +73,12 @@ testing.suites.named<JvmTestSuite>("test") {
                 description = "Runs tests against Gradle $gradleVersionUnderTest"
                 systemProperty("gradleVersionUnderTest", gradleVersionUnderTest)
                 exclude("**/*SamplesTest.class") // Not yet cross-version ready
-                if (gradleVersionUnderTest == "7.4") {
-                    // affected by long since fixed bugs in gradle
-                    exclude("**/*ConfigurationCacheTest.class")
-                }
                 exclude("**/initialization/**") // Settings plugin only for Gradle 8.8+
+                if (gradleVersionUnderTest == "7.4") {
+                    // Configuration cache only "reliable" since 7.6 (?)
+                    // https://github.com/gradlex-org/java-module-dependencies/issues/129
+                    exclude("**/configcache/**")
+                }
             }
         }
     }
