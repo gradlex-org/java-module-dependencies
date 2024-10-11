@@ -16,7 +16,11 @@
 
 package org.gradlex.javamodule.dependencies;
 
-import org.gradle.api.*;
+import org.gradle.api.GradleException;
+import org.gradle.api.NonNullApi;
+import org.gradle.api.Plugin;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
@@ -36,7 +40,12 @@ import org.gradlex.javamodule.dependencies.internal.bridges.ExtraJavaModuleInfoB
 import org.gradlex.javamodule.dependencies.internal.dsl.AllDirectivesInternal;
 import org.gradlex.javamodule.dependencies.internal.dsl.GradleOnlyDirectivesInternal;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
-import org.gradlex.javamodule.dependencies.tasks.*;
+import org.gradlex.javamodule.dependencies.tasks.BuildFileDependenciesGenerate;
+import org.gradlex.javamodule.dependencies.tasks.ModuleDependencyReport;
+import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck;
+import org.gradlex.javamodule.dependencies.tasks.ModuleInfoGenerate;
+import org.gradlex.javamodule.dependencies.tasks.ModulePathAnalysis;
+import org.gradlex.javamodule.dependencies.tasks.ModuleVersionRecommendation;
 
 import java.io.File;
 import java.util.HashSet;
@@ -47,7 +56,11 @@ import static org.gradle.api.plugins.HelpTasksPlugin.HELP_GROUP;
 import static org.gradle.language.base.plugins.LifecycleBasePlugin.VERIFICATION_GROUP;
 import static org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension.JAVA_MODULE_DEPENDENCIES;
 import static org.gradlex.javamodule.dependencies.internal.utils.DependencyDeclarationsUtil.declaredDependencies;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.*;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_RUNTIME;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_STATIC;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_TRANSITIVE;
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
 
 @SuppressWarnings("unused")

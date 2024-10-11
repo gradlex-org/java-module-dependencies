@@ -18,7 +18,11 @@ package org.gradlex.javamodule.dependencies.internal.utils;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
 
@@ -101,7 +105,6 @@ public class ModuleInfo implements Serializable {
         }
         return null;
     }
-
 
     /**
      * @return true, if we are inside a multi-line comment after this line
