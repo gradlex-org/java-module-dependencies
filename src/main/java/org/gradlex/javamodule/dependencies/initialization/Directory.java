@@ -23,6 +23,7 @@ import org.gradle.api.provider.Property;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -41,13 +42,17 @@ public abstract class Directory {
      */
     public abstract ListProperty<String> getPlugins();
 
-    @Inject
-    protected abstract ObjectFactory getObjects();
 
     @Inject
     public Directory(File root) {
         this.root = root;
+        getExclusions().convention(Arrays.asList("build", "\\..*"));
     }
+
+    @Inject
+    protected abstract ObjectFactory getObjects();
+
+    public abstract ListProperty<String> getExclusions();
 
     /**
      * {@link Module#plugin(String)}
@@ -62,6 +67,7 @@ public abstract class Directory {
     public void module(String subDirectory) {
         module(subDirectory, m -> {});
     }
+
 
     /**
      * Configure details of a Module in a subdirectory of this directory.

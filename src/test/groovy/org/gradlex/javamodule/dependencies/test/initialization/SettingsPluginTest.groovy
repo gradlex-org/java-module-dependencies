@@ -90,12 +90,74 @@ class SettingsPluginTest extends Specification {
         result.getOutput().contains("Calculating task graph as no cached configuration is available for tasks: :app:compileJava")
 
         when:
-        runner.build() // https://github.com/gradlex-org/java-module-dependencies/issues/128
         result = runner.build()
 
         then:
         result.getOutput().contains("Reusing configuration cache.")
     }
+
+    def "configurationCacheHitExtraDir"() {
+        given:
+        settingsFile << '''
+            javaModules {
+                directory(".") { plugin("java-library") }
+            }
+        '''
+        libModuleInfoFile << 'module abc.lib { }'
+        appModuleInfoFile << '''
+            module org.gradlex.test.app {
+                requires abc.lib;
+            }
+        '''
+
+
+        def runner = runner(':app:compileJava')
+        when:
+        def result = runner.build()
+
+        then:
+        result.getOutput().contains("Calculating task graph as no cached configuration is available for tasks: :app:compileJava")
+
+        when:
+        new File(settingsFile.parentFile, ".thisShallBeIgnored").mkdir()
+
+        result = runner.build()
+
+        then:
+        result.getOutput().contains("Reusing configuration cache.")
+    }
+
+    def "configurationCacheHitExtraNotIgnored"() {
+        given:
+        settingsFile << '''
+            javaModules {
+                directory(".") { plugin("java-library") }
+            }
+        '''
+        libModuleInfoFile << 'module abc.lib { }'
+        appModuleInfoFile << '''
+            module org.gradlex.test.app {
+                requires abc.lib;
+            }
+        '''
+
+
+        def runner = runner(':app:compileJava')
+        when:
+        def result = runner.build()
+
+        then:
+        result.getOutput().contains("Calculating task graph as no cached configuration is available for tasks: :app:compileJava")
+
+        when:
+        new File(settingsFile.parentFile, "thisShallNotBeIgnored").mkdir()
+
+        result = runner.build()
+
+        then:
+        result.getOutput().contains("Calculating task graph as configuration cache cannot be reused because a build logic input of type 'ValueSourceDirectoryListing' has changed.")
+    }
+
 
     def "configurationCacheHitIrrelevantChange"() {
         given:
@@ -119,7 +181,6 @@ class SettingsPluginTest extends Specification {
         result.getOutput().contains("Calculating task graph as no cached configuration is available for tasks: :app:compileJava")
 
         when:
-        runner.build() // https://github.com/gradlex-org/java-module-dependencies/issues/128
         appModuleInfoFile.write('''
             module org.gradlex.test.app {
                 requires abc.lib; //This is a comment and should not break the configurationCache
@@ -153,7 +214,6 @@ class SettingsPluginTest extends Specification {
         result.getOutput().contains("Calculating task graph as no cached configuration is available for tasks: :app:compileJava")
 
         when:
-        runner.build() // https://github.com/gradlex-org/java-module-dependencies/issues/128
         appModuleInfoFile.write('''
             module org.gradlex.test.app {
                //dependency removed; so thats indeed a configuration change
