@@ -22,6 +22,7 @@ import org.gradle.api.provider.ValueSource;
 import org.gradle.api.provider.ValueSourceParameters;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,11 +33,17 @@ public abstract class ValueSourceDirectoryListing implements ValueSource<List<St
     @Override
     public List<String> obtain() {
         File file = getParameters().getDir().get();
-        String[] list = file.list();
+        File[] list = file.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return file.isDirectory();
+            }
+        });
         if (list == null) {
             throw new RuntimeException("Failed to inspect: " + file.getAbsolutePath());
         }
         return Arrays.stream(list)
+                .map(File::getName)
                 .filter(x -> !getParameters().getExclusions().get().contains(x))
                 .filter(x -> getParameters().getRegexExclusions().get().stream().noneMatch(x::matches))
                 .sorted()
