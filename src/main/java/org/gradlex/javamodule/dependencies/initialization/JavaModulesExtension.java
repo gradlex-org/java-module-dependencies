@@ -101,6 +101,7 @@ public abstract class JavaModulesExtension {
                 spec.getParameters().getRegexExclusions().set(moduleDirectory.getExclusions());
                 spec.getParameters().getExclusions().set(moduleDirectory.customizedModules.keySet());
                 spec.getParameters().getDir().set(modulesDirectory);
+                spec.getParameters().getRequiresBuildFile().set(moduleDirectory.getRequiresBuildFile());
             }
         });
 

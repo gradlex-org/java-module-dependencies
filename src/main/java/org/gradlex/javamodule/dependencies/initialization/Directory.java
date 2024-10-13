@@ -20,6 +20,7 @@ import org.gradle.api.Action;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -47,12 +48,15 @@ public abstract class Directory {
     public Directory(File root) {
         this.root = root;
         getExclusions().convention(Arrays.asList("build", "\\..*"));
+        getRequiresBuildFile().convention(false);
     }
 
     @Inject
     protected abstract ObjectFactory getObjects();
 
     public abstract ListProperty<String> getExclusions();
+
+    public abstract Property<Boolean> getRequiresBuildFile();
 
     /**
      * {@link Module#plugin(String)}
@@ -87,4 +91,6 @@ public abstract class Directory {
         module.getPlugins().addAll(getPlugins());
         return module;
     }
+
+
 }

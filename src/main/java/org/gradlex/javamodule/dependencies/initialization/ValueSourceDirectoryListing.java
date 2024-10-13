@@ -23,36 +23,54 @@ import org.gradle.api.provider.ValueSourceParameters;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class ValueSourceDirectoryListing implements ValueSource<List<String>, ValueSourceDirectoryListing.DirectoryListingParameter> {
 
 
     @Override
     public List<String> obtain() {
+        Path path = getParameters().getDir().get().toPath();
         File file = getParameters().getDir().get();
-        File[] list = file.listFiles(new FileFilter() {
+        try (Stream<Path> directoryStream = Files.find(path, 1, new BiPredicate<Path, BasicFileAttributes>() {
             @Override
-            public boolean accept(File file) {
-                return file.isDirectory();
+            public boolean test(Path path, BasicFileAttributes basicFileAttributes) {
+                return basicFileAttributes.isDirectory();
             }
-        });
-        if (list == null) {
-            throw new RuntimeException("Failed to inspect: " + file.getAbsolutePath());
+        })) {
+            return directoryStream.filter(x -> !getParameters().getExclusions().get().contains(x.getFileName().toString()))
+                    .filter(x -> getParameters().getRegexExclusions().get().stream().noneMatch(r -> x.getFileName().toString().matches(r)))
+                    .filter(x -> checkBuildFile(x, getParameters()))
+                    .map(x -> x.getFileName().toString())
+                    .sorted()
+                    .collect(Collectors.toList());
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed on " + file, e);
         }
-        return Arrays.stream(list)
-                .map(File::getName)
-                .filter(x -> !getParameters().getExclusions().get().contains(x))
-                .filter(x -> getParameters().getRegexExclusions().get().stream().noneMatch(x::matches))
-                .sorted()
-                .collect(Collectors.toList());
 
 
     }
 
+    private boolean checkBuildFile(Path x, DirectoryListingParameter parameters) {
+        if (!parameters.getRequiresBuildFile().get()) {
+            return true;
+        }
+        return Files.isRegularFile(x.resolve("build.gradle.kts")) || Files.isRegularFile(x.resolve("build.gradle"));
+    }
+
     interface DirectoryListingParameter extends ValueSourceParameters {
+
+        Property<Boolean> getRequiresBuildFile();
 
         Property<File> getDir();
 
