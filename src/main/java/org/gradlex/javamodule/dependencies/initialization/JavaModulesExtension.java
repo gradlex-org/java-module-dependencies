@@ -36,16 +36,17 @@ import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
 import org.gradlex.javamodule.dependencies.internal.utils.ValueModuleDirectoryListing;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class JavaModulesExtension {
 
     private final Settings settings;
     private final ModuleInfoCache moduleInfoCache;
+    private final List<ModuleProject> moduleProjects = new ArrayList<>();
 
     @Inject
     public abstract ObjectFactory getObjects();
@@ -57,6 +58,7 @@ public abstract class JavaModulesExtension {
     public JavaModulesExtension(Settings settings) {
         this.settings = settings;
         this.moduleInfoCache = getObjects().newInstance(ModuleInfoCache.class, true);
+        settings.getGradle().getLifecycle().beforeProject(new ApplyPluginsAction(moduleProjects, moduleInfoCache));
     }
 
     /**
@@ -137,36 +139,46 @@ public abstract class JavaModulesExtension {
 
         String group = module.getGroup().getOrNull();
         List<String> plugins = module.getPlugins().get();
-        settings.getGradle().getLifecycle().beforeProject(new ApplyPluginsAction(artifact, group, plugins, mainModuleName, moduleInfoCache));
+        moduleProjects.add(new ModuleProject(artifact, group, plugins, mainModuleName));
+    }
+
+    private static class ModuleProject {
+        private final String artifact;
+        private final String group;
+        private final List<String> plugins;
+        private final String mainModuleName;
+
+        public ModuleProject(String artifact, String group, List<String> plugins, String mainModuleName) {
+            this.artifact = artifact;
+            this.group = group;
+            this.plugins = plugins;
+            this.mainModuleName = mainModuleName;
+        }
     }
 
     @NonNullApi
     private static class ApplyPluginsAction implements IsolatedAction<Project>, Action<Project> {
 
-        private final String artifact;
-        private final String group;
-        private final List<String> plugins;
-        private final String mainModuleName;
+        private final List<ModuleProject> moduleProjects;
         private final ModuleInfoCache moduleInfoCache;
 
-        public ApplyPluginsAction(String artifact, @Nullable String group, List<String> plugins, @Nullable String mainModuleName, ModuleInfoCache moduleInfoCache) {
-            this.artifact = artifact;
-            this.group = group;
-            this.plugins = plugins;
-            this.mainModuleName = mainModuleName;
+        public ApplyPluginsAction(List<ModuleProject> moduleProjects, ModuleInfoCache moduleInfoCache) {
+            this.moduleProjects = moduleProjects;
             this.moduleInfoCache = moduleInfoCache;
         }
 
         @Override
         public void execute(Project project) {
-            if (project.getName().equals(artifact)) {
-                if (group != null) project.setGroup(group);
-                project.getPlugins().apply(JavaModuleDependenciesPlugin.class);
-                project.getExtensions().getByType(JavaModuleDependenciesExtension.class).getModuleInfoCache().set(moduleInfoCache);
-                plugins.forEach(id -> project.getPlugins().apply(id));
-                if (mainModuleName != null) {
-                    project.getPlugins().withType(ApplicationPlugin.class, p ->
-                            project.getExtensions().getByType(JavaApplication.class).getMainModule().set(mainModuleName));
+            for (ModuleProject m : moduleProjects) {
+                if (project.getName().equals(m.artifact)) {
+                    if (m.group != null) project.setGroup(m.group);
+                    project.getPlugins().apply(JavaModuleDependenciesPlugin.class);
+                    project.getExtensions().getByType(JavaModuleDependenciesExtension.class).getModuleInfoCache().set(moduleInfoCache);
+                    m.plugins.forEach(id -> project.getPlugins().apply(id));
+                    if (m.mainModuleName != null) {
+                        project.getPlugins().withType(ApplicationPlugin.class, p ->
+                                project.getExtensions().getByType(JavaApplication.class).getMainModule().set(m.mainModuleName));
+                    }
                 }
             }
         }

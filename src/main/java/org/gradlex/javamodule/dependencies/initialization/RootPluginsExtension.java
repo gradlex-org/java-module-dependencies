@@ -23,33 +23,37 @@ import org.gradle.api.Project;
 import org.gradle.api.initialization.Settings;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class RootPluginsExtension {
 
-    private final Settings settings;
+    private final List<String> ids = new ArrayList<>();
 
     @Inject
     public RootPluginsExtension(Settings settings) {
-        this.settings = settings;
+        settings.getGradle().getLifecycle().beforeProject(new ApplyPluginAction(ids));
     }
 
     public void id(String id) {
-        settings.getGradle().getLifecycle().beforeProject(new ApplyPluginAction(id));
+        ids.add(id);
     }
 
     @NonNullApi
     private static class ApplyPluginAction implements IsolatedAction<Project>, Action<Project> {
 
-        private final String id;
+        private final List<String> ids;
 
-        public ApplyPluginAction(String id) {
-            this.id = id;
+        public ApplyPluginAction(List<String> ids) {
+            this.ids = ids;
         }
 
         @Override
         public void execute(Project project) {
             if (isRoot(project)) {
-                project.getPlugins().apply(id);
+                for (String id : ids) {
+                    project.getPlugins().apply(id);
+                }
             }
         }
 
