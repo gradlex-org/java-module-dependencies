@@ -55,21 +55,6 @@ public abstract class Directory {
     protected abstract ObjectFactory getObjects();
 
     /**
-     * Configure which folders should be ignored when searching for Modules.
-     * This can be tweaked to optimize the configuration cache hit ratio.
-     * Defaults to: 'build', '.*'
-     */
-    public abstract ListProperty<String> getExclusions();
-
-    /**
-     * Configure if only folders that contain a 'build.gradle' or 'build.gradle.kts'
-     * should be considered when searching for Modules.
-     * Setting this to true may improve configuration cache hit ratio if you know
-     * that all modules have build files in addition to the 'module-info.java' files.
-     */
-    public abstract Property<Boolean> getRequiresBuildFile();
-
-    /**
      * {@link Module#plugin(String)}
      */
     public void plugin(String id) {
@@ -82,7 +67,6 @@ public abstract class Directory {
     public void module(String subDirectory) {
         module(subDirectory, m -> {});
     }
-
 
     /**
      * Configure details of a Module in a subdirectory of this directory.
@@ -103,5 +87,18 @@ public abstract class Directory {
         return module;
     }
 
+    /**
+     * Configure which folders should be ignored when searching for Modules.
+     * This can be tweaked to optimize the configuration cache hit ratio.
+     * Defaults to: 'build', '.*'
+     */
+    public abstract ListProperty<String> getExclusions();
 
+    /**
+     * Configure if only folders that contain a 'build.gradle' or 'build.gradle.kts'
+     * should be considered when searching for Modules.
+     * Setting this to true may improve configuration cache hit ratio if you know
+     * that all modules have build files in addition to the 'module-info.java' files.
+     */
+    public abstract Property<Boolean> getRequiresBuildFile();
 }
