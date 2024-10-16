@@ -3,6 +3,7 @@
 ## Version 1.8
 * [#127](https://github.com/gradlex-org/java-module-dependencies/issues/127) Less configuration cache misses when modifying `module-info.java` (Thanks [TheGoesen](https://github.com/TheGoesen))
 * [#128](https://github.com/gradlex-org/java-module-dependencies/issues/128) Less configuration cache misses when using Settings plugin (Thanks [TheGoesen](https://github.com/TheGoesen))
+* [#135](https://github.com/gradlex-org/java-module-dependencies/issues/135) Improve performance of ApplyPluginsAction
 
 ## Version 1.7.1
 * Update module name mappings
