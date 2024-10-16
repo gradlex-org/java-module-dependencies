@@ -157,7 +157,7 @@ public abstract class JavaModulesExtension {
     }
 
     @NonNullApi
-    private static class ApplyPluginsAction implements IsolatedAction<Project>, Action<Project> {
+    private static class ApplyPluginsAction implements IsolatedAction<Project> {
 
         private final List<ModuleProject> moduleProjects;
         private final ModuleInfoCache moduleInfoCache;
@@ -185,7 +185,7 @@ public abstract class JavaModulesExtension {
     }
 
     @NonNullApi
-    private static class ApplyJavaModuleVersionsPluginAction implements IsolatedAction<Project>, Action<Project> {
+    private static class ApplyJavaModuleVersionsPluginAction implements IsolatedAction<Project> {
 
         private final String projectName;
 
