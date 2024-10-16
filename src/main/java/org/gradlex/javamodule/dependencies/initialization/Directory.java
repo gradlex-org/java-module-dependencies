@@ -20,9 +20,11 @@ import org.gradle.api.Action;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -41,13 +43,16 @@ public abstract class Directory {
      */
     public abstract ListProperty<String> getPlugins();
 
-    @Inject
-    protected abstract ObjectFactory getObjects();
 
     @Inject
     public Directory(File root) {
         this.root = root;
+        getExclusions().convention(Arrays.asList("build", "\\..*"));
+        getRequiresBuildFile().convention(false);
     }
+
+    @Inject
+    protected abstract ObjectFactory getObjects();
 
     /**
      * {@link Module#plugin(String)}
@@ -81,4 +86,19 @@ public abstract class Directory {
         module.getPlugins().addAll(getPlugins());
         return module;
     }
+
+    /**
+     * Configure which folders should be ignored when searching for Modules.
+     * This can be tweaked to optimize the configuration cache hit ratio.
+     * Defaults to: 'build', '.*'
+     */
+    public abstract ListProperty<String> getExclusions();
+
+    /**
+     * Configure if only folders that contain a 'build.gradle' or 'build.gradle.kts'
+     * should be considered when searching for Modules.
+     * Setting this to true may improve configuration cache hit ratio if you know
+     * that all modules have build files in addition to the 'module-info.java' files.
+     */
+    public abstract Property<Boolean> getRequiresBuildFile();
 }

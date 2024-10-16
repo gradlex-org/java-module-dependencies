@@ -119,6 +119,10 @@ javaModules { // use instead of 'include(...)'
     group = "org.example"  // group for all Modules
     plugin("java-library") // apply plugin to all Modules' subprojects
     module("app") { ... }  // individualise Module (only if needed)
+    
+    // To optimze Configuration Cache hits:
+    exclusions.add("_.*")  // do not inspect certain folders (regex)
+    requiresBuildFile      // only look at folder containing a build.gradle(.kts)
   }
   
   versions("gradle/versions") // subproject configured as Platform Project

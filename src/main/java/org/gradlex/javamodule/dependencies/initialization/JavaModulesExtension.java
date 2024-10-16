@@ -27,11 +27,14 @@ import org.gradle.api.plugins.ApplicationPlugin;
 import org.gradle.api.plugins.JavaApplication;
 import org.gradle.api.plugins.JavaPlatformExtension;
 import org.gradle.api.plugins.JavaPlatformPlugin;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ProviderFactory;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesPlugin;
 import org.gradlex.javamodule.dependencies.JavaModuleVersionsPlugin;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
+import org.gradlex.javamodule.dependencies.internal.utils.ValueModuleDirectoryListing;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -46,6 +49,9 @@ public abstract class JavaModulesExtension {
 
     @Inject
     public abstract ObjectFactory getObjects();
+
+    @Inject
+    public abstract ProviderFactory getProviders();
 
     @Inject
     public JavaModulesExtension(Settings settings) {
@@ -85,22 +91,21 @@ public abstract class JavaModulesExtension {
         Directory moduleDirectory = getObjects().newInstance(Directory.class, modulesDirectory);
         action.execute(moduleDirectory);
 
-        File[] projectDirs = modulesDirectory.listFiles();
-        if (projectDirs == null) {
-            throw new RuntimeException("Failed to inspect: " + modulesDirectory);
-        }
-
         for (Module module : moduleDirectory.customizedModules.values()) {
             includeModule(module, new File(modulesDirectory, module.getDirectory().get()));
         }
+        Provider<List<String>> listProvider = getProviders().of(ValueModuleDirectoryListing.class, spec -> {
+            spec.getParameters().getExclusions().set(moduleDirectory.getExclusions());
+            spec.getParameters().getExplicitlyConfiguredFolders().set(moduleDirectory.customizedModules.keySet());
+            spec.getParameters().getDir().set(modulesDirectory);
+            spec.getParameters().getRequiresBuildFile().set(moduleDirectory.getRequiresBuildFile());
+        });
 
-        for (File projectDir : projectDirs) {
-            if (!moduleDirectory.customizedModules.containsKey(projectDir.getName())) {
-                Module module = moduleDirectory.addModule(projectDir.getName());
-                if (!module.getModuleInfoPaths().get().isEmpty()) {
-                    // only auto-include if there is at least one module-info.java
-                    includeModule(module, projectDir);
-                }
+        for (String projectDir : listProvider.get()) {
+            Module module = moduleDirectory.addModule(projectDir);
+            if (!module.getModuleInfoPaths().get().isEmpty()) {
+                // only auto-include if there is at least one module-info.java
+                includeModule(module, new File(modulesDirectory, projectDir));
             }
         }
     }
