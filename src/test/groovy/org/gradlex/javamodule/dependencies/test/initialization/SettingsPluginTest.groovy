@@ -110,7 +110,6 @@ class SettingsPluginTest extends Specification {
             }
         '''
 
-
         def runner = runner(':app:compileJava')
         when:
         def result = runner.build()
@@ -141,7 +140,6 @@ class SettingsPluginTest extends Specification {
             }
         '''
 
-
         def runner = runner(':app:compileJava')
         when:
         def result = runner.build()
@@ -155,9 +153,8 @@ class SettingsPluginTest extends Specification {
         result = runner.build()
 
         then:
-        result.getOutput().contains("Calculating task graph as configuration cache cannot be reused because a build logic input of type 'ValueSourceDirectoryListing' has changed.")
+        result.getOutput().contains("Calculating task graph as configuration cache cannot be reused because a build logic input of type 'ValueModuleDirectoryListing' has changed.")
     }
-
 
     def "configurationCacheHitIrrelevantChange"() {
         given:

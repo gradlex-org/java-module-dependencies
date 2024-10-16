@@ -29,12 +29,12 @@ import org.gradle.api.plugins.JavaPlatformExtension;
 import org.gradle.api.plugins.JavaPlatformPlugin;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
-import org.gradle.api.provider.ValueSourceSpec;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesPlugin;
 import org.gradlex.javamodule.dependencies.JavaModuleVersionsPlugin;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
+import org.gradlex.javamodule.dependencies.internal.utils.ValueModuleDirectoryListing;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -91,18 +91,14 @@ public abstract class JavaModulesExtension {
         Directory moduleDirectory = getObjects().newInstance(Directory.class, modulesDirectory);
         action.execute(moduleDirectory);
 
-
         for (Module module : moduleDirectory.customizedModules.values()) {
             includeModule(module, new File(modulesDirectory, module.getDirectory().get()));
         }
-        Provider<List<String>> listProvider = getProviders().of(ValueSourceDirectoryListing.class, new Action<ValueSourceSpec<ValueSourceDirectoryListing.DirectoryListingParameter>>() {
-            @Override
-            public void execute(ValueSourceSpec<ValueSourceDirectoryListing.DirectoryListingParameter> spec) {
-                spec.getParameters().getRegexExclusions().set(moduleDirectory.getExclusions());
-                spec.getParameters().getExclusions().set(moduleDirectory.customizedModules.keySet());
-                spec.getParameters().getDir().set(modulesDirectory);
-                spec.getParameters().getRequiresBuildFile().set(moduleDirectory.getRequiresBuildFile());
-            }
+        Provider<List<String>> listProvider = getProviders().of(ValueModuleDirectoryListing.class, spec -> {
+            spec.getParameters().getExclusions().set(moduleDirectory.getExclusions());
+            spec.getParameters().getExplicitlyConfiguredFolders().set(moduleDirectory.customizedModules.keySet());
+            spec.getParameters().getDir().set(modulesDirectory);
+            spec.getParameters().getRequiresBuildFile().set(moduleDirectory.getRequiresBuildFile());
         });
 
         for (String projectDir : listProvider.get()) {
