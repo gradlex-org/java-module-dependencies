@@ -29,11 +29,6 @@ import java.util.stream.Stream;
 public abstract class Module {
 
     /**
-     * The directory, relative to the build root directory, in which the Module is located.
-     */
-    public abstract Property<String> getDirectory();
-
-    /**
      * The 'artifact' name of the Module. This corresponds to the Gradle subproject name. If the Module is published
      * to a Maven repository, this is the 'artifact' in the 'group:artifact' identifier to address the published Jar.
      */
@@ -58,14 +53,17 @@ public abstract class Module {
      */
     public abstract ListProperty<String> getPlugins();
 
+    File directory;
+
     @Inject
-    public Module(File root) {
-        getArtifact().convention(getDirectory().map(f -> Paths.get(f).getFileName().toString()));
-        getModuleInfoPaths().convention(getDirectory().map(projectDir -> listChildren(root, projectDir + "/src")
+    public Module(File directory) {
+        this.directory = directory;
+        getArtifact().convention(directory.getName());
+        getModuleInfoPaths().convention(listSrcChildren()
                 .map(srcDir -> new File(srcDir, "java/module-info.java"))
                 .filter(File::exists)
                 .map(moduleInfo -> "src/" + moduleInfo.getParentFile().getParentFile().getName() + "/java")
-                .collect(Collectors.toList())));
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -76,8 +74,8 @@ public abstract class Module {
         getPlugins().add(id);
     }
 
-    private Stream<File> listChildren(File root, String projectDir) {
-        File[] children = new File(root, projectDir).listFiles();
+    private Stream<File> listSrcChildren() {
+        File[] children = new File(directory, "src").listFiles();
         return children == null ? Stream.empty() : Arrays.stream(children);
     }
 }

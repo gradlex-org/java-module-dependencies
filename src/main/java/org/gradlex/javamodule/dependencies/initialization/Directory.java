@@ -20,7 +20,6 @@ import org.gradle.api.Action;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -80,8 +79,7 @@ public abstract class Directory {
     }
 
     Module addModule(String subDirectory) {
-        Module module = getObjects().newInstance(Module.class, root);
-        module.getDirectory().convention(subDirectory);
+        Module module = getObjects().newInstance(Module.class, new File(root, subDirectory));
         module.getGroup().convention(getGroup());
         module.getPlugins().addAll(getPlugins());
         return module;
