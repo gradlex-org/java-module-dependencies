@@ -68,6 +68,7 @@ import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUti
 public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAware> {
 
     private static final String EXTRA_JAVA_MODULE_INFO_PLUGIN_ID = "org.gradlex.extra-java-module-info";
+    private static final String REGISTER_HELP_TASKS_PROPERTY = "org.gradlex.java-module-dependencies.register-help-tasks";
 
     @Override
     public void apply(ExtensionAware projectOrSettings) {
@@ -92,6 +93,10 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
     }
 
     private void setupForJavaProject(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
+        boolean registerHelpTasks = Boolean.parseBoolean(project.getProviders()
+                .gradleProperty(REGISTER_HELP_TASKS_PROPERTY)
+                .getOrElse("true"));
+
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         sourceSets.all(sourceSet -> {
             process(REQUIRES, sourceSet.getImplementationConfigurationName(), sourceSet, project, javaModuleDependencies);
@@ -103,21 +108,22 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
             javaModuleDependencies.doAddRequiresRuntimeSupport(sourceSet, sourceSet);
         });
 
-        TaskProvider<Task> checkAllModuleInfo = project.getTasks().register("checkAllModuleInfo", t -> {
-            t.setGroup(VERIFICATION_GROUP);
-            t.setDescription("Check scope and order of directives in 'module-info.java' files");
-        });
-
         setupDirectivesDSL(project, javaModuleDependencies);
 
-        setupOrderingCheckTasks(project, checkAllModuleInfo, javaModuleDependencies);
-        setupModuleDependenciesTask(project);
-        setupReportTasks(project, javaModuleDependencies);
-        setupMigrationTasks(project, javaModuleDependencies);
+        TaskProvider<Task> checkAllModuleInfo = registerHelpTasks ? project.getTasks().register("checkAllModuleInfo", t -> {
+            t.setGroup(VERIFICATION_GROUP);
+            t.setDescription("Check scope and order of directives in 'module-info.java' files");
+        }) : null;
 
-        project.getPlugins().withId("com.autonomousapps.dependency-analysis", analysisPlugin -> {
-            DependencyAnalysisBridge.registerDependencyAnalysisPostProcessingTask(project, checkAllModuleInfo);
-        });
+        if (registerHelpTasks) {
+            setupOrderingCheckTasks(project, checkAllModuleInfo, javaModuleDependencies);
+            setupModuleDependenciesTask(project);
+            setupReportTasks(project, javaModuleDependencies);
+            setupMigrationTasks(project, javaModuleDependencies);
+        }
+
+        project.getPlugins().withId("com.autonomousapps.dependency-analysis", analysisPlugin ->
+                DependencyAnalysisBridge.registerDependencyAnalysisPostProcessingTask(project, checkAllModuleInfo));
     }
 
     private void setupExtraJavaModulePluginBridge(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
@@ -143,17 +149,15 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
     private void setupModuleDependenciesTask(Project project) {
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         TaskProvider<ModuleDependencyReport> moduleDependencies = project.getTasks().register("moduleDependencies", ModuleDependencyReport.class, t -> t.setGroup(HELP_GROUP));
-        sourceSets.all(sourceSet -> {
-            moduleDependencies.configure(t -> {
-                HashSet<Configuration> joined = new HashSet<>();
-                if (t.getConfigurations() != null) {
-                    joined.addAll(t.getConfigurations());
-                }
-                joined.add(project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName()));
-                joined.add(project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName()));
-                t.setConfigurations(joined);
-            });
-        });
+        sourceSets.all(sourceSet -> moduleDependencies.configure(t -> {
+            HashSet<Configuration> joined = new HashSet<>();
+            if (t.getConfigurations() != null) {
+                joined.addAll(t.getConfigurations());
+            }
+            joined.add(project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName()));
+            joined.add(project.getConfigurations().getByName(sourceSet.getRuntimeClasspathConfigurationName()));
+            t.setConfigurations(joined);
+        }));
     }
 
     private void setupReportTasks(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {

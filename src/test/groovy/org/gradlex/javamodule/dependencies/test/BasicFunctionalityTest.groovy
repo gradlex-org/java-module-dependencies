@@ -6,7 +6,7 @@ import spock.lang.Specification
 class BasicFunctionalityTest extends Specification {
 
     @Delegate
-    GradleBuild build = new GradleBuild()
+    GradleBuild build = new GradleBuild(true)
 
     def "can configure all tasks in a build without error"() {
         given:
