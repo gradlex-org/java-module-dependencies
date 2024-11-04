@@ -81,11 +81,11 @@ public abstract class ModuleInfoCache {
      * @param projectRoot the project that should hold a Java module
      * @return parsed module-info.java for the given project assuming a standard Java project layout
      */
-    public ModuleInfo put(File projectRoot, String moduleInfoPath, String artifact, Provider<String> group, ProviderFactory providers) {
+    public ModuleInfo put(File projectRoot, String moduleInfoPath, String projectPath, String artifact, Provider<String> group, ProviderFactory providers) {
         File folder = new File(projectRoot, moduleInfoPath);
         if (maybePutModuleInfo(folder, providers)) {
             ModuleInfo thisModuleInfo = moduleInfo.get(folder);
-            moduleNameToProjectPath.put(thisModuleInfo.getModuleName(), ":" + artifact);
+            moduleNameToProjectPath.put(thisModuleInfo.getModuleName(), projectPath);
             Path parentDirectory = Paths.get(moduleInfoPath).getParent();
             String capabilitySuffix = parentDirectory == null ? null : sourceSetToCapabilitySuffix(parentDirectory.getFileName().toString());
             if (capabilitySuffix != null) {

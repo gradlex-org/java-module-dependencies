@@ -129,6 +129,19 @@ javaModules { // use instead of 'include(...)'
 }
 ```
 
+If you need more control over the properties of a Gradle subproject, in particular to define a nested project path,
+you can still use Gradle's `include(...)` and then register the subproject with this plugin.
+
+```
+include(":project:with:custom:path")
+javaModules { 
+  module(project(":project:with:custom:path")) {
+    group = "org.example"  // define group early so that all subprojects know all groups
+    plugin("java-library") // apply plugin to the Module's subproject to omit 'build.gradle'
+  }
+}
+```
+
 ## Project structure definition when using this plugin as Project Plugin
 
 In this setup, subprojects with Java Modules are configured as in any traditional Gradle build: by using the

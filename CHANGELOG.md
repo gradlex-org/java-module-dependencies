@@ -1,6 +1,7 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
 ## Version 1.8
+* [#136](https://github.com/gradlex-org/java-module-dependencies/pull/136) Support hierarchical project paths in Settings DSL
 * [#141](https://github.com/gradlex-org/java-module-dependencies/pull/141) Introduce `org.gradlex.java-module-dependencies.register-help-tasks` property
 * [#127](https://github.com/gradlex-org/java-module-dependencies/issues/127) Less configuration cache misses when modifying `module-info.java` (Thanks [TheGoesen](https://github.com/TheGoesen))
 * [#128](https://github.com/gradlex-org/java-module-dependencies/issues/128) Less configuration cache misses when using Settings plugin (Thanks [TheGoesen](https://github.com/TheGoesen))
