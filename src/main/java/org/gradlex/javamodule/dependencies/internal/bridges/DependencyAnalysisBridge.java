@@ -26,11 +26,12 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesScopeCheck;
 
+import javax.annotation.Nullable;
 import java.io.File;
 
 public class DependencyAnalysisBridge {
 
-    public static void registerDependencyAnalysisPostProcessingTask(Project project, TaskProvider<Task> checkAllModuleInfo) {
+    public static void registerDependencyAnalysisPostProcessingTask(Project project, @Nullable TaskProvider<Task> checkAllModuleInfo) {
         TaskContainer tasks = project.getTasks();
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
 
@@ -54,7 +55,9 @@ public class DependencyAnalysisBridge {
         project.getExtensions().getByType(AbstractExtension.class)
                 .registerPostProcessingTask(checkModuleDirectivesScope);
 
-        checkAllModuleInfo.configure(t -> t.dependsOn(checkModuleDirectivesScope));
+        if (checkAllModuleInfo != null) {
+            checkAllModuleInfo.configure(t -> t.dependsOn(checkModuleDirectivesScope));
+        }
         tasks.withType(ModuleDirectivesOrderingCheck.class).configureEach(t -> t.mustRunAfter(checkModuleDirectivesScope));
     }
 }

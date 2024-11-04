@@ -8,6 +8,7 @@ import java.nio.file.Files
 
 class GradleBuild {
 
+    final boolean withHelpTasks
     final File projectDir
     final File settingsFile
     final File appBuildFile
@@ -17,7 +18,8 @@ class GradleBuild {
 
     final String gradleVersionUnderTest = System.getProperty("gradleVersionUnderTest")
 
-    GradleBuild(File projectDir = Files.createTempDirectory("gradle-build").toFile()) {
+    GradleBuild(boolean withHelpTasks = false, File projectDir = Files.createTempDirectory("gradle-build").toFile()) {
+        this.withHelpTasks = withHelpTasks
         this.projectDir = projectDir
         this.settingsFile = file("settings.gradle.kts")
         this.appBuildFile = file("app/build.gradle.kts")
@@ -98,7 +100,8 @@ class GradleBuild {
                 .forwardOutput()
                 .withPluginClasspath()
                 .withProjectDir(projectDir)
-                .withArguments(Arrays.asList(args) + latestFeaturesArgs + '-s' + '--warning-mode=all')
+                .withArguments(Arrays.asList(args) + latestFeaturesArgs + '-s' + '--warning-mode=all'
+                        + "-Porg.gradlex.java-module-dependencies.register-help-tasks=$withHelpTasks".toString())
                 .withDebug(ManagementFactory.getRuntimeMXBean().getInputArguments().toString().contains("-agentlib:jdwp")).with {
             gradleVersionUnderTest ? it.withGradleVersion(gradleVersionUnderTest) : it
         }

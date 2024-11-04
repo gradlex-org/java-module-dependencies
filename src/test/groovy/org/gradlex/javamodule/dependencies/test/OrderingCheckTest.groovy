@@ -6,7 +6,7 @@ import spock.lang.Specification
 class OrderingCheckTest extends Specification {
 
     @Delegate
-    GradleBuild build = new GradleBuild()
+    GradleBuild build = new GradleBuild(true)
 
     def "order is expected to be alphabetic for each scope individually"() {
         when:
