@@ -16,13 +16,16 @@ detachedResolver.repositories.ivy {
         setM2compatible(true)
     }
 }
-val modulePropertiesConfiguration = detachedResolver.configurations.create("moduleProperties")
-val dep = detachedResolver.dependencies.add(modulePropertiesConfiguration.name, "com.github.sormuras.modules:modules:1")
+val modulePropertiesScope = detachedResolver.configurations.dependencyScope("moduleProperties")
+val modulePropertiesPath = detachedResolver.configurations.resolvable("modulePropertiesPath") {
+    extendsFrom(modulePropertiesScope.get())
+}
+val dep = detachedResolver.dependencies.add(modulePropertiesScope.name, "com.github.sormuras.modules:modules:1")
 (dep as ExternalModuleDependency).isChanging = true
 
 val updateUniqueModulesProperties = tasks.register<UniqueModulesPropertiesUpdate>("updateUniqueModulesProperties") {
     skipUpdate.set(providers.environmentVariable("CI").getOrElse("false").toBoolean())
-    modulesProperties.from(modulePropertiesConfiguration)
+    modulesProperties.from(modulePropertiesPath)
     uniqueModulesProperties.set(layout.projectDirectory.file(
         "src/main/resources/org/gradlex/javamodule/dependencies/unique_modules.properties")
     )

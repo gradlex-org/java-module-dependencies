@@ -6,8 +6,10 @@ plugins {
 }
 
 dependencyResolutionManagement {
-    repositories.mavenCentral()
-    repositories.gradlePluginPortal()
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
 }
 
 rootProject.name = "java-module-dependencies"
