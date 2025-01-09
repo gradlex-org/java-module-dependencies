@@ -134,7 +134,13 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
         ResolvedArtifactResult moduleJar = getModuleArtifacts().get().stream().flatMap(c -> c.getArtifacts().stream()).filter(a ->
                 coordinatesEquals(coordinates, capability, a)).findFirst().orElse(null);
         try {
-            String moduleName = moduleJar == null ? coordinates : readModuleNameFromJarFile(moduleJar.getFile());
+            String moduleName = null;
+            if (moduleJar != null) {
+                moduleName = readModuleNameFromJarFile(moduleJar.getFile());
+            }
+            if (moduleName == null) {
+                moduleName = coordinates;
+            }
             if (inBuildFile) {
                 return directive(conf, SCOPES_TO_DIRECTIVES_BUILD_FILE_DSL) + "(\"" + moduleName + "\")";
             } else {
