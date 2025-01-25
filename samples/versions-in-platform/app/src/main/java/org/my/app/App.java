@@ -11,9 +11,7 @@ public class App {
 
     public static boolean doWork() {
         ObjectMapper om = new ObjectMapper();
-        if (!om.canSerialize(LoggerFactoryBinder.class)) {
-            throw new RuntimeException("Boom!");
-        }
+        LoggerFactoryBinder lfb;
         System.out.println(App.class.getModule().getName());
 
         try {
