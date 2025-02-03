@@ -28,7 +28,7 @@ configurations.compileClasspath {
 dependencies {
     implementation("org.ow2.asm:asm:9.7.1")
 
-    compileOnly("org.gradlex:extra-java-module-info:1.9")
+    compileOnly("org.gradlex:extra-java-module-info:1.10")
     compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:2.7.0")
 
     testImplementation("org.spockframework:spock-core:2.1-groovy-3.0")
