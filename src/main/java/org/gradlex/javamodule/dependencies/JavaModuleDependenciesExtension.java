@@ -71,7 +71,6 @@ import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Dire
  * - Define dependencies and dependency constraints by Module Name
  *   using {@link #ga(String)}, {@link #gav(String, String)} or {@link #gav(String)}
  */
-@SuppressWarnings("unused")
 public abstract class JavaModuleDependenciesExtension {
     static final String JAVA_MODULE_DEPENDENCIES = "javaModuleDependencies";
     private static final String INTERNAL = "internal";
@@ -214,13 +213,13 @@ public abstract class JavaModuleDependenciesExtension {
 
     public Provider<Dependency> create(String moduleName, SourceSet sourceSetWithModuleInfo) {
         if (getModuleInfoCache().get().isInitializedInSettings()) {
-            return createPrecise(moduleName, sourceSetWithModuleInfo);
+            return createPrecise(moduleName);
         } else {
             return createWithGuessing(moduleName, sourceSetWithModuleInfo);
         }
     }
 
-    private Provider<Dependency> createPrecise(String moduleName, SourceSet sourceSetWithModuleInfo) {
+    private Provider<Dependency> createPrecise(String moduleName) {
         return getProviders().provider(() -> {
             String projectPath = getModuleInfoCache().get().getProjectPath(moduleName);
             String capability = getModuleInfoCache().get().getCapability(moduleName);
@@ -314,6 +313,7 @@ public abstract class JavaModuleDependenciesExtension {
      * @param version The (required) version
      * @return Dependency notation
      */
+    @SuppressWarnings("unused")
     public Provider<String> gav(String moduleName, String version) {
         return ga(moduleName).map(s -> s + ":" + version);
     }
@@ -326,6 +326,7 @@ public abstract class JavaModuleDependenciesExtension {
      * @param version The (required) version
      * @return Dependency notation
      */
+    @SuppressWarnings("unused")
     public Provider<String> gav(Provider<String> moduleName, Provider<String> version) {
         return ga(moduleName).map(s -> s + ":" + version.get());
     }
@@ -339,6 +340,7 @@ public abstract class JavaModuleDependenciesExtension {
      * @param moduleName The Module Name
      * @return Dependency notation
      */
+    @SuppressWarnings("unused")
     public Provider<Map<String, Object>> gav(String moduleName) {
         return ga(moduleName).map(ga -> findGav(ga, moduleName));
     }
@@ -352,6 +354,7 @@ public abstract class JavaModuleDependenciesExtension {
      * @param moduleName The Module Name
      * @return Dependency notation
      */
+    @SuppressWarnings("unused")
     public Provider<Map<String, Object>> gav(Provider<String> moduleName) {
         return ga(moduleName).map(ga -> findGav(ga, moduleName.get()));
     }
@@ -506,6 +509,7 @@ public abstract class JavaModuleDependenciesExtension {
      * @param sourceSetForModuleInfo The source set that contains the module-info.java (e.g. 'main')
      * @param sourceSetForClasspath  The source set that contains the code that is compiled (e.g. 'test')
      */
+    @SuppressWarnings("unused")
     public void addRequiresRuntimeSupport(SourceSet sourceSetForModuleInfo, SourceSet sourceSetForClasspath) {
         doAddRequiresRuntimeSupport(sourceSetForModuleInfo, sourceSetForClasspath);
     }
@@ -545,13 +549,6 @@ public abstract class JavaModuleDependenciesExtension {
         return getProviders().provider(() -> {
             throw new RuntimeException("Unknown Module: " + moduleName.get());
         });
-    }
-
-    private String moduleDebugInfo(String moduleName, File moduleInfoFile, File rootDir) {
-        return moduleName
-                + " (required in "
-                + moduleInfoFile.getAbsolutePath().substring(rootDir.getAbsolutePath().length() + 1)
-                + ")";
     }
 
     @Inject
