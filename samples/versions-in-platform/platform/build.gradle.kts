@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     api(platform("com.fasterxml.jackson:jackson-bom:2.18.2"))
-    api(platform("org.junit:junit-bom:5.11.4"))
+    api(platform("org.junit:junit-bom:5.12.0"))
 }
 
 dependencies.constraints {
