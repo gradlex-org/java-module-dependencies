@@ -29,7 +29,7 @@ dependencies {
     implementation("org.ow2.asm:asm:9.7.1")
 
     compileOnly("org.gradlex:extra-java-module-info:1.11")
-    compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:2.8.2")
+    compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:2.10.1")
 
     testImplementation("org.spockframework:spock-core:2.1-groovy-3.0")
     testImplementation("org.gradle.exemplar:samples-check:1.0.2")
