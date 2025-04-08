@@ -1,5 +1,9 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.8.1
+* Update module name mappings
+* Update 'org.ow2.asm:asm' to 9.8
+
 ## Version 1.8
 * [#136](https://github.com/gradlex-org/java-module-dependencies/pull/136) Support hierarchical project paths in Settings DSL
 * [#141](https://github.com/gradlex-org/java-module-dependencies/pull/141) Introduce `org.gradlex.java-module-dependencies.register-help-tasks` property
