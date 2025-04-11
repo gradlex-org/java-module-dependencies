@@ -17,7 +17,6 @@
 package org.gradlex.javamodule.dependencies.internal.utils;
 
 import org.gradle.api.logging.Logger;
-import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
@@ -39,9 +38,6 @@ public abstract class ModuleInfoCache {
     private final Map<File, ModuleInfo> moduleInfo = new HashMap<>();
     private final Map<String, String> moduleNameToProjectPath = new HashMap<>();
     private final Map<String, String> moduleNameToCapability = new HashMap<>();
-
-    @Inject
-    public abstract ObjectFactory getObjects();
 
     @Inject
     public ModuleInfoCache(boolean initializedInSettings) {
