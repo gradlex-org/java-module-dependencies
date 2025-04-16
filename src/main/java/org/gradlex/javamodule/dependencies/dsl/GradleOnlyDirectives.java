@@ -32,6 +32,8 @@ public abstract class GradleOnlyDirectives {
 
     protected final List<String> compileClasspathModules = new ArrayList<>();
     protected final List<String> runtimeClasspathModules = new ArrayList<>();
+    protected final List<String> exportsToModules = new ArrayList<>();
+    protected final List<String> opensToModules = new ArrayList<>();
 
     @Inject
     protected abstract DependencyHandler getDependencies();

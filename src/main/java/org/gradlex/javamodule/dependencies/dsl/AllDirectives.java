@@ -35,4 +35,12 @@ abstract public class AllDirectives extends GradleOnlyDirectives {
         compileClasspathModules.add(moduleName);
         add(sourceSet.getCompileOnlyConfigurationName(), moduleName);
     }
+
+    public void exportsTo(String moduleName) {
+        exportsToModules.add(moduleName);
+    }
+
+    public void opensTo(String moduleName) {
+        opensToModules.add(moduleName);
+    }
 }

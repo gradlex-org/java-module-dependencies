@@ -22,6 +22,10 @@ import org.gradlex.javamodule.dependencies.dsl.AllDirectives;
 
 import java.util.List;
 
+/**
+ * Note: These methods are used by the 'java-module-testing' plugin to access information
+ * defined in the Module Info DSL.
+ */
 abstract public class AllDirectivesInternal extends AllDirectives {
 
     public AllDirectivesInternal(SourceSet sourceSet, SourceSet mainSourceSet, JavaModuleDependenciesExtension javaModuleDependencies) {
@@ -34,5 +38,13 @@ abstract public class AllDirectivesInternal extends AllDirectives {
 
     public List<String> getRuntimeClasspathModules() {
         return runtimeClasspathModules;
+    }
+
+    public List<String> getExportsToModules() {
+        return exportsToModules;
+    }
+
+    public List<String> getOpensToModules() {
+        return opensToModules;
     }
 }
