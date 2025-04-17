@@ -1,5 +1,8 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.9
+* [#188](https://github.com/gradlex-org/java-module-dependencies/pull/188) Add `exportsTo` and `opensTo` statements to Module Info DSL
+
 ## Version 1.8.1
 * Update module name mappings
 * Update 'org.ow2.asm:asm' to 9.8
