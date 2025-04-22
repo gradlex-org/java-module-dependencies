@@ -32,7 +32,7 @@ dependencies {
     compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:2.16.0")
 
     testImplementation("org.spockframework:spock-core:2.1-groovy-3.0")
-    testImplementation("org.gradle.exemplar:samples-check:1.0.2")
+    testImplementation("org.gradle.exemplar:samples-check:1.0.3")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
 }
 
