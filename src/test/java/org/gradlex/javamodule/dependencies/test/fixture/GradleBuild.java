@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.nio.file.Files.writeString;
 import static java.util.function.Function.identity;
 
 public class GradleBuild {
