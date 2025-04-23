@@ -1,13 +1,16 @@
 plugins {
     id("gradlexbuild.module-mappings")
-    id("groovy")
     id("org.gradlex.internal.plugin-publish-conventions") version "0.6"
 }
 
 group = "org.gradlex"
 version = "1.9"
 
-tasks.withType<JavaCompile>().configureEach {
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+}
+
+tasks.compileJava {
     options.release = 8
 }
 
@@ -31,7 +34,7 @@ dependencies {
     compileOnly("org.gradlex:extra-java-module-info:1.12")
     compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:2.16.0")
 
-    testImplementation("org.spockframework:spock-core:2.1-groovy-3.0")
+    testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("org.gradle.exemplar:samples-check:1.0.3")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
 }

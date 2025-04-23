@@ -1,63 +1,72 @@
-package org.gradlex.javamodule.dependencies.test
+/*
+ * Copyright the GradleX team.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import org.gradle.testkit.runner.TaskOutcome
-import org.gradlex.javamodule.dependencies.test.fixture.GradleBuild
-import spock.lang.Specification
+package org.gradlex.javamodule.dependencies.test.runtime;
 
-class RequiresRuntimeTest extends Specification {
+import org.gradlex.javamodule.dependencies.test.fixture.GradleBuild;
+import org.junit.jupiter.api.Test;
 
-    @Delegate
-    GradleBuild build = new GradleBuild()
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.gradle.testkit.runner.TaskOutcome.SUCCESS;
 
-    def "can define runtime only dependencies in module-info"() {
-        given:
-        appBuildFile << '''
+class RequiresRuntimeTest {
+
+    GradleBuild build = new GradleBuild();
+
+    @Test
+    void can_define_runtime_only_dependencies_in_moduleinfo() {
+        build.appBuildFile.appendText("""
             dependencies.constraints {
                 javaModuleDependencies {
                     implementation(gav("org.slf4j", "2.0.3"))
                     implementation(gav("org.slf4j.simple", "2.0.3"))
                 }
-            }
-        '''
-        appModuleInfoFile << '''
+            }""");
+        build.appModuleInfoFile.appendText("""
             module org.gradlex.test.app {
                 requires org.slf4j;
                 requires /*runtime*/ org.slf4j.simple;
-            }
-        '''
+            }""");
 
-        when:
-        def rt = printRuntimeJars()
+        var rt = build.printRuntimeJars();
 
-        then:
-        rt.output.contains('[slf4j-simple-2.0.3.jar, slf4j-api-2.0.3.jar]')
+        assertThat(rt.getOutput()).contains("[slf4j-simple-2.0.3.jar, slf4j-api-2.0.3.jar]");
 
-        when:
-        def cp = printCompileJars()
+        var cp = build.printCompileJars();
 
-        then:
-        cp.output.contains('[org.slf4j.simple, slf4j-api-2.0.3.jar]') // 'org.slf4j.simple' is the folder nam of synthetic 'module-info.class'
+        assertThat(cp.getOutput()).contains("[org.slf4j.simple, slf4j-api-2.0.3.jar]"); // 'org.slf4j.simple' is the folder nam of synthetic 'module-info.class'
     }
 
-    def "compiles with runtime only dependencies in module-info"() {
-        given:
-        appBuildFile << '''
+    @Test
+    void compiles_with_runtime_only_dependencies_in_moduleinfo() {
+        build.appBuildFile.appendText("""
             dependencies.constraints {
                 javaModuleDependencies {
                     implementation(gav("org.slf4j", "2.0.3"))
                     implementation(gav("org.slf4j.simple", "2.0.3"))
                 }
-            }
-        '''
-        appModuleInfoFile << '''
+            }""");
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires org.slf4j;
                 requires /*runtime*/ org.slf4j.simple;
-                
+            
                 exports org.gradlex.test.app;
-            }
-        '''
-        file("app/src/main/java/org/gradlex/test/app/Main.java") << """
+            }""");
+        build.file("app/src/main/java/org/gradlex/test/app/Main.java").writeText("""
             package org.gradlex.test.app;
             
             import org.slf4j.Logger;
@@ -65,37 +74,33 @@ class RequiresRuntimeTest extends Specification {
             
             public class Main {
                 private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
-                
+            
                 public static void main(String[] args) {
                     LOGGER.info("Running application...");
                 }
-            }
-        """
+            }""");
 
-        when:
-        def result = run()
+        var result = build.run();
 
-        then:
-        result.output.contains("[main] INFO org.gradlex.test.app.Main - Running application...")
+        assertThat(result.getOutput()).contains("[main] INFO org.gradlex.test.app.Main - Running application...");
     }
 
-    def "runtime only dependencies are not visible at compile time"() {
-        given:
-        appBuildFile << '''
+    @Test
+    void runtime_only_dependencies_are_not_visible_at_compile_time() {
+        build.appBuildFile.appendText("""
             dependencies.constraints {
                 javaModuleDependencies {
                     implementation(gav("org.slf4j", "2.0.3"))
                 }
             }
-        '''
-        appModuleInfoFile << '''
+        """);
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires /*runtime*/ org.slf4j;
-                
+            
                 exports org.gradlex.test.app;
-            }
-        '''
-        file("app/src/main/java/org/gradlex/test/app/Main.java") << """
+            }""");
+        build.file("app/src/main/java/org/gradlex/test/app/Main.java").writeText("""
             package org.gradlex.test.app;
             
             import org.slf4j.Logger;
@@ -103,60 +108,53 @@ class RequiresRuntimeTest extends Specification {
             
             public class Main {
                 private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
-                
+            
                 public static void main(String[] args) {
                     LOGGER.info("Running application...");
                 }
-            }
-        """
+            }""");
 
-        when:
-        def result = fail()
+        var result = build.fail();
 
-        then:
-        result.output.contains("error: package org.slf4j does not exist")
+        assertThat(result.getOutput()).contains("error: package org.slf4j does not exist");
     }
 
-    def "generates javadoc with runtime only dependencies in module-info"() {
-        given:
-        appBuildFile << '''
+    @Test
+    void generates_javadoc_with_runtime_only_dependencies_in_moduleinfo() {
+        build.appBuildFile.appendText("""
             java.withJavadocJar()
             dependencies.constraints {
                 javaModuleDependencies {
                     implementation(gav("org.slf4j", "2.0.3"))
                     implementation(gav("org.slf4j.simple", "2.0.3"))
                 }
-            }
-        '''
-        appModuleInfoFile << '''
+            }""");
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires org.slf4j;
                 requires /*runtime*/ org.slf4j.simple;
-                
+            
                 exports org.gradlex.test.app;
-            }
-        '''
-        file("app/src/main/java/org/gradlex/test/app/Main.java") << """
+            }""");
+        build.file("app/src/main/java/org/gradlex/test/app/Main.java").writeText("""
             package org.gradlex.test.app;
             
-            public class Main {}
-        """
+            public class Main {}""");
 
-        when:
-        def result = build()
+        var result = build.build().task(":app:javadoc");
 
-        then:
-        result.task(':app:javadoc').outcome == TaskOutcome.SUCCESS
+        assertThat(result).isNotNull();
+        assertThat(result.getOutcome()).isEqualTo(SUCCESS);
     }
 
-    def "can configure additional compile tasks to work with runtime only dependencies"() {
+    @Test
+    void can_configure_additional_compile_tasks_to_work_with_runtime_only_dependencies() {
         // This is typically needed for whitebox testing
-        given:
-        appBuildFile << '''
+        build.appBuildFile.appendText("""
             javaModuleDependencies.addRequiresRuntimeSupport(sourceSets.main.get(), sourceSets.test.get())
             tasks.compileTestJava {
                 classpath += sourceSets.main.get().output
-                
+            
                 val srcDir = sourceSets.test.get().java.sourceDirectories.first()
                 options.compilerArgumentProviders.add {
                     listOf(
@@ -173,24 +171,20 @@ class RequiresRuntimeTest extends Specification {
                     implementation(gav("org.slf4j", "2.0.3"))
                     implementation(gav("org.slf4j.simple", "2.0.3"))
                 }
-            }
-        '''
-        appModuleInfoFile << '''
+            }""");
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires org.slf4j;
                 requires /*runtime*/ org.slf4j.simple;
-            }
-        '''
-        file("app/src/test/java/org/gradlex/test/app/MainTest.java") << """
+            }""");
+        build.file("app/src/test/java/org/gradlex/test/app/MainTest.java").writeText("""
             package org.gradlex.test.app;
             
-            public class MainTest {}
-        """
+            public class MainTest {}""");
 
-        when:
-        def result = build()
+        var result = build.build().task(":app:compileTestJava");
 
-        then:
-        result.task(":app:compileTestJava").outcome == TaskOutcome.SUCCESS
+        assertThat(result).isNotNull();
+        assertThat(result.getOutcome()).isEqualTo(SUCCESS);
     }
 }
