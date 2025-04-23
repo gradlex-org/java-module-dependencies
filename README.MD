@@ -45,7 +45,7 @@ If you build Java Modules with Gradle, you should consider using these plugins o
 Working (example) projects to inspect:
 - [java-module-system](https://github.com/jjohannes/java-module-system) contains a compact sample and further documentation
 - [gradle-project-setup-howto](https://github.com/jjohannes/gradle-project-setup-howto/tree/java_module_system) is a full-fledged Java Module System project setup
-- [hedera-services](https://github.com/hashgraph/hedera-services) is an open-source Java project using this plugin large scale
+- [hiero-consensus-node](https://github.com/hiero-ledger/hiero-consensus-node) is an open-source Java project using this plugin large scale
 
 For general information about how to structure Gradle builds and apply community plugins like this one
 you can check out my [Understanding Gradle video series](https://www.youtube.com/playlist?list=PLWQK2ZdV4Yl2k2OmC_gsjDpdIBTN0qqkE). 
@@ -182,7 +182,7 @@ You may define additional mappings from _Module Name_ to _group:name (GA) coordi
 
 The plugin already knows about Modules available on Maven Central. The information is stored in:
 
-- [modules.properties](src/main/resources/org/gradlex/javamodule/dependencies/modules.properties) - [please open a PR](https://github.com/gradlex-org/extra-java-module-info/pulls) if you miss an entry
+- [modules.properties](src/main/resources/org/gradlex/javamodule/dependencies/modules.properties) - [please open a PR](https://github.com/gradlex-org/java-module-dependencies/pulls) if you miss an entry
 - [unique_modules.properties](src/main/resources/org/gradlex/javamodule/dependencies/unique_modules.properties) - this information is extracted from [modules.properties](https://github.com/sormuras/modules/blob/main/com.github.sormuras.modules/com/github/sormuras/modules/modules.properties) by [@sormuras](https://github.com/sormuras)
 
 You define additional entries (or overwrite entries from the plugin) in a `gradle/modules.properties` file in your project:
