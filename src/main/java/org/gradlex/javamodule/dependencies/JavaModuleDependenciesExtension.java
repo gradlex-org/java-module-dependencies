@@ -212,6 +212,10 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     public Provider<Dependency> create(String moduleName, SourceSet sourceSetWithModuleInfo) {
+        if (JDKInfo.MODULES.contains(moduleName)) {
+            // The module is part of the JDK, no dependency required
+            return getProviders().provider(() -> null);
+        }
         if (getModuleInfoCache().get().isInitializedInSettings()) {
             return createPrecise(moduleName);
         } else {

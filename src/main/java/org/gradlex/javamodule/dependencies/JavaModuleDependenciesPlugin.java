@@ -277,11 +277,6 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
     }
 
     private void declareDependency(String moduleName, Project project, SourceSet sourceSet, Configuration configuration, JavaModuleDependenciesExtension javaModuleDependencies) {
-        if (JDKInfo.MODULES.contains(moduleName)) {
-            // The module is part of the JDK, no dependency required
-            return;
-        }
-
         project.getDependencies().addProvider(configuration.getName(), javaModuleDependencies.create(moduleName, sourceSet));
     }
 
