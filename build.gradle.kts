@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.gradlex"
-version = "1.9"
+version = "1.9.1"
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(17)
