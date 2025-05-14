@@ -53,7 +53,7 @@ you can check out my [Understanding Gradle video series](https://www.youtube.com
 ## Plugin dependency
 
 Add this to the build file of your convention plugin's build
-(e.g. `gradle/plugins/build.gradle(.kts)` or `buildSrc/build.gradle(.kts)`).
+(e.g. `build-logic/build.gradle(.kts)` or `buildSrc/build.gradle(.kts)`).
 
 ```
 dependencies {
