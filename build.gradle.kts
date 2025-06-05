@@ -69,7 +69,7 @@ tasks.test {
 
 testing.suites.named<JvmTestSuite>("test") {
     useJUnitJupiter()
-    listOf("7.4", "7.6.4", "8.0.2").forEach { gradleVersionUnderTest ->
+    listOf("7.4", "7.6.5", "8.0.2").forEach { gradleVersionUnderTest ->
         targets.register("test${gradleVersionUnderTest}") {
             testTask {
                 group = LifecycleBasePlugin.VERIFICATION_GROUP
