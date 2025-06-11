@@ -2,6 +2,7 @@
 
 ## Version 1.9.1
 * Never attempt to create dependency for JDK core module
+* Update and fix ([#199](https://github.com/gradlex-org/java-module-dependencies/pull/199)) module name mappings
 
 ## Version 1.9
 * [#188](https://github.com/gradlex-org/java-module-dependencies/pull/188) Add `exportsTo` and `opensTo` statements to Module Info DSL
