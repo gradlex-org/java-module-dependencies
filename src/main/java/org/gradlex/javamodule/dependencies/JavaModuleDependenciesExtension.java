@@ -132,10 +132,10 @@ public abstract class JavaModuleDependenciesExtension {
      */
     public abstract Property<Boolean> getAnalyseOnly();
 
-    public JavaModuleDependenciesExtension(VersionCatalogsExtension versionCatalogs) {
+    public JavaModuleDependenciesExtension(VersionCatalogsExtension versionCatalogs, File rootDir) {
         this.versionCatalogs = versionCatalogs;
         getModuleInfoCache().convention(getProviders().provider(() -> getObjects().newInstance(ModuleInfoCache.class, false)));
-        getModulesProperties().set(new File(getProject().getRootDir(), "gradle/modules.properties"));
+        getModulesProperties().set(new File(rootDir, "gradle/modules.properties"));
         getVersionCatalogName().convention("libs");
         getModuleNameCheck().convention(true);
         getAnalyseOnly().convention(false);

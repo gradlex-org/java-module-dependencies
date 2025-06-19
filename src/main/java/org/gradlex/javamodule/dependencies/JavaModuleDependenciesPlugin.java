@@ -85,7 +85,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
     private void applyProject(Project project) {
         VersionCatalogsExtension versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
         JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().create(
-                JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class, versionCatalogs);
+                JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class, versionCatalogs, project.getRootDir());
 
         setupExtraJavaModulePluginBridge(project, javaModuleDependencies);
 
