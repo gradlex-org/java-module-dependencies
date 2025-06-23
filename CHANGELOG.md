@@ -2,6 +2,7 @@
 
 ## Version 1.9.3
 * [#209](https://github.com/gradlex-org/java-module-dependencies/issues/209) Fix: configuration cache issue when building kotlin-dsl plugins
+* Update module name mappings
 
 ## Version 1.9.2
 * Update module name mappings
