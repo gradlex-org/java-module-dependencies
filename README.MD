@@ -26,6 +26,7 @@ There is a [CHANGELOG.md](CHANGELOG.md).
 
 > [!NOTE]
 > There is also a Maven Extension offering similar functionality for Apache Maven builds:
+> 
 > [java-module-dependencies-maven-extension](https://github.com/gradlex-org/java-module-dependencies-maven-extension)
 
 # Java Modules with Gradle
