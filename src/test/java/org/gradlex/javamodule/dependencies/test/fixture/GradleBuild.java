@@ -72,8 +72,10 @@ public class GradleBuild {
                 id("org.gradlex.java-module-versions")
                 id("application")
             }
-            javaModuleDependencies {
-                versionsFromPlatformAndConsistentResolution(":app", ":app")
+            dependencies {
+                implementation(platform(project(":app")) as ModuleDependency) {
+                    capabilities { requireCapability("${project.group}:app-platform") }
+                }
             }
             application {
                 mainModule.set("org.gradlex.test.app")
