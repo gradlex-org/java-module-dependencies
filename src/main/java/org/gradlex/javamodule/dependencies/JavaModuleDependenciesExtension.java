@@ -447,57 +447,6 @@ public abstract class JavaModuleDependenciesExtension {
         return mainRuntimeClasspath;
     }
 
-    /**
-     * @deprecated use the 'org.gradlex.jvm-dependency-conflict-resolution' plugin instead.
-     */
-    @Deprecated
-    public Configuration versionsFromPlatformAndConsistentResolution(String platformProject, String... versionsProvidingProjects) {
-        return versionsFromPlatformAndConsistentResolution(platformProject, Arrays.asList(versionsProvidingProjects));
-    }
-
-    /**
-     * @deprecated use the 'org.gradlex.jvm-dependency-conflict-resolution' plugin instead.
-     */
-    @Deprecated
-    public Configuration versionsFromPlatformAndConsistentResolution(String platformProject, Collection<String> versionsProvidingProjects) {
-        boolean platformInJavaProject = versionsProvidingProjects.contains(platformProject);
-
-        maybeCreateInternalConfiguration().withDependencies(d -> {
-            Dependency platformDependency = getDependencies().platform(createDependency(platformProject));
-            if (platformInJavaProject) {
-                if (platformProject.startsWith(":")) {
-                    String capability = ((ProjectDependency) platformDependency).getDependencyProject().getGroup() + platformProject + "-platform";
-                    ((ProjectDependency) platformDependency).capabilities(c -> c.requireCapability(capability));
-                } else if (platformDependency instanceof ModuleDependency) {
-                    String capability = platformProject + "-platform";
-                    ((ModuleDependency) platformDependency).capabilities(c -> c.requireCapability(capability));
-                }
-            }
-            d.add(platformDependency);
-        });
-
-        getSourceSets().configureEach(sourceSet -> {
-            ConfigurationContainer configurations = getConfigurations();
-            Configuration internal = configurations.getByName(INTERNAL);
-            configurations.getByName(sourceSet.getRuntimeClasspathConfigurationName()).extendsFrom(internal);
-            configurations.getByName(sourceSet.getCompileClasspathConfigurationName()).extendsFrom(internal);
-            configurations.getByName(sourceSet.getAnnotationProcessorConfigurationName()).extendsFrom(internal);
-        });
-
-        return versionsFromConsistentResolution(versionsProvidingProjects);
-    }
-
-    private Configuration maybeCreateInternalConfiguration() {
-        Configuration internal = getConfigurations().findByName(INTERNAL);
-        if (internal != null) {
-            return internal;
-        }
-        return getConfigurations().create(INTERNAL, i -> {
-            i.setCanBeResolved(false);
-            i.setCanBeConsumed(false);
-        });
-    }
-
     private Dependency createDependency(String project) {
         boolean isProjectInBuild = project.startsWith(":");
         return getDependencies().create(isProjectInBuild

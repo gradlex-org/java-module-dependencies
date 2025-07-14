@@ -39,16 +39,16 @@ public abstract class DependencyDeclarationsUtil {
         return project.provider(() -> configurations.getNames().contains(configuration)
                 ? configurations.getByName(configuration).getDependencies().stream()
                     .filter(DependencyDeclarationsUtil::isLibraryDependency)
-                    .map(DependencyDeclarationsUtil::toIdentifier).collect(Collectors.toList())
+                    .map(d -> toIdentifier(project, d)).collect(Collectors.toList())
                 : Collections.emptyList());
     }
 
-    private static String toIdentifier(Dependency dependency) {
+    private static String toIdentifier(Project project, Dependency dependency) {
         if (dependency instanceof ProjectDependency) {
             // assume Module Name of local Module
             ProjectDependency projectDependency = (ProjectDependency) dependency;
             if (projectDependency.getRequestedCapabilities().isEmpty()) {
-                return projectDependency.getDependencyProject().getGroup() + "." +  dependency.getName();
+                return project.getGroup() + "." +  dependency.getName();
             } else {
                 Capability capability = projectDependency.getRequestedCapabilities().get(0);
                 return capability.getGroup() + "." + capability.getName().replace("-", ".");
