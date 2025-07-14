@@ -31,6 +31,7 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
+import org.jspecify.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -139,7 +140,7 @@ public abstract class ModulePathAnalysis extends DefaultTask {
         p("");
     }
 
-    private void collect(Configuration configuration, Set<String> usedMappings, Set<String> nonModules, Set<String> missingMappings, Set<String> wrongMappings, String ownModuleNamesPrefix) throws IOException {
+    private void collect(Configuration configuration, Set<String> usedMappings, Set<String> nonModules, Set<String> missingMappings, Set<String> wrongMappings, @Nullable String ownModuleNamesPrefix) throws IOException {
         for (ResolvedArtifactResult result : configuration.getIncoming().getArtifacts()) {
             ComponentIdentifier id = result.getId().getComponentIdentifier();
             File resultFile = result.getFile();

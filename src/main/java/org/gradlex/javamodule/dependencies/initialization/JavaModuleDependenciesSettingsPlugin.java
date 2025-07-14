@@ -17,12 +17,10 @@
 package org.gradlex.javamodule.dependencies.initialization;
 
 import org.gradle.api.GradleException;
-import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
 import org.gradle.api.initialization.Settings;
 import org.gradle.util.GradleVersion;
 
-@NonNullApi
 public abstract class JavaModuleDependenciesSettingsPlugin implements Plugin<Settings> {
 
     @Override

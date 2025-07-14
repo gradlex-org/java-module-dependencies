@@ -25,6 +25,7 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -105,7 +106,7 @@ public abstract class ModuleInfoGenerate extends DefaultTask {
         }).collect(Collectors.toList());
     }
 
-    private String moduleName(String gaOrProjectModuleName) {
+    private @Nullable String moduleName(String gaOrProjectModuleName) {
         if (!gaOrProjectModuleName.contains(":")) {
             return gaOrProjectModuleName;
         }

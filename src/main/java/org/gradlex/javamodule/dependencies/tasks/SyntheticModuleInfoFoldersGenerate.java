@@ -26,7 +26,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoClassCreator;
 
-@NonNullApi
 @CacheableTask
 public abstract class SyntheticModuleInfoFoldersGenerate extends DefaultTask {
 

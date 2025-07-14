@@ -20,6 +20,7 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
@@ -64,7 +65,7 @@ public abstract class ModuleInfoCache {
         return ModuleInfo.EMPTY;
     }
 
-    public File getFolder(SourceSet sourceSet, ProviderFactory providers) {
+    public @Nullable File getFolder(SourceSet sourceSet, ProviderFactory providers) {
         for (File folder : sourceSet.getJava().getSrcDirs()) {
             if (maybePutModuleInfo(folder, providers)) {
                 return folder;
@@ -97,11 +98,11 @@ public abstract class ModuleInfoCache {
         return ModuleInfo.EMPTY;
     }
 
-    public String getProjectPath(String moduleName) {
+    public @Nullable String getProjectPath(String moduleName) {
         return moduleNameToProjectPath.get(moduleName);
     }
 
-    public String getCapability(String moduleName) {
+    public @Nullable String getCapability(String moduleName) {
         return moduleNameToCapability.get(moduleName);
     }
 
@@ -109,7 +110,7 @@ public abstract class ModuleInfoCache {
         Provider<ModuleInfo> moduleInfoProvider = provideModuleInfo(folder, providers);
         if (moduleInfoProvider.isPresent()) {
             if (!moduleInfo.containsKey(folder)) {
-                moduleInfo.put(folder, moduleInfoProvider.get() );
+                moduleInfo.put(folder, moduleInfoProvider.get());
             }
             return true;
         }

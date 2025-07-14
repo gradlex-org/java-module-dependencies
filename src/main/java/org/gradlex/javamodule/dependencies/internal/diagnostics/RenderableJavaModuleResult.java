@@ -29,7 +29,6 @@ import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableUnresolve
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-@NonNullApi
 public class RenderableJavaModuleResult extends RenderableModuleResult {
 
     private final Set<ResolvedArtifactResult> resolvedJars;

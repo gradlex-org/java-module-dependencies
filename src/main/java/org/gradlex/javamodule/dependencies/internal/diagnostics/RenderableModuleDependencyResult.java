@@ -16,7 +16,6 @@
 
 package org.gradlex.javamodule.dependencies.internal.diagnostics;
 
-import org.gradle.api.NonNullApi;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ComponentSelector;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
@@ -36,7 +35,6 @@ import java.util.Set;
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.isRealModule;
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readModuleNameFromJarFile;
 
-@NonNullApi
 public class RenderableModuleDependencyResult extends RenderableDependencyResult {
     private final ResolvedDependencyResult dependency;
     private final Set<ResolvedArtifactResult> resolvedJars;
@@ -55,11 +53,9 @@ public class RenderableModuleDependencyResult extends RenderableDependencyResult
                 out.add(new RenderableUnresolvedDependencyResult((UnresolvedDependencyResult) d));
             } else {
                 ResolvedDependencyResult resolved = (ResolvedDependencyResult) d;
-                ResolvedArtifactResult artifact = resolvedJars.stream().filter(a ->
-                        a.getId().getComponentIdentifier().equals(resolved.getSelected().getId())).findFirst().orElse(null);
-                if (artifact != null) {
-                    out.add(new RenderableModuleDependencyResult(resolved, resolvedJars));
-                }
+                resolvedJars.stream().filter(a -> a.getId().getComponentIdentifier().equals(resolved.getSelected().getId()))
+                        .findFirst()
+                        .ifPresent(artifact -> out.add(new RenderableModuleDependencyResult(resolved, resolvedJars)));
             }
         }
         return out;
@@ -81,7 +77,7 @@ public class RenderableModuleDependencyResult extends RenderableDependencyResult
                     return "[CLASSPATH] " + selected.getDisplayName();
                 } else {
                     String version = "";
-                    String coordinates =  selected.getDisplayName();
+                    String coordinates = selected.getDisplayName();
                     String jarName = artifact.getFile().getName();
                     if (selected instanceof ModuleComponentIdentifier) {
                         String selectedVersion = ((ModuleComponentIdentifier) selected).getVersion();

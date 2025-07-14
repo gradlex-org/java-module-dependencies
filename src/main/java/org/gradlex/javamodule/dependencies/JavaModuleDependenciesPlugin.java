@@ -17,7 +17,6 @@
 package org.gradlex.javamodule.dependencies;
 
 import org.gradle.api.GradleException;
-import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -64,7 +63,6 @@ import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Dire
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
 
 @SuppressWarnings("unused")
-@NonNullApi
 public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAware> {
 
     private static final String EXTRA_JAVA_MODULE_INFO_PLUGIN_ID = "org.gradlex.extra-java-module-info";
@@ -84,6 +82,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
 
     private void applyProject(Project project) {
         VersionCatalogsExtension versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
+        @SuppressWarnings("DataFlowIssue")
         JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().create(
                 JAVA_MODULE_DEPENDENCIES, JavaModuleDependenciesExtension.class, versionCatalogs, project.getRootDir());
 
@@ -151,6 +150,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
         TaskProvider<ModuleDependencyReport> moduleDependencies = project.getTasks().register("moduleDependencies", ModuleDependencyReport.class, t -> t.setGroup(HELP_GROUP));
         sourceSets.all(sourceSet -> moduleDependencies.configure(t -> {
             HashSet<Configuration> joined = new HashSet<>();
+            //noinspection ConstantValue
             if (t.getConfigurations() != null) {
                 joined.addAll(t.getConfigurations());
             }

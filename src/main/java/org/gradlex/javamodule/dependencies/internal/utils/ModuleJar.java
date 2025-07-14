@@ -16,6 +16,7 @@
 
 package org.gradlex.javamodule.dependencies.internal.utils;
 
+import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ModuleVisitor;
@@ -36,6 +37,7 @@ public class ModuleJar {
     private static final String MODULE_INFO_CLASS_FILE = "module-info.class";
     private static final Pattern MODULE_INFO_CLASS_MRJAR_PATH = Pattern.compile("META-INF/versions/\\d+/module-info.class");
 
+    @Nullable
     public static String readModuleNameFromJarFile(File jarFileOrClassFolder) throws IOException {
         if (jarFileOrClassFolder.isDirectory()) {
             // class folder
@@ -86,7 +88,8 @@ public class ModuleJar {
         return false;
     }
 
-    private static String getAutomaticModuleName(Manifest manifest) {
+    @Nullable
+    private static String getAutomaticModuleName(@Nullable Manifest manifest) {
         if (manifest == null) {
             return null;
         }
