@@ -18,14 +18,13 @@ package org.gradlex.javamodule.dependencies.tasks;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,7 +39,7 @@ public abstract class CatalogGenerate extends DefaultTask {
     public static class CatalogEntry implements Comparator<CatalogEntry> {
         private final String moduleName;
         private final Provider<String> fullId;
-        private final String version;
+        private final @Nullable String version;
 
         public CatalogEntry(String moduleName, Provider<String> fullId, @Nullable String version) {
             this.moduleName = moduleName;

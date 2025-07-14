@@ -41,11 +41,11 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
 import org.gradlex.javamodule.dependencies.tasks.SyntheticModuleInfoFoldersGenerate;
+import org.jspecify.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.io.CharArrayReader;
@@ -73,9 +73,8 @@ import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Dire
  */
 public abstract class JavaModuleDependenciesExtension {
     static final String JAVA_MODULE_DEPENDENCIES = "javaModuleDependencies";
-    private static final String INTERNAL = "internal";
 
-    private final VersionCatalogsExtension versionCatalogs;
+    private final @Nullable VersionCatalogsExtension versionCatalogs;
 
     public abstract Property<ModuleInfoCache> getModuleInfoCache();
 
@@ -132,7 +131,7 @@ public abstract class JavaModuleDependenciesExtension {
      */
     public abstract Property<Boolean> getAnalyseOnly();
 
-    public JavaModuleDependenciesExtension(VersionCatalogsExtension versionCatalogs, File rootDir) {
+    public JavaModuleDependenciesExtension(@Nullable VersionCatalogsExtension versionCatalogs, File rootDir) {
         this.versionCatalogs = versionCatalogs;
         getModuleInfoCache().convention(getProviders().provider(() -> getObjects().newInstance(ModuleInfoCache.class, false)));
         getModulesProperties().set(new File(rootDir, "gradle/modules.properties"));
@@ -198,7 +197,7 @@ public abstract class JavaModuleDependenciesExtension {
         List<String> allProjectNames = getProject().getRootProject().getSubprojects().stream().map(Project::getName).collect(Collectors.toList());
 
         Optional<String> perfectMatch = allProjectNames.stream().filter(p -> p.replace("-", ".").equals(moduleNameSuffix)).findFirst();
-        Optional<String> existingProjectName = allProjectNames.stream().filter(p -> moduleNameSuffix != null && moduleNameSuffix.startsWith(p.replace("-", ".") + "."))
+        Optional<String> existingProjectName = allProjectNames.stream().filter(p -> moduleNameSuffix.startsWith(p.replace("-", ".") + "."))
                 .max(Comparator.comparingInt(String::length));
 
         if (perfectMatch.isPresent()) {
@@ -278,7 +277,7 @@ public abstract class JavaModuleDependenciesExtension {
         });
     }
 
-    private ModuleDependency createExternalDependency(String moduleName) {
+    private @Nullable ModuleDependency createExternalDependency(String moduleName) {
         Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
         if (coordinates.isPresent()) {
             Map<String, Object> component;
@@ -572,7 +571,4 @@ public abstract class JavaModuleDependenciesExtension {
 
     @Inject
     protected abstract ConfigurationContainer getConfigurations();
-
-    @Inject
-    protected abstract SourceSetContainer getSourceSets();
 }

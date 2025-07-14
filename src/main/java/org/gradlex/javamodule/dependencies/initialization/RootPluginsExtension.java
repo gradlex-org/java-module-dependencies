@@ -17,7 +17,6 @@
 package org.gradlex.javamodule.dependencies.initialization;
 
 import org.gradle.api.IsolatedAction;
-import org.gradle.api.NonNullApi;
 import org.gradle.api.Project;
 import org.gradle.api.initialization.Settings;
 
@@ -38,7 +37,6 @@ public abstract class RootPluginsExtension {
         ids.add(id);
     }
 
-    @NonNullApi
     private static class ApplyPluginAction implements IsolatedAction<Project> {
 
         private final List<String> ids;

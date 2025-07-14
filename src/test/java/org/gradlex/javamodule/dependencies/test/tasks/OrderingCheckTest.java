@@ -43,7 +43,7 @@ class OrderingCheckTest {
     }
 
     @Test
-    void if_order_is_not_alphabetic_for_a_scope_an_advice_is_given() throws IOException {
+    void if_order_is_not_alphabetic_for_a_scope_an_advice_is_given() {
         build.appModuleInfoFile.writeText("""
             module org.example.app {
                 requires a.b.c

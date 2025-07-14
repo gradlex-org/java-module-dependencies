@@ -17,6 +17,7 @@
 package org.gradlex.javamodule.dependencies.internal.utils;
 
 import org.gradle.api.tasks.SourceSet;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -30,6 +31,7 @@ public abstract class ModuleNamingUtil {
         return toDottedCase(projectName) + "." + toDottedCase(sourceSetName);
     }
 
+    @Nullable
     public static String sourceSetToCapabilitySuffix(String sourceSetName) {
         if (sourceSetName.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
             return null;

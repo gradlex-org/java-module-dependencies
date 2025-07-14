@@ -16,7 +16,6 @@
 
 package org.gradlex.javamodule.dependencies.internal.diagnostics;
 
-import org.gradle.api.NonNullApi;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.provider.Provider;
@@ -29,16 +28,16 @@ import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableDependenc
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableModuleResult;
 import org.gradle.internal.graph.GraphRenderer;
 import org.gradle.internal.logging.text.StyledTextOutput;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
-@NonNullApi
 public class AsciiModuleDependencyReportRenderer extends AsciiDependencyReportRenderer {
 
-    private DependencyGraphsRenderer dependencyGraphRenderer;
+    private @Nullable DependencyGraphsRenderer dependencyGraphRenderer;
     private final Provider<Map<String, ArtifactCollection>> resolvedJars;
 
     public AsciiModuleDependencyReportRenderer(Provider<Map<String, ArtifactCollection>> resolvedJars) {
@@ -67,7 +66,7 @@ public class AsciiModuleDependencyReportRenderer extends AsciiDependencyReportRe
         if (root.getChildren().isEmpty()) {
             this.getTextOutput().withStyle(StyledTextOutput.Style.Info).text("No dependencies");
             this.getTextOutput().println();
-        } else {
+        } else if (this.dependencyGraphRenderer != null){
             this.dependencyGraphRenderer.render(Collections.singletonList(root));
         }
     }

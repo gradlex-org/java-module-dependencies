@@ -18,7 +18,6 @@ package org.gradlex.javamodule.dependencies.initialization;
 
 import org.gradle.api.Action;
 import org.gradle.api.IsolatedAction;
-import org.gradle.api.NonNullApi;
 import org.gradle.api.Project;
 import org.gradle.api.initialization.ProjectDescriptor;
 import org.gradle.api.initialization.Settings;
@@ -35,6 +34,7 @@ import org.gradlex.javamodule.dependencies.JavaModuleVersionsPlugin;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
 import org.gradlex.javamodule.dependencies.internal.utils.ValueModuleDirectoryListing;
+import org.jspecify.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -165,11 +165,11 @@ public abstract class JavaModulesExtension {
 
     private static class ModuleProject {
         private final String path;
-        private final String group;
+        private final @Nullable String group;
         private final List<String> plugins;
-        private final String mainModuleName;
+        private final @Nullable String mainModuleName;
 
-        public ModuleProject(String path, String group, List<String> plugins, String mainModuleName) {
+        public ModuleProject(String path, @Nullable String group, List<String> plugins, @Nullable String mainModuleName) {
             this.path = path;
             this.group = group;
             this.plugins = plugins;
@@ -177,7 +177,6 @@ public abstract class JavaModulesExtension {
         }
     }
 
-    @NonNullApi
     private static class ApplyPluginsAction implements IsolatedAction<Project> {
 
         private final List<ModuleProject> moduleProjects;
@@ -205,7 +204,6 @@ public abstract class JavaModulesExtension {
         }
     }
 
-    @NonNullApi
     private static class ApplyJavaModuleVersionsPluginAction implements IsolatedAction<Project> {
 
         private final String projectPath;

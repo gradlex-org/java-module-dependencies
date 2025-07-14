@@ -25,8 +25,8 @@ import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck;
 import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesScopeCheck;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.File;
 
 public class DependencyAnalysisBridge {

@@ -32,6 +32,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -166,6 +167,7 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
         return false;
     }
 
+    @Nullable
     private String sourceSetName(String configurationName) {
         Optional<String> scope = getScope(configurationName);
         if (!scope.isPresent()) {
@@ -175,6 +177,7 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
         return sourceSet.isEmpty() ? "main" : sourceSet;
     }
 
+    @Nullable
     private String directive(String configurationName, Map<String, String> scopesToDirectives) {
         return getScope(configurationName).map(scopesToDirectives::get).orElse(null);
     }

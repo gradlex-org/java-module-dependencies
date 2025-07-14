@@ -16,7 +16,6 @@
 
 package org.gradlex.javamodule.dependencies;
 
-import org.gradle.api.NonNullApi;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -30,8 +29,8 @@ import org.gradle.util.GradleVersion;
 import org.gradlex.javamodule.dependencies.dsl.ModuleVersions;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.tasks.CatalogGenerate;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -47,7 +46,6 @@ import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Dire
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_TRANSITIVE;
 
 @SuppressWarnings("unused")
-@NonNullApi
 public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
 
     @Override

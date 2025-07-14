@@ -16,6 +16,8 @@
 
 package org.gradlex.javamodule.dependencies;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -27,7 +29,7 @@ final public class SharedMappings {
     static Map<String, String> loadModuleNameToGAProperties() {
         Properties properties = new Properties() {
             @Override
-            public synchronized Object put(Object key, Object value) {
+            public synchronized @Nullable Object put(Object key, Object value) {
                 if (get(key) != null) {
                     throw new IllegalArgumentException(key + " already present.");
                 }

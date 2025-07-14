@@ -31,7 +31,6 @@ import javax.inject.Inject;
 import java.util.Collections;
 import java.util.Set;
 
-@NonNullApi
 public abstract class ModuleDependencyReport extends DependencyReportTask {
 
     @Internal
