@@ -161,17 +161,30 @@ class RequiresRuntimeTest {
                         "--module-path",
                         classpath.files.joinToString(":"),
                         "--patch-module",
-                        "org.gradlex.test.app=" + srcDir
+                        "org.gradlex.test.app=" + srcDir,
+                        "--add-modules",
+                        "org.junit.jupiter.api",
+                        "--add-reads",
+                        "org.gradlex.test.app=org.junit.jupiter.api"
                     )
                 }
             }
+            tasks.test { useJUnitPlatform() }
             
             dependencies.constraints {
                 javaModuleDependencies {
                     implementation(gav("org.slf4j", "2.0.3"))
                     implementation(gav("org.slf4j.simple", "2.0.3"))
                 }
-            }""");
+            }
+            dependencies {
+                javaModuleDependencies {
+                    testImplementation(gav("org.junit.jupiter.api", "5.13.4"))
+                    testRuntimeOnly(ga("org.junit.jupiter.engine"))
+                    testRuntimeOnly(ga("org.junit.platform.launcher"))
+                }
+            }
+            """);
         build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires org.slf4j;
@@ -180,7 +193,10 @@ class RequiresRuntimeTest {
         build.file("app/src/test/java/org/gradlex/test/app/MainTest.java").writeText("""
             package org.gradlex.test.app;
             
-            public class MainTest {}""");
+            public class MainTest {
+                @org.junit.jupiter.api.Test
+                void test() {}
+            }""");
 
         var result = build.build().task(":app:compileTestJava");
 

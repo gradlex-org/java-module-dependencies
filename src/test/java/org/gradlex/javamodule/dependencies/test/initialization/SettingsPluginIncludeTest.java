@@ -64,6 +64,7 @@ class SettingsPluginIncludeTest {
 
     @Test
     void can_define_included_subprojects_with_custom_project_directory_as_modules() {
+        build.projectDir.dir("project/with/custom/path");
         build.settingsFile.appendText("""
             include(":project:with:custom:path")
             project(":project:with:custom:path").projectDir = file("lib")
