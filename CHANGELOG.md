@@ -1,6 +1,7 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
 ## Version 1.10
+* [#235](https://github.com/gradlex-org/java-module-dependencies/issues/235) Upgrade to Gradle 9.1, address deprecation
 * [#221](https://github.com/gradlex-org/java-module-dependencies/issues/221) Upgrade to Gradle 9, remove deprecated features
 * [#209](https://github.com/gradlex-org/java-module-dependencies/issues/209) Fix: configuration cache issue when building kotlin-dsl plugins
 * Update module name mappings
