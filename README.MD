@@ -62,7 +62,7 @@ Add this to the build file of your convention plugin's build
 
 ```
 dependencies {
-  implementation("org.gradlex:java-module-dependencies:1.9.2")
+  implementation("org.gradlex:java-module-dependencies:1.10")
 }
 ```
 
