@@ -20,6 +20,7 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.ExternalDependency;
 import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.VersionCatalog;
@@ -63,6 +64,7 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.empty;
+import static org.gradlex.javamodule.dependencies.internal.utils.DependencyDeclarationsUtil.copyVersionConstraint;
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_RUNTIME;
 
 /**
@@ -280,7 +282,7 @@ public abstract class JavaModuleDependenciesExtension {
     private @Nullable ModuleDependency createExternalDependency(String moduleName) {
         Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
         if (coordinates.isPresent()) {
-            Map<String, Object> component;
+            ExternalDependency component;
             String capability;
             if (coordinates.get().contains("|")) {
                 String[] split = coordinates.get().split("\\|");
@@ -344,7 +346,7 @@ public abstract class JavaModuleDependenciesExtension {
      * @return Dependency notation
      */
     @SuppressWarnings("unused")
-    public Provider<Map<String, Object>> gav(String moduleName) {
+    public Provider<ExternalDependency> gav(String moduleName) {
         return ga(moduleName).map(ga -> findGav(ga, moduleName));
     }
 
@@ -358,23 +360,18 @@ public abstract class JavaModuleDependenciesExtension {
      * @return Dependency notation
      */
     @SuppressWarnings("unused")
-    public Provider<Map<String, Object>> gav(Provider<String> moduleName) {
+    public Provider<ExternalDependency> gav(Provider<String> moduleName) {
         return ga(moduleName).map(ga -> findGav(ga, moduleName.get()));
     }
 
-    private Map<String, Object> findGav(String ga, String moduleName) {
-        VersionCatalog catalog = versionCatalogs == null ? null : versionCatalogs.find(getVersionCatalogName().get()).orElse(null);
-        Optional<VersionConstraint> version = catalog == null ? empty() : catalog.findVersion(moduleName.replace('_', '.'));
-        Map<String, Object> gav = new HashMap<>();
-        String[] gaSplit = ga.split(":");
-        if (gaSplit.length < 2) {
-            throw new RuntimeException("Invalid mapping: " + moduleName + "="+ ga);
-        }
-        gav.put(GAV.GROUP, gaSplit[0]);
-        gav.put(GAV.ARTIFACT, gaSplit[1]);
-        version.ifPresent(versionConstraint -> gav.put(GAV.VERSION, versionConstraint));
-        return gav;
+    private ExternalDependency findGav(String ga, String moduleName) {
+        Optional<VersionCatalog> catalog = versionCatalogs == null ? empty() : versionCatalogs.find(getVersionCatalogName().get());
+        Optional<VersionConstraint> version = catalog.flatMap(versionCatalog -> versionCatalog.findVersion(moduleName.replace('_', '.')));
+        ExternalDependency dependency = (ExternalDependency) getDependencies().create(ga);
+        version.ifPresent(versionConstraint -> dependency.version(copy -> copyVersionConstraint(versionConstraint, copy)));
+        return dependency;
     }
+
 
     /**
      * Finds the Module Name for given coordinates

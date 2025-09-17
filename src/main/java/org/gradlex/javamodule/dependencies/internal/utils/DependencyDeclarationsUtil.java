@@ -20,7 +20,9 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ModuleDependency;
+import org.gradle.api.artifacts.MutableVersionConstraint;
 import org.gradle.api.artifacts.ProjectDependency;
+import org.gradle.api.artifacts.VersionConstraint;
 import org.gradle.api.attributes.Category;
 import org.gradle.api.capabilities.Capability;
 import org.gradle.api.provider.Provider;
@@ -64,5 +66,29 @@ public abstract class DependencyDeclarationsUtil {
             return category == null || category.getName().equals(LIBRARY);
         }
         return false;
+    }
+
+    /**
+     * Fill a MutableVersionConstraint with the information from another VersionConstraint object retrieved
+     * from a version catalog.
+     */
+    public static void copyVersionConstraint(VersionConstraint version, MutableVersionConstraint copy) {
+        String branch = version.getBranch();
+        String requiredVersion = version.getRequiredVersion();
+        String preferredVersion = version.getPreferredVersion();
+        String strictVersion = version.getStrictVersion();
+
+        if (branch != null && !branch.isEmpty()) {
+            copy.setBranch(branch);
+        }
+        if (!requiredVersion.isEmpty()) {
+            copy.require(requiredVersion);
+        }
+        if (!preferredVersion.isEmpty()) {
+            copy.prefer(preferredVersion);
+        }
+        if (!strictVersion.isEmpty()) {
+            copy.strictly(strictVersion);
+        }
     }
 }
