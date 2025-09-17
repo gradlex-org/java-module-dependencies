@@ -87,12 +87,12 @@ class CustomizationTest {
     @Test
     void can_use_custom_catalog() {
         build.settingsFile.appendText("""
-            dependencyResolutionManagement.versionCatalogs.create("modules") {
+            dependencyResolutionManagement.versionCatalogs.create("moduleLibs") {
                 version("org.apache.xmlbeans", "5.0.1")
                 version("com.fasterxml.jackson.databind", "2.12.5")
             }""");
         build.appBuildFile.appendText("""
-            javaModuleDependencies.versionCatalogName.set("modules")""");
+            javaModuleDependencies.versionCatalogName.set("moduleLibs")""");
         build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires com.fasterxml.jackson.databind;
