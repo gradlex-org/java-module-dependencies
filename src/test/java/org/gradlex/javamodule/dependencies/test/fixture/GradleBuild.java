@@ -136,7 +136,7 @@ public class GradleBuild {
         );
         Stream<String> standardArgs = Stream.of(
                 "-s",
-                "--warning-mode=all",
+                "--warning-mode=fail",
                 "-Porg.gradlex.java-module-dependencies.register-help-tasks=" + withHelpTasks
         );
         GradleRunner runner = GradleRunner.create()
