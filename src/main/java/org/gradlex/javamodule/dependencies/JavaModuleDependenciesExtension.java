@@ -56,11 +56,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.empty;
@@ -226,15 +227,14 @@ public abstract class JavaModuleDependenciesExtension {
 
     private Provider<Dependency> createPrecise(String moduleName) {
         return getProviders().provider(() -> {
-            String projectPath = getModuleInfoCache().get().getProjectPath(moduleName);
-            String capability = getModuleInfoCache().get().getCapability(moduleName);
+            LocalModule localModule = getModuleInfoCache().get().getLocalModule(moduleName);
 
-            if (projectPath != null) {
+            if (localModule != null) {
                 // local project
-                ProjectDependency projectDependency = (ProjectDependency) getDependencies().create(getProject().project(projectPath));
+                ProjectDependency projectDependency = (ProjectDependency) getDependencies().create(getProject().project(localModule.getProjectPath()));
                 projectDependency.because(moduleName);
-                if (capability != null) {
-                    projectDependency.capabilities(c -> c.requireCapabilities(capability));
+                if (localModule.getCapability() != null) {
+                    projectDependency.capabilities(c -> c.requireCapabilities(localModule.getCapability()));
                 }
                 return projectDependency;
             } else {
@@ -404,6 +404,13 @@ public abstract class JavaModuleDependenciesExtension {
                 return modulePrefix.map(s -> s + artifact).orElse(null);
             }
         });
+    }
+
+    /**
+     * @return information about all modules defined in module-info.java files in the build
+     */
+    public Set<LocalModule> allLocalModules() {
+        return new TreeSet<>(getModuleInfoCache().get().getAllLocalModules());
     }
 
     /**

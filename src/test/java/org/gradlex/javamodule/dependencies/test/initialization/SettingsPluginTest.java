@@ -282,4 +282,38 @@ class SettingsPluginTest {
         assertThat(requireNonNull(result.task(":lib:compileJava")).getOutcome()).isEqualTo(SUCCESS);
     }
 
+    @Test
+    void can_access_local_module_information_in_project() {
+        build.settingsFile.appendText("""
+            javaModules {
+                directory(".") {
+                    group = "org.example"
+                    module("aggregation")
+                }
+            }""");
+        build.libModuleInfoFile.writeText("module abc.lib { }");
+        build.file("lib/src/testFixtures/java/module-info.java").writeText("module abc.lib.test.fixtures { }");
+        build.appModuleInfoFile.writeText("""
+            module org.gradlex.test.app {
+                requires abc.lib;
+            }""");
+
+        build.file("aggregation/build.gradle.kts").writeText("""
+            plugins { id("org.gradlex.java-module-dependencies") }
+            tasks.register("info") {
+                val info = javaModuleDependencies.allLocalModules().joinToString("\\n")
+                doLast { println(info) }
+            }""");
+
+        var result = build.runner(":aggregation:info").build();
+
+        assertThat(result.getOutput()).contains("""
+            > Task :aggregation:info
+            [moduleName='abc.lib', projectPath=':lib', capability='null']
+            [moduleName='abc.lib.test.fixtures', projectPath=':lib', capability='org.example:lib-test-fixtures']
+            [moduleName='org.gradlex.test.app', projectPath=':app', capability='null']
+            
+            """);
+    }
+
 }

@@ -20,6 +20,7 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
+import org.gradlex.javamodule.dependencies.LocalModule;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,8 +39,7 @@ public abstract class ModuleInfoCache {
 
     private final boolean initializedInSettings;
     private final Map<File, ModuleInfo> moduleInfo = new HashMap<>();
-    private final Map<String, String> moduleNameToProjectPath = new HashMap<>();
-    private final Map<String, String> moduleNameToCapability = new HashMap<>();
+    private final Map<String, LocalModule> localModules = new HashMap<>();
 
     @Inject
     public ModuleInfoCache(boolean initializedInSettings) {
@@ -82,28 +83,30 @@ public abstract class ModuleInfoCache {
         File folder = new File(projectRoot, moduleInfoPath);
         if (maybePutModuleInfo(folder, providers)) {
             ModuleInfo thisModuleInfo = moduleInfo.get(folder);
-            moduleNameToProjectPath.put(thisModuleInfo.getModuleName(), projectPath);
+            String moduleName = thisModuleInfo.getModuleName();
+            String capability = null;
             Path parentDirectory = Paths.get(moduleInfoPath).getParent();
             String capabilitySuffix = parentDirectory == null ? null : sourceSetToCapabilitySuffix(parentDirectory.getFileName().toString());
             if (capabilitySuffix != null) {
                 if (group.isPresent()) {
-                    moduleNameToCapability.put(thisModuleInfo.getModuleName(), group.get() + ":" + artifact + "-" + capabilitySuffix);
+                    capability = group.get() + ":" + artifact + "-" + capabilitySuffix;
                 } else {
                     LOGGER.lifecycle(
-                            "[WARN] [Java Module Dependencies] " + thisModuleInfo.getModuleName() + " - 'group' not defined!");
+                            "[WARN] [Java Module Dependencies] " + moduleName + " - 'group' not defined!");
                 }
             }
+            localModules.put(moduleName, new LocalModule(moduleName, projectPath, capability));
             return thisModuleInfo;
         }
         return ModuleInfo.EMPTY;
     }
 
-    public @Nullable String getProjectPath(String moduleName) {
-        return moduleNameToProjectPath.get(moduleName);
+    public @Nullable LocalModule getLocalModule(String moduleName) {
+        return localModules.get(moduleName);
     }
 
-    public @Nullable String getCapability(String moduleName) {
-        return moduleNameToCapability.get(moduleName);
+    public Collection<LocalModule> getAllLocalModules() {
+        return localModules.values();
     }
 
     private boolean maybePutModuleInfo(File folder, ProviderFactory providers) {
