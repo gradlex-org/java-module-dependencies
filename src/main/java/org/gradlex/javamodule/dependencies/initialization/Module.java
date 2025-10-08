@@ -21,7 +21,6 @@ import org.gradle.api.provider.Property;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;

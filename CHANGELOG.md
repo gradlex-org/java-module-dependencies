@@ -1,7 +1,8 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
-## Version 1.10.1
+## Version 1.11
 * [#245](https://github.com/gradlex-org/java-module-dependencies/issues/245) Add 'allLocalModules' access to extension
+* [#245](https://github.com/gradlex-org/java-module-dependencies/issues/247) Defining a 'versions' project in settings supports applying additional plugins
 * Update module name mappings
 
 ## Version 1.10

@@ -38,7 +38,6 @@ import org.jspecify.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,7 +73,7 @@ public abstract class JavaModulesExtension {
     public void module(String directory, Action<Module> action) {
         Module module = getObjects().newInstance(Module.class, new File(settings.getRootDir(), directory));
         action.execute(module);
-        includeModule(module, new File(settings.getRootDir(), directory));
+        includeModule(module, new File(settings.getRootDir(), directory), false);
     }
 
     /**
@@ -92,7 +91,7 @@ public abstract class JavaModulesExtension {
         module.getArtifact().set(project.getName());
         module.getArtifact().finalizeValue(); // finalize, as the project name can no longer be changed
         action.execute(module);
-        configureModule(module, project);
+        configureModule(module, project, false);
     }
 
     /**
@@ -111,7 +110,7 @@ public abstract class JavaModulesExtension {
         action.execute(moduleDirectory);
 
         for (Module module : moduleDirectory.customizedModules.values()) {
-            includeModule(module, module.directory);
+            includeModule(module, module.directory, false);
         }
         Provider<List<String>> listProvider = getProviders().of(ValueModuleDirectoryListing.class, spec -> {
             spec.getParameters().getExclusions().set(moduleDirectory.getExclusions());
@@ -124,7 +123,7 @@ public abstract class JavaModulesExtension {
             Module module = moduleDirectory.addModule(projectDir);
             if (!module.getModuleInfoPaths().get().isEmpty()) {
                 // only auto-include if there is at least one module-info.java
-                includeModule(module, new File(modulesDirectory, projectDir));
+                includeModule(module, new File(modulesDirectory, projectDir), false);
             }
         }
     }
@@ -133,34 +132,43 @@ public abstract class JavaModulesExtension {
      * Configure a subproject as Platform for defining Module versions.
      */
     public void versions(String directory) {
-        String projectName = Paths.get(directory).getFileName().toString();
-        settings.include(projectName);
-        settings.project(":" + projectName).setProjectDir(new File(settings.getRootDir(), directory));
-        settings.getGradle().getLifecycle().beforeProject(new ApplyJavaModuleVersionsPluginAction(":" + projectName));
+        versions(directory, m -> {});
     }
 
-    private void includeModule(Module module, File projectDir) {
+    /**
+     * Configure a subproject as Platform for defining Module versions.
+     */
+    public void versions(String directory, Action<Module> action) {
+        File versionProjectDir = new File(settings.getRootDir(), directory);
+        Module module = getObjects().newInstance(Module.class, versionProjectDir);
+        action.execute(module);
+        includeModule(module, module.directory, true);
+    }
+
+    private void includeModule(Module module, File projectDir, boolean definesVersions) {
         String artifact = module.getArtifact().get();
         settings.include(artifact);
         ProjectDescriptor project = settings.project(":" + artifact);
         project.setProjectDir(projectDir);
 
-        configureModule(module, project);
+        configureModule(module, project, definesVersions);
     }
 
-    private void configureModule(Module module, ProjectDescriptor project) {
+    private void configureModule(Module module, ProjectDescriptor project, boolean definesVersions) {
         String mainModuleName = null;
-        for (String moduleInfoPath : module.getModuleInfoPaths().get()) {
-            ModuleInfo moduleInfo = moduleInfoCache.put(project.getProjectDir(), moduleInfoPath,
-                    project.getPath(), module.getArtifact().get(), module.getGroup(), settings.getProviders());
-            if (moduleInfoPath.contains("/main/")) {
-                mainModuleName = moduleInfo.getModuleName();
+        if (!definesVersions) {
+            for (String moduleInfoPath : module.getModuleInfoPaths().get()) {
+                ModuleInfo moduleInfo = moduleInfoCache.put(project.getProjectDir(), moduleInfoPath,
+                        project.getPath(), module.getArtifact().get(), module.getGroup(), settings.getProviders());
+                if (moduleInfoPath.contains("/main/")) {
+                    mainModuleName = moduleInfo.getModuleName();
+                }
             }
         }
 
         String group = module.getGroup().getOrNull();
         List<String> plugins = module.getPlugins().get();
-        moduleProjects.add(new ModuleProject(project.getPath(), group, plugins, mainModuleName));
+        moduleProjects.add(new ModuleProject(project.getPath(), group, plugins, mainModuleName, definesVersions));
     }
 
     private static class ModuleProject {
@@ -168,12 +176,14 @@ public abstract class JavaModulesExtension {
         private final @Nullable String group;
         private final List<String> plugins;
         private final @Nullable String mainModuleName;
+        private final boolean definesVersions;
 
-        public ModuleProject(String path, @Nullable String group, List<String> plugins, @Nullable String mainModuleName) {
+        public ModuleProject(String path, @Nullable String group, List<String> plugins, @Nullable String mainModuleName, boolean definesVersions) {
             this.path = path;
             this.group = group;
             this.plugins = plugins;
             this.mainModuleName = mainModuleName;
+            this.definesVersions = definesVersions;
         }
     }
 
@@ -192,32 +202,20 @@ public abstract class JavaModulesExtension {
             for (ModuleProject m : moduleProjects) {
                 if (project.getPath().equals(m.path)) {
                     if (m.group != null) project.setGroup(m.group);
-                    project.getPlugins().apply(JavaModuleDependenciesPlugin.class);
-                    project.getExtensions().getByType(JavaModuleDependenciesExtension.class).getModuleInfoCache().set(moduleInfoCache);
+                    if (m.definesVersions) {
+                        project.getPlugins().apply(JavaPlatformPlugin.class);
+                        project.getPlugins().apply(JavaModuleVersionsPlugin.class);
+                        project.getExtensions().getByType(JavaPlatformExtension.class).allowDependencies();
+                    } else {
+                        project.getPlugins().apply(JavaModuleDependenciesPlugin.class);
+                        project.getExtensions().getByType(JavaModuleDependenciesExtension.class).getModuleInfoCache().set(moduleInfoCache);
+                    }
                     m.plugins.forEach(id -> project.getPlugins().apply(id));
                     if (m.mainModuleName != null) {
                         project.getPlugins().withType(ApplicationPlugin.class, p ->
                                 project.getExtensions().getByType(JavaApplication.class).getMainModule().set(m.mainModuleName));
                     }
                 }
-            }
-        }
-    }
-
-    private static class ApplyJavaModuleVersionsPluginAction implements IsolatedAction<Project> {
-
-        private final String projectPath;
-
-        public ApplyJavaModuleVersionsPluginAction(String projectPath) {
-            this.projectPath = projectPath;
-        }
-
-        @Override
-        public void execute(Project project) {
-            if (projectPath.equals(project.getPath())) {
-                project.getPlugins().apply(JavaPlatformPlugin.class);
-                project.getPlugins().apply(JavaModuleVersionsPlugin.class);
-                project.getExtensions().getByType(JavaPlatformExtension.class).allowDependencies();
             }
         }
     }
