@@ -53,7 +53,7 @@ pluginPublishConventions {
     }
 }
 
-gradlePlugin.plugins.create("java-module-versions") {
+gradlePlugin.plugins.register("java-module-versions") {
     id = "${project.group}.${name}"
     implementationClass = "org.gradlex.javamodule.dependencies.JavaModuleVersionsPlugin"
     displayName = "Java Module Versions Gradle Plugin"
