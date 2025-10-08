@@ -32,7 +32,7 @@ dependencies {
     implementation("org.ow2.asm:asm:9.9")
 
     compileOnly("org.gradlex:extra-java-module-info:1.13.1")
-    compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:3.0.4")
+    compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:3.1.0")
 
     testImplementation("org.assertj:assertj-core:3.27.6")
     testImplementation("org.gradle.exemplar:samples-check:1.0.3")
