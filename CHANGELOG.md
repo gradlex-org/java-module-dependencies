@@ -1,5 +1,9 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.10.1
+* [#245](https://github.com/gradlex-org/java-module-dependencies/issues/245) Add 'allLocalModules' access to extension
+* Update module name mappings
+
 ## Version 1.10
 * [#235](https://github.com/gradlex-org/java-module-dependencies/issues/235) Upgrade to Gradle 9.1, address deprecation
 * [#221](https://github.com/gradlex-org/java-module-dependencies/issues/221) Upgrade to Gradle 9, remove deprecated features
