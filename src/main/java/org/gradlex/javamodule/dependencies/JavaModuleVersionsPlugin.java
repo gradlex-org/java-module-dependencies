@@ -47,6 +47,7 @@ import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Dire
 
 @SuppressWarnings("unused")
 public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
+    private static final boolean MIN_GRADLE_9_0 = GradleVersion.current().compareTo(GradleVersion.version("9.0.0")) >= 0;
 
     @Override
     public void apply(Project project) {
@@ -73,7 +74,7 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
         Configuration platformElements = project.getConfigurations().create("platformElements", c -> {
             c.setCanBeResolved(false);
             c.setCanBeConsumed(true);
-            c.setVisible(false);
+            setInvisible(c);
             c.extendsFrom(versions);
             c.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.class, JAVA_RUNTIME));
         });
@@ -154,4 +155,10 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
         return moduleNames.stream().map(moduleName -> new CatalogGenerate.CatalogEntry(moduleName, javaModuleDependencies.ga(moduleName), null)).collect(Collectors.toList());
     }
 
+    @SuppressWarnings("deprecation")
+    private void setInvisible(Configuration c) {
+        if (!MIN_GRADLE_9_0) {
+            c.setVisible(false);
+        }
+    }
 }
