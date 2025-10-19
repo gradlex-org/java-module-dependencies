@@ -17,7 +17,6 @@
 package org.gradlex.javamodule.dependencies.tasks;
 
 import org.gradle.api.DefaultTask;
-import org.gradle.api.NonNullApi;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.tasks.CacheableTask;

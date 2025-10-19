@@ -16,7 +16,6 @@
 
 package org.gradlex.javamodule.dependencies.internal.diagnostics;
 
-import org.gradle.api.NonNullApi;
 import org.gradle.api.artifacts.result.DependencyResult;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;

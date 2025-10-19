@@ -16,7 +16,6 @@
 
 package org.gradlex.javamodule.dependencies.tasks;
 
-import org.gradle.api.NonNullApi;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileCollection;
