@@ -1,21 +1,14 @@
-/*
- * Copyright the GradleX team.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package org.gradlex.javamodule.dependencies.tasks;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
@@ -24,15 +17,6 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
-
-import javax.inject.Inject;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 public abstract class BuildFileDependenciesGenerate extends DefaultTask {
     public abstract static class SourceSetDependencies {
@@ -90,7 +74,13 @@ public abstract class BuildFileDependenciesGenerate extends DefaultTask {
     @Inject
     public abstract ObjectFactory getObjects();
 
-    public void addDependencies(String name, List<DependencyDeclaration> api, List<DependencyDeclaration> implementation, List<DependencyDeclaration> compileOnlyApi, List<DependencyDeclaration> compileOnly, List<DependencyDeclaration> runtimeOnly) {
+    public void addDependencies(
+            String name,
+            List<DependencyDeclaration> api,
+            List<DependencyDeclaration> implementation,
+            List<DependencyDeclaration> compileOnlyApi,
+            List<DependencyDeclaration> compileOnly,
+            List<DependencyDeclaration> runtimeOnly) {
         SourceSetDependencies dependencies = getObjects().newInstance(SourceSetDependencies.class, name);
         dependencies.getApiDependencies().convention(api);
         dependencies.getImplementationDependencies().convention(implementation);
@@ -104,9 +94,12 @@ public abstract class BuildFileDependenciesGenerate extends DefaultTask {
     public void generate() throws IOException {
         File buildGradle = getBuildFile().get().getAsFile();
         List<String> fileContentToPreserve = Files.readAllLines(buildGradle.toPath());
-        Optional<String> dependenciesBlock = fileContentToPreserve.stream().filter(line -> line.contains("dependencies")).findFirst();
+        Optional<String> dependenciesBlock = fileContentToPreserve.stream()
+                .filter(line -> line.contains("dependencies"))
+                .findFirst();
         if (dependenciesBlock.isPresent()) {
-            fileContentToPreserve = fileContentToPreserve.subList(0, fileContentToPreserve.indexOf(dependenciesBlock.get()));
+            fileContentToPreserve =
+                    fileContentToPreserve.subList(0, fileContentToPreserve.indexOf(dependenciesBlock.get()));
         }
 
         List<String> content = new ArrayList<>(fileContentToPreserve);
@@ -116,16 +109,18 @@ public abstract class BuildFileDependenciesGenerate extends DefaultTask {
 
         if (!getDependencies().get().stream().allMatch(SourceSetDependencies::isEmpty)) {
             content.add("dependencies {");
-            getDependencies().get().stream().sorted((a, b) -> ("main".equals(a.name)) ? -1 : a.name.compareTo(b.name)).forEach(sourceSetBlock -> {
-                content.addAll(toDeclarationString(sourceSetBlock.getApiDependencies()));
-                content.addAll(toDeclarationString(sourceSetBlock.getImplementationDependencies()));
-                content.addAll(toDeclarationString(sourceSetBlock.getCompileOnlyApiDependencies()));
-                content.addAll(toDeclarationString(sourceSetBlock.getCompileOnlyDependencies()));
-                content.addAll(toDeclarationString(sourceSetBlock.getRuntimeOnlyDependencies()));
-                if (!sourceSetBlock.isEmpty()) {
-                    content.add("");
-                }
-            });
+            getDependencies().get().stream()
+                    .sorted((a, b) -> ("main".equals(a.name)) ? -1 : a.name.compareTo(b.name))
+                    .forEach(sourceSetBlock -> {
+                        content.addAll(toDeclarationString(sourceSetBlock.getApiDependencies()));
+                        content.addAll(toDeclarationString(sourceSetBlock.getImplementationDependencies()));
+                        content.addAll(toDeclarationString(sourceSetBlock.getCompileOnlyApiDependencies()));
+                        content.addAll(toDeclarationString(sourceSetBlock.getCompileOnlyDependencies()));
+                        content.addAll(toDeclarationString(sourceSetBlock.getRuntimeOnlyDependencies()));
+                        if (!sourceSetBlock.isEmpty()) {
+                            content.add("");
+                        }
+                    });
             content.remove(content.size() - 1);
             content.add("}");
         }
@@ -134,36 +129,39 @@ public abstract class BuildFileDependenciesGenerate extends DefaultTask {
     }
 
     private List<String> toDeclarationString(ListProperty<DependencyDeclaration> dependencies) {
-        return dependencies.get().stream().map(d -> {
-            String group = d.fullId.get().split(":")[0];
-            String artifact = d.fullId.get().split(":")[1];
-            String feature = null;
-            if (artifact.contains("|")) {
-                feature = artifact.split("\\|")[1];
-                artifact = artifact.split("\\|")[0];
-            }
+        return dependencies.get().stream()
+                .map(d -> {
+                    String group = d.fullId.get().split(":")[0];
+                    String artifact = d.fullId.get().split(":")[1];
+                    String feature = null;
+                    if (artifact.contains("|")) {
+                        feature = artifact.split("\\|")[1];
+                        artifact = artifact.split("\\|")[0];
+                    }
 
-            String identifier;
-            if (group.equals(getOwnProjectGroup().get())) {
-                if (getWithCatalog().get()) {
-                    identifier = "projects." + toCamelCase(artifact);
-                } else {
-                    identifier = "project(\":" + artifact + "\")";
-                }
-            } else {
-                if (getWithCatalog().get()) {
-                    identifier = "libs." + d.moduleName;
-                } else {
-                    identifier = "\"" + group + ":" + artifact + "\"";
-                }
-            }
+                    String identifier;
+                    if (group.equals(getOwnProjectGroup().get())) {
+                        if (getWithCatalog().get()) {
+                            identifier = "projects." + toCamelCase(artifact);
+                        } else {
+                            identifier = "project(\":" + artifact + "\")";
+                        }
+                    } else {
+                        if (getWithCatalog().get()) {
+                            identifier = "libs." + d.moduleName;
+                        } else {
+                            identifier = "\"" + group + ":" + artifact + "\"";
+                        }
+                    }
 
-            if (feature == null) {
-                return "    " + d.scope + "(" + identifier + ")";
-            } else {
-                return "    " + d.scope + "(" + identifier + ") { capabilities { requireCapabilities(\"" + group + ":" + artifact + "-" + feature + "\") } }";
-            }
-        }).collect(Collectors.toList());
+                    if (feature == null) {
+                        return "    " + d.scope + "(" + identifier + ")";
+                    } else {
+                        return "    " + d.scope + "(" + identifier + ") { capabilities { requireCapabilities(\"" + group
+                                + ":" + artifact + "-" + feature + "\") } }";
+                    }
+                })
+                .collect(Collectors.toList());
     }
 
     private String toCamelCase(String s) {
@@ -174,7 +172,10 @@ public abstract class BuildFileDependenciesGenerate extends DefaultTask {
             if (i == 0) {
                 word = word.isEmpty() ? word : word.toLowerCase();
             } else {
-                word = word.isEmpty() ? word : Character.toUpperCase(word.charAt(0)) + word.substring(1).toLowerCase();
+                word = word.isEmpty()
+                        ? word
+                        : Character.toUpperCase(word.charAt(0))
+                                + word.substring(1).toLowerCase();
             }
             builder.append(word);
         }

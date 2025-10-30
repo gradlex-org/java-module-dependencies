@@ -1,23 +1,7 @@
-/*
- * Copyright the GradleX team.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package org.gradlex.javamodule.dependencies.test.fixture;
 
-import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
+import static java.util.function.Function.identity;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -27,8 +11,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static java.util.function.Function.identity;
+import org.gradle.testkit.runner.BuildResult;
+import org.gradle.testkit.runner.GradleRunner;
 
 public class GradleBuild {
 
@@ -60,13 +44,15 @@ public class GradleBuild {
         this.appModuleInfoFile = new WritableFile(projectDir.dir("app/src/main/java"), "module-info.java");
         this.libModuleInfoFile = new WritableFile(projectDir.dir("lib/src/main/java"), "module-info.java");
 
-        settingsFile.writeText("""
+        settingsFile.writeText(
+                """
             dependencyResolutionManagement { repositories.mavenCentral() }
             rootProject.name = "test-project"
             include("lib", "app")
             includeBuild(".")
         """);
-        appBuildFile.writeText("""
+        appBuildFile.writeText(
+                """
             plugins {
                 id("org.gradlex.java-module-dependencies")
                 id("org.gradlex.java-module-versions")
@@ -90,7 +76,8 @@ public class GradleBuild {
                 doLast { println(inputs.files.map { it.name }) }
             }
         """);
-        libBuildFile.writeText("""   
+        libBuildFile.writeText(
+                """
                     plugins {
                         id("org.gradlex.java-module-dependencies")
                         id("java-library")
@@ -114,6 +101,7 @@ public class GradleBuild {
     public BuildResult printRuntimeJars() {
         return runner(":app:printRuntimeJars", "-q").build();
     }
+
     public BuildResult printCompileJars() {
         return runner(":app:printCompileJars", "-q").build();
     }
@@ -127,25 +115,30 @@ public class GradleBuild {
     }
 
     public GradleRunner runner(boolean projectIsolation, String... args) {
-        boolean debugMode = ManagementFactory.getRuntimeMXBean().getInputArguments().toString().contains("-agentlib:jdwp");
-        List<String> latestFeaturesArgs = GRADLE_VERSION_UNDER_TEST != null || !projectIsolation ? List.of() : List.of(
-                "--configuration-cache",
-                "-Dorg.gradle.unsafe.isolated-projects=true",
-                // "getGroup" in "JavaModuleDependenciesExtension.create"
-                "--configuration-cache-problems=warn", "-Dorg.gradle.configuration-cache.max-problems=3"
-        );
+        boolean debugMode = ManagementFactory.getRuntimeMXBean()
+                .getInputArguments()
+                .toString()
+                .contains("-agentlib:jdwp");
+        List<String> latestFeaturesArgs = GRADLE_VERSION_UNDER_TEST != null || !projectIsolation
+                ? List.of()
+                : List.of(
+                        "--configuration-cache",
+                        "-Dorg.gradle.unsafe.isolated-projects=true",
+                        // "getGroup" in "JavaModuleDependenciesExtension.create"
+                        "--configuration-cache-problems=warn",
+                        "-Dorg.gradle.configuration-cache.max-problems=3");
         Stream<String> standardArgs = Stream.of(
                 "-s",
                 "--warning-mode=fail",
-                "-Porg.gradlex.java-module-dependencies.register-help-tasks=" + withHelpTasks
-        );
+                "-Porg.gradlex.java-module-dependencies.register-help-tasks=" + withHelpTasks);
         GradleRunner runner = GradleRunner.create()
                 .forwardOutput()
                 .withPluginClasspath()
                 .withDebug(debugMode)
                 .withProjectDir(projectDir.getAsPath().toFile())
                 .withArguments(Stream.of(Arrays.stream(args), latestFeaturesArgs.stream(), standardArgs)
-                        .flatMap(identity()).collect(Collectors.toList()));
+                        .flatMap(identity())
+                        .collect(Collectors.toList()));
         if (GRADLE_VERSION_UNDER_TEST != null) {
             runner.withGradleVersion(GRADLE_VERSION_UNDER_TEST);
         }

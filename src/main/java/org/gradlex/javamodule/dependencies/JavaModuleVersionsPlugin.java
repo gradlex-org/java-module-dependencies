@@ -1,21 +1,19 @@
-/*
- * Copyright the GradleX team.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package org.gradlex.javamodule.dependencies;
 
+import static org.gradle.api.attributes.Usage.JAVA_RUNTIME;
+import static org.gradle.api.plugins.JavaPlatformPlugin.API_CONFIGURATION_NAME;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_RUNTIME;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_STATIC;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_TRANSITIVE;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -31,23 +29,10 @@ import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.tasks.CatalogGenerate;
 import org.jspecify.annotations.Nullable;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static org.gradle.api.attributes.Usage.JAVA_RUNTIME;
-import static org.gradle.api.plugins.JavaPlatformPlugin.API_CONFIGURATION_NAME;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_RUNTIME;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_STATIC;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_STATIC_TRANSITIVE;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_TRANSITIVE;
-
 @SuppressWarnings("unused")
 public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
-    private static final boolean MIN_GRADLE_9_0 = GradleVersion.current().compareTo(GradleVersion.version("9.0.0")) >= 0;
+    private static final boolean MIN_GRADLE_9_0 =
+            GradleVersion.current().compareTo(GradleVersion.version("9.0.0")) >= 0;
 
     @Override
     public void apply(Project project) {
@@ -81,9 +66,14 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
 
         if (GradleVersion.current().compareTo(GradleVersion.version("8.6")) < 0) {
             // https://github.com/gradle/gradle/issues/26163
-            project.afterEvaluate(p -> platformElements.getOutgoing().capability(project.getGroup() + ":" + project.getName() + "-platform:" + project.getVersion()));
+            project.afterEvaluate(p -> platformElements
+                    .getOutgoing()
+                    .capability(project.getGroup() + ":" + project.getName() + "-platform:" + project.getVersion()));
         } else {
-            platformElements.getOutgoing().capability(project.provider(() -> project.getGroup() + ":" + project.getName() + "-platform:" + project.getVersion()));
+            platformElements
+                    .getOutgoing()
+                    .capability(project.provider(
+                            () -> project.getGroup() + ":" + project.getName() + "-platform:" + project.getVersion()));
         }
 
         setupVersionsDSL(project, versions);
@@ -93,18 +83,24 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
 
     private void setupVersionsDSL(Project project, Configuration configuration) {
         project.getPlugins().apply(JavaModuleDependenciesPlugin.class);
-        JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
+        JavaModuleDependenciesExtension javaModuleDependencies =
+                project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
         project.getExtensions().create("moduleInfo", ModuleVersions.class, configuration, javaModuleDependencies);
     }
 
     private void setupConstraintsValidation(Project project, Configuration configuration) {
         configuration.getDependencyConstraints().configureEach(d -> {
-            JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
+            JavaModuleDependenciesExtension javaModuleDependencies =
+                    project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
             String userDefinedReason = d.getReason();
             String ga = d.getModule().toString();
             Provider<String> moduleName = javaModuleDependencies.moduleName(ga);
-            if (moduleName.isPresent() && isModuleName(userDefinedReason) && !moduleName.get().equals(userDefinedReason)) {
-                project.getLogger().lifecycle("WARN: Expected module name for '" + ga + "' is '" + moduleName.get() + "' (not '" + userDefinedReason + "')");
+            if (moduleName.isPresent()
+                    && isModuleName(userDefinedReason)
+                    && !moduleName.get().equals(userDefinedReason)) {
+                project.getLogger()
+                        .lifecycle("WARN: Expected module name for '" + ga + "' is '" + moduleName.get() + "' (not '"
+                                + userDefinedReason + "')");
             }
         });
     }
@@ -114,7 +110,8 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
     }
 
     private void registerCatalogTask(Project project) {
-        JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
+        JavaModuleDependenciesExtension javaModuleDependencies =
+                project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
         ModuleVersions moduleVersions = project.getExtensions().getByType(ModuleVersions.class);
         project.getTasks().register("generateCatalog", CatalogGenerate.class, t -> {
             t.setGroup("java modules");
@@ -131,12 +128,27 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
                         moduleInfoFile = new File(srcDirSet, "java9/module-info.java");
                     }
                     if (moduleInfoFile.exists()) {
-                        ModuleInfo moduleInfo = new ModuleInfo(project.getProviders().fileContents(project.getLayout().getProjectDirectory().file(moduleInfoFile.getAbsolutePath())).getAsText().get());
-                        t.getEntries().addAll(collectCatalogEntriesFromModuleInfos(javaModuleDependencies, moduleInfo.get(REQUIRES_TRANSITIVE)));
-                        t.getEntries().addAll(collectCatalogEntriesFromModuleInfos(javaModuleDependencies, moduleInfo.get(REQUIRES)));
-                        t.getEntries().addAll(collectCatalogEntriesFromModuleInfos(javaModuleDependencies, moduleInfo.get(REQUIRES_STATIC_TRANSITIVE)));
-                        t.getEntries().addAll(collectCatalogEntriesFromModuleInfos(javaModuleDependencies, moduleInfo.get(REQUIRES_STATIC)));
-                        t.getEntries().addAll(collectCatalogEntriesFromModuleInfos(javaModuleDependencies, moduleInfo.get(REQUIRES_RUNTIME)));
+                        ModuleInfo moduleInfo = new ModuleInfo(project.getProviders()
+                                .fileContents(project.getLayout()
+                                        .getProjectDirectory()
+                                        .file(moduleInfoFile.getAbsolutePath()))
+                                .getAsText()
+                                .get());
+                        t.getEntries()
+                                .addAll(collectCatalogEntriesFromModuleInfos(
+                                        javaModuleDependencies, moduleInfo.get(REQUIRES_TRANSITIVE)));
+                        t.getEntries()
+                                .addAll(collectCatalogEntriesFromModuleInfos(
+                                        javaModuleDependencies, moduleInfo.get(REQUIRES)));
+                        t.getEntries()
+                                .addAll(collectCatalogEntriesFromModuleInfos(
+                                        javaModuleDependencies, moduleInfo.get(REQUIRES_STATIC_TRANSITIVE)));
+                        t.getEntries()
+                                .addAll(collectCatalogEntriesFromModuleInfos(
+                                        javaModuleDependencies, moduleInfo.get(REQUIRES_STATIC)));
+                        t.getEntries()
+                                .addAll(collectCatalogEntriesFromModuleInfos(
+                                        javaModuleDependencies, moduleInfo.get(REQUIRES_RUNTIME)));
                     }
                 });
             });
@@ -147,12 +159,20 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
         });
     }
 
-    private List<CatalogGenerate.CatalogEntry> collectCatalogEntriesFromVersions(JavaModuleDependenciesExtension javaModuleDependencies, ModuleVersions moduleVersions) {
-        return moduleVersions.getDeclaredVersions().entrySet().stream().map(mv -> new CatalogGenerate.CatalogEntry(mv.getKey(), javaModuleDependencies.ga(mv.getKey()), mv.getValue())).collect(Collectors.toList());
+    private List<CatalogGenerate.CatalogEntry> collectCatalogEntriesFromVersions(
+            JavaModuleDependenciesExtension javaModuleDependencies, ModuleVersions moduleVersions) {
+        return moduleVersions.getDeclaredVersions().entrySet().stream()
+                .map(mv -> new CatalogGenerate.CatalogEntry(
+                        mv.getKey(), javaModuleDependencies.ga(mv.getKey()), mv.getValue()))
+                .collect(Collectors.toList());
     }
 
-    private List<CatalogGenerate.CatalogEntry> collectCatalogEntriesFromModuleInfos(JavaModuleDependenciesExtension javaModuleDependencies, List<String> moduleNames) {
-        return moduleNames.stream().map(moduleName -> new CatalogGenerate.CatalogEntry(moduleName, javaModuleDependencies.ga(moduleName), null)).collect(Collectors.toList());
+    private List<CatalogGenerate.CatalogEntry> collectCatalogEntriesFromModuleInfos(
+            JavaModuleDependenciesExtension javaModuleDependencies, List<String> moduleNames) {
+        return moduleNames.stream()
+                .map(moduleName ->
+                        new CatalogGenerate.CatalogEntry(moduleName, javaModuleDependencies.ga(moduleName), null))
+                .collect(Collectors.toList());
     }
 
     @SuppressWarnings("deprecation")

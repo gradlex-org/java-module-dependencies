@@ -1,21 +1,12 @@
-/*
- * Copyright the GradleX team.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package org.gradlex.javamodule.dependencies.internal.diagnostics;
 
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.isRealModule;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readModuleNameFromJarFile;
+
+import java.io.IOException;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ComponentSelector;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
@@ -28,18 +19,12 @@ import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableDependenc
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableDependencyResult;
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableUnresolvedDependencyResult;
 
-import java.io.IOException;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.isRealModule;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readModuleNameFromJarFile;
-
 public class RenderableModuleDependencyResult extends RenderableDependencyResult {
     private final ResolvedDependencyResult dependency;
     private final Set<ResolvedArtifactResult> resolvedJars;
 
-    public RenderableModuleDependencyResult(ResolvedDependencyResult dependency, Set<ResolvedArtifactResult> resolvedJars) {
+    public RenderableModuleDependencyResult(
+            ResolvedDependencyResult dependency, Set<ResolvedArtifactResult> resolvedJars) {
         super(dependency);
         this.dependency = dependency;
         this.resolvedJars = resolvedJars;
@@ -53,7 +38,10 @@ public class RenderableModuleDependencyResult extends RenderableDependencyResult
                 out.add(new RenderableUnresolvedDependencyResult((UnresolvedDependencyResult) d));
             } else {
                 ResolvedDependencyResult resolved = (ResolvedDependencyResult) d;
-                resolvedJars.stream().filter(a -> a.getId().getComponentIdentifier().equals(resolved.getSelected().getId()))
+                resolvedJars.stream()
+                        .filter(a -> a.getId()
+                                .getComponentIdentifier()
+                                .equals(resolved.getSelected().getId()))
                         .findFirst()
                         .ifPresent(artifact -> out.add(new RenderableModuleDependencyResult(resolved, resolvedJars)));
             }
@@ -65,8 +53,10 @@ public class RenderableModuleDependencyResult extends RenderableDependencyResult
     public String getName() {
         ComponentSelector requested = getRequested();
         ComponentIdentifier selected = getActual();
-        ResolvedArtifactResult artifact = resolvedJars.stream().filter(a ->
-                a.getId().getComponentIdentifier().equals(selected)).findFirst().orElse(null);
+        ResolvedArtifactResult artifact = resolvedJars.stream()
+                .filter(a -> a.getId().getComponentIdentifier().equals(selected))
+                .findFirst()
+                .orElse(null);
 
         try {
             if (artifact == null) {
@@ -88,11 +78,13 @@ public class RenderableModuleDependencyResult extends RenderableDependencyResult
                                 version = " (" + requestedVersion + " -> " + selectedVersion + ")";
                             }
                         }
-                        coordinates = ((ModuleComponentIdentifier) selected).getModuleIdentifier().toString();
+                        coordinates = ((ModuleComponentIdentifier) selected)
+                                .getModuleIdentifier()
+                                .toString();
                     }
                     String auto = isRealModule(artifact.getFile()) ? "" : "[AUTO] ";
-                    return auto + actualModuleName + version + " | " + coordinates +
-                            (isConstraint() ? "" : " | " + jarName);
+                    return auto + actualModuleName + version + " | " + coordinates
+                            + (isConstraint() ? "" : " | " + jarName);
                 }
             }
         } catch (IOException e) {

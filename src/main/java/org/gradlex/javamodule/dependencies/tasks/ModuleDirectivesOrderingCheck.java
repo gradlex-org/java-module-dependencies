@@ -1,21 +1,11 @@
-/*
- * Copyright the GradleX team.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package org.gradlex.javamodule.dependencies.tasks;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
@@ -25,12 +15,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @CacheableTask
 public abstract class ModuleDirectivesOrderingCheck extends DefaultTask {
@@ -53,16 +37,20 @@ public abstract class ModuleDirectivesOrderingCheck extends DefaultTask {
     public void checkOrder() throws IOException {
         StringBuilder sb = new StringBuilder();
         for (ModuleInfo.Directive directive : ModuleInfo.Directive.values()) {
-            List<String> originalOrder = getModuleInfo().get().get(directive).stream().map(name -> name + ";").collect(Collectors.toList());
+            List<String> originalOrder = getModuleInfo().get().get(directive).stream()
+                    .map(name -> name + ";")
+                    .collect(Collectors.toList());
 
             List<String> sorted = new ArrayList<>(originalOrder);
             sorted.sort((m1, m2) -> {
                 // own modules go first
                 if (getModuleNamePrefix().isPresent()) {
-                    if (m1.startsWith(getModuleNamePrefix().get()) && !m2.startsWith(getModuleNamePrefix().get())) {
+                    if (m1.startsWith(getModuleNamePrefix().get())
+                            && !m2.startsWith(getModuleNamePrefix().get())) {
                         return -1;
                     }
-                    if (!m1.startsWith(getModuleNamePrefix().get()) && m2.startsWith(getModuleNamePrefix().get())) {
+                    if (!m1.startsWith(getModuleNamePrefix().get())
+                            && m2.startsWith(getModuleNamePrefix().get())) {
                         return 1;
                     }
                 }
