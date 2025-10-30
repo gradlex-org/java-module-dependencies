@@ -12,7 +12,10 @@ configurations.compileClasspath {
 dependencies {
     implementation("org.ow2.asm:asm:9.9")
     compileOnly("org.gradlex:extra-java-module-info:1.13.1")
-    compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:3.4.0")
+    compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:3.4.0") {
+        exclude("dev.zacsweers.moshix", "moshi-sealed-runtime")
+        exclude("javax.inject", "javax.inject")
+    }
 }
 
 publishingConventions {
@@ -53,7 +56,8 @@ detachedResolver.repositories.ivy {
 val modulePropertiesScope = detachedResolver.configurations.dependencyScope("moduleProperties")
 val modulePropertiesPath =
     detachedResolver.configurations.resolvable("modulePropertiesPath") { extendsFrom(modulePropertiesScope.get()) }
-val dep = detachedResolver.dependencies.add(modulePropertiesScope.name, "com.github.sormuras.modules:modules:1")
+val dep =
+    detachedResolver.dependencies.add(modulePropertiesScope.name, "com.github.sormuras.modules:modules:1@properties")
 
 (dep as ExternalModuleDependency).isChanging = true
 
