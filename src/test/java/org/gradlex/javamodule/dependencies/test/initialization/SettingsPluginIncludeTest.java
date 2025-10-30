@@ -18,12 +18,14 @@ package org.gradlex.javamodule.dependencies.test.initialization;
 
 import org.gradlex.javamodule.dependencies.test.fixture.GradleBuild;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS;
 
+@Tag("no-cross-version")
 class SettingsPluginIncludeTest {
 
     GradleBuild build = new GradleBuild();
