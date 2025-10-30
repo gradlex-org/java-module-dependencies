@@ -1,21 +1,12 @@
-/*
- * Copyright the GradleX team.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package org.gradlex.javamodule.dependencies.internal.utils;
 
+import static org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE;
+import static org.gradle.api.attributes.Category.LIBRARY;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
@@ -27,21 +18,15 @@ import org.gradle.api.attributes.Category;
 import org.gradle.api.capabilities.Capability;
 import org.gradle.api.provider.Provider;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.gradle.api.attributes.Category.CATEGORY_ATTRIBUTE;
-import static org.gradle.api.attributes.Category.LIBRARY;
-
 public abstract class DependencyDeclarationsUtil {
 
     public static Provider<List<String>> declaredDependencies(Project project, String configuration) {
         ConfigurationContainer configurations = project.getConfigurations();
         return project.provider(() -> configurations.getNames().contains(configuration)
                 ? configurations.getByName(configuration).getDependencies().stream()
-                    .filter(DependencyDeclarationsUtil::isLibraryDependency)
-                    .map(d -> toIdentifier(project, d)).collect(Collectors.toList())
+                        .filter(DependencyDeclarationsUtil::isLibraryDependency)
+                        .map(d -> toIdentifier(project, d))
+                        .collect(Collectors.toList())
                 : Collections.emptyList());
     }
 
@@ -50,9 +35,10 @@ public abstract class DependencyDeclarationsUtil {
             // assume Module Name of local Module
             ProjectDependency projectDependency = (ProjectDependency) dependency;
             if (projectDependency.getRequestedCapabilities().isEmpty()) {
-                return project.getGroup() + "." +  dependency.getName();
+                return project.getGroup() + "." + dependency.getName();
             } else {
-                Capability capability = projectDependency.getRequestedCapabilities().get(0);
+                Capability capability =
+                        projectDependency.getRequestedCapabilities().get(0);
                 return capability.getGroup() + "." + capability.getName().replace("-", ".");
             }
         }

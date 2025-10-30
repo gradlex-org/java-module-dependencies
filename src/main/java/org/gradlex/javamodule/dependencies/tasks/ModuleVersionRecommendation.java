@@ -1,21 +1,11 @@
-/*
- * Copyright the GradleX team.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package org.gradlex.javamodule.dependencies.tasks;
 
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -41,12 +31,6 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 
-import javax.inject.Inject;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-
 public abstract class ModuleVersionRecommendation extends DefaultTask {
 
     @Input
@@ -67,18 +51,24 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
         ConfigurationContainer configurations = project.getConfigurations();
         ComponentMetadataHandler components = project.getDependencies().getComponents();
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-        JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
+        JavaModuleDependenciesExtension javaModuleDependencies =
+                project.getExtensions().getByType(JavaModuleDependenciesExtension.class);
 
-        AttributeContainer rtClasspathAttributes = configurations.getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME).getAttributes();
+        AttributeContainer rtClasspathAttributes = configurations
+                .getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
+                .getAttributes();
         Configuration latestVersionsClasspath = configurations.create("latestVersionsClasspath", c -> {
             c.setCanBeConsumed(false);
             c.setCanBeResolved(true);
-            c.getAttributes().attribute(
-                    Usage.USAGE_ATTRIBUTE,
-                    Objects.requireNonNull(rtClasspathAttributes.getAttribute(Usage.USAGE_ATTRIBUTE)));
-            c.getAttributes().attribute(
-                    LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
-                    Objects.requireNonNull(rtClasspathAttributes.getAttribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE)));
+            c.getAttributes()
+                    .attribute(
+                            Usage.USAGE_ATTRIBUTE,
+                            Objects.requireNonNull(rtClasspathAttributes.getAttribute(Usage.USAGE_ATTRIBUTE)));
+            c.getAttributes()
+                    .attribute(
+                            LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+                            Objects.requireNonNull(
+                                    rtClasspathAttributes.getAttribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE)));
 
             c.getResolutionStrategy().getDependencySubstitution().all(m -> {
                 ComponentSelector requested = m.getRequested();
@@ -91,8 +81,10 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
         });
 
         for (SourceSet sourceSet : sourceSets) {
-            latestVersionsClasspath.extendsFrom(configurations.getByName(sourceSet.getRuntimeClasspathConfigurationName()));
-            latestVersionsClasspath.extendsFrom(configurations.getByName(sourceSet.getCompileClasspathConfigurationName()));
+            latestVersionsClasspath.extendsFrom(
+                    configurations.getByName(sourceSet.getRuntimeClasspathConfigurationName()));
+            latestVersionsClasspath.extendsFrom(
+                    configurations.getByName(sourceSet.getCompileClasspathConfigurationName()));
         }
 
         components.all(c -> {
@@ -108,19 +100,24 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
                 c.setStatus("integration");
             }
         });
-        getResolutionResult().set(project.provider(() -> latestVersionsClasspath.getIncoming().getResolutionResult().getAllComponents().stream().map(
-                result -> {
-                    ModuleVersionIdentifier moduleVersion = result.getModuleVersion();
-                    if (moduleVersion != null && !(result.getId() instanceof ProjectComponentIdentifier)) {
-                        String ga = moduleVersion.getGroup() + ":" + moduleVersion.getName();
-                        String version = moduleVersion.getVersion();
-                        Provider<String> moduleName = javaModuleDependencies.moduleName(ga);
-                        if (moduleName.isPresent()) {
-                            return moduleName.get() + ":" + version;
-                        }
-                    }
-                    return null;
-                }).filter(Objects::nonNull).collect(Collectors.toList())));
+        getResolutionResult()
+                .set(project.provider(
+                        () -> latestVersionsClasspath.getIncoming().getResolutionResult().getAllComponents().stream()
+                                .map(result -> {
+                                    ModuleVersionIdentifier moduleVersion = result.getModuleVersion();
+                                    if (moduleVersion != null
+                                            && !(result.getId() instanceof ProjectComponentIdentifier)) {
+                                        String ga = moduleVersion.getGroup() + ":" + moduleVersion.getName();
+                                        String version = moduleVersion.getVersion();
+                                        Provider<String> moduleName = javaModuleDependencies.moduleName(ga);
+                                        if (moduleName.isPresent()) {
+                                            return moduleName.get() + ":" + version;
+                                        }
+                                    }
+                                    return null;
+                                })
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList())));
     }
 
     @TaskAction
@@ -159,7 +156,8 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
 
         if (getPrintForPropertiesFile().isPresent()) {
             p("");
-            p("Latest Stable Versions of Java Modules - use in: " + getPrintForPropertiesFile().get().getAsFile());
+            p("Latest Stable Versions of Java Modules - use in: "
+                    + getPrintForPropertiesFile().get().getAsFile());
             p("=================================================================================================");
             for (String entry : moduleVersionsPropertiesFile) {
                 p(entry);
@@ -172,5 +170,4 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
     private void p(String toPrint) {
         System.out.println(toPrint);
     }
-
 }

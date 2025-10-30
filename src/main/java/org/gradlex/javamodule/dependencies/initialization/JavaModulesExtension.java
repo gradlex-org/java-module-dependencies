@@ -1,21 +1,10 @@
-/*
- * Copyright the GradleX team.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package org.gradlex.javamodule.dependencies.initialization;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.IsolatedAction;
 import org.gradle.api.Project;
@@ -35,11 +24,6 @@ import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
 import org.gradlex.javamodule.dependencies.internal.utils.ValueModuleDirectoryListing;
 import org.jspecify.annotations.Nullable;
-
-import javax.inject.Inject;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class JavaModulesExtension {
 
@@ -158,8 +142,13 @@ public abstract class JavaModulesExtension {
         String mainModuleName = null;
         if (!definesVersions) {
             for (String moduleInfoPath : module.getModuleInfoPaths().get()) {
-                ModuleInfo moduleInfo = moduleInfoCache.put(project.getProjectDir(), moduleInfoPath,
-                        project.getPath(), module.getArtifact().get(), module.getGroup(), settings.getProviders());
+                ModuleInfo moduleInfo = moduleInfoCache.put(
+                        project.getProjectDir(),
+                        moduleInfoPath,
+                        project.getPath(),
+                        module.getArtifact().get(),
+                        module.getGroup(),
+                        settings.getProviders());
                 if (moduleInfoPath.contains("/main/")) {
                     mainModuleName = moduleInfo.getModuleName();
                 }
@@ -178,7 +167,12 @@ public abstract class JavaModulesExtension {
         private final @Nullable String mainModuleName;
         private final boolean definesVersions;
 
-        public ModuleProject(String path, @Nullable String group, List<String> plugins, @Nullable String mainModuleName, boolean definesVersions) {
+        public ModuleProject(
+                String path,
+                @Nullable String group,
+                List<String> plugins,
+                @Nullable String mainModuleName,
+                boolean definesVersions) {
             this.path = path;
             this.group = group;
             this.plugins = plugins;
@@ -205,15 +199,22 @@ public abstract class JavaModulesExtension {
                     if (m.definesVersions) {
                         project.getPlugins().apply(JavaPlatformPlugin.class);
                         project.getPlugins().apply(JavaModuleVersionsPlugin.class);
-                        project.getExtensions().getByType(JavaPlatformExtension.class).allowDependencies();
+                        project.getExtensions()
+                                .getByType(JavaPlatformExtension.class)
+                                .allowDependencies();
                     } else {
                         project.getPlugins().apply(JavaModuleDependenciesPlugin.class);
-                        project.getExtensions().getByType(JavaModuleDependenciesExtension.class).getModuleInfoCache().set(moduleInfoCache);
+                        project.getExtensions()
+                                .getByType(JavaModuleDependenciesExtension.class)
+                                .getModuleInfoCache()
+                                .set(moduleInfoCache);
                     }
                     m.plugins.forEach(id -> project.getPlugins().apply(id));
                     if (m.mainModuleName != null) {
-                        project.getPlugins().withType(ApplicationPlugin.class, p ->
-                                project.getExtensions().getByType(JavaApplication.class).getMainModule().set(m.mainModuleName));
+                        project.getPlugins().withType(ApplicationPlugin.class, p -> project.getExtensions()
+                                .getByType(JavaApplication.class)
+                                .getMainModule()
+                                .set(m.mainModuleName));
                     }
                 }
             }

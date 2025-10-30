@@ -1,23 +1,20 @@
-/*
- * Copyright the GradleX team.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package org.gradlex.javamodule.dependencies.tasks;
+
+import static org.gradle.api.plugins.JavaPlugin.RUNTIME_ONLY_CONFIGURATION_NAME;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readModuleNameFromJarFile;
 
 import com.autonomousapps.AbstractPostProcessingTask;
 import com.autonomousapps.model.Advice;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
@@ -34,24 +31,12 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.jspecify.annotations.Nullable;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static org.gradle.api.plugins.JavaPlugin.RUNTIME_ONLY_CONFIGURATION_NAME;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readModuleNameFromJarFile;
-
 @CacheableTask
 public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingTask {
 
     private static final Map<String, String> SCOPES_TO_DIRECTIVES = new HashMap<>();
     private static final Map<String, String> SCOPES_TO_DIRECTIVES_BUILD_FILE_DSL = new HashMap<>();
+
     static {
         SCOPES_TO_DIRECTIVES.put("compileOnlyApi", "requires static transitive");
         SCOPES_TO_DIRECTIVES.put("compileOnly", "requires static");
@@ -79,21 +64,29 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
         StringBuilder message = new StringBuilder();
         for (Map.Entry<String, String> sourceSet : getSourceSets().get().entrySet()) {
             boolean inBuildFile = !sourceSet.getValue().endsWith("module-info.java");
-            List<String> toAdd = projectAdvice.stream().filter(a ->
-                    a.getToConfiguration() != null && !RUNTIME_ONLY_CONFIGURATION_NAME.equals(getScope(a.getToConfiguration()).orElse(null))
-            ).filter(a ->
-                    sourceSet.getKey().equals(sourceSetName(a.getToConfiguration()))
-            ).map(a ->
-                    declaration(a.getToConfiguration(), a.getCoordinates().getIdentifier(), a.getCoordinates().getGradleVariantIdentification().getCapabilities(), inBuildFile)
-            ).sorted().collect(Collectors.toList());
+            List<String> toAdd = projectAdvice.stream()
+                    .filter(a -> a.getToConfiguration() != null
+                            && !RUNTIME_ONLY_CONFIGURATION_NAME.equals(
+                                    getScope(a.getToConfiguration()).orElse(null)))
+                    .filter(a -> sourceSet.getKey().equals(sourceSetName(a.getToConfiguration())))
+                    .map(a -> declaration(
+                            a.getToConfiguration(),
+                            a.getCoordinates().getIdentifier(),
+                            a.getCoordinates().getGradleVariantIdentification().getCapabilities(),
+                            inBuildFile))
+                    .sorted()
+                    .collect(Collectors.toList());
 
-            List<String> toRemove = projectAdvice.stream().filter(a ->
-                    a.getFromConfiguration() != null
-            ).filter(a ->
-                    sourceSet.getKey().equals(sourceSetName(a.getFromConfiguration()))
-            ).map(a ->
-                    declaration(a.getFromConfiguration(), a.getCoordinates().getIdentifier(), a.getCoordinates().getGradleVariantIdentification().getCapabilities(), inBuildFile)
-            ).sorted().collect(Collectors.toList());
+            List<String> toRemove = projectAdvice.stream()
+                    .filter(a -> a.getFromConfiguration() != null)
+                    .filter(a -> sourceSet.getKey().equals(sourceSetName(a.getFromConfiguration())))
+                    .map(a -> declaration(
+                            a.getFromConfiguration(),
+                            a.getCoordinates().getIdentifier(),
+                            a.getCoordinates().getGradleVariantIdentification().getCapabilities(),
+                            inBuildFile))
+                    .sorted()
+                    .collect(Collectors.toList());
 
             if (!toAdd.isEmpty() || !toRemove.isEmpty()) {
                 if (message.length() > 0) {
@@ -131,9 +124,13 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
     }
 
     private String declaration(String conf, String coordinates, Set<String> capabilities, boolean inBuildFile) {
-        String capability = capabilities.isEmpty() ? coordinates : capabilities.iterator().next();
-        ResolvedArtifactResult moduleJar = getModuleArtifacts().get().stream().flatMap(c -> c.getArtifacts().stream()).filter(a ->
-                coordinatesEquals(coordinates, capability, a)).findFirst().orElse(null);
+        String capability =
+                capabilities.isEmpty() ? coordinates : capabilities.iterator().next();
+        ResolvedArtifactResult moduleJar = getModuleArtifacts().get().stream()
+                .flatMap(c -> c.getArtifacts().stream())
+                .filter(a -> coordinatesEquals(coordinates, capability, a))
+                .findFirst()
+                .orElse(null);
         try {
             String moduleName = null;
             if (moduleJar != null) {
@@ -159,7 +156,8 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
             return false;
         }
         if (id instanceof ModuleComponentIdentifier) {
-            return coordinates.equals(((ModuleComponentIdentifier) id).getModuleIdentifier().toString());
+            return coordinates.equals(
+                    ((ModuleComponentIdentifier) id).getModuleIdentifier().toString());
         }
         if (id instanceof ProjectComponentIdentifier) {
             return coordinates.equals(((ProjectComponentIdentifier) id).getProjectPath());
@@ -173,7 +171,8 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
         if (!scope.isPresent()) {
             return null;
         }
-        String sourceSet = configurationName.substring(0, configurationName.length() - scope.get().length());
+        String sourceSet = configurationName.substring(
+                0, configurationName.length() - scope.get().length());
         return sourceSet.isEmpty() ? "main" : sourceSet;
     }
 
@@ -183,7 +182,8 @@ public abstract class ModuleDirectivesScopeCheck extends AbstractPostProcessingT
     }
 
     private Optional<String> getScope(String configurationName) {
-        return SCOPES_TO_DIRECTIVES.keySet().stream().filter(k -> configurationName.toLowerCase(Locale.ROOT).endsWith(k.toLowerCase(Locale.ROOT))).findFirst();
+        return SCOPES_TO_DIRECTIVES.keySet().stream()
+                .filter(k -> configurationName.toLowerCase(Locale.ROOT).endsWith(k.toLowerCase(Locale.ROOT)))
+                .findFirst();
     }
-
 }

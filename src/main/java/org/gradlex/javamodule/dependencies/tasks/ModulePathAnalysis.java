@@ -1,21 +1,18 @@
-/*
- * Copyright the GradleX team.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package org.gradlex.javamodule.dependencies.tasks;
 
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.isRealModule;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readModuleNameFromJarFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -33,26 +30,13 @@ import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.jspecify.annotations.Nullable;
 
-import javax.inject.Inject;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.isRealModule;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleJar.readModuleNameFromJarFile;
-
 public abstract class ModulePathAnalysis extends DefaultTask {
     private final String projectName;
     private final SourceSetContainer sourceSets;
     private final JavaModuleDependenciesExtension javaModuleDependencies;
 
     @InputFiles
-    public abstract ListProperty<Configuration> getClasspathConfigurations() ;
+    public abstract ListProperty<Configuration> getClasspathConfigurations();
 
     @Inject
     public ModulePathAnalysis(Project project) {
@@ -74,15 +58,16 @@ public abstract class ModulePathAnalysis extends DefaultTask {
         for (File folder : main.getJava().getSrcDirs()) {
             File file = new File(folder, "module-info.java");
             if (file.exists()) {
-                try(Stream<String> lines = Files.lines(file.toPath())) {
+                try (Stream<String> lines = Files.lines(file.toPath())) {
                     String fileContent = lines.collect(Collectors.joining("\n"));
-                    ownModuleNamesPrefix = new ModuleInfo(fileContent).moduleNamePrefix(projectName, main.getName(), false);
+                    ownModuleNamesPrefix =
+                            new ModuleInfo(fileContent).moduleNamePrefix(projectName, main.getName(), false);
                 }
                 break;
             }
         }
 
-        for (Configuration classPath: getClasspathConfigurations().get()) {
+        for (Configuration classPath : getClasspathConfigurations().get()) {
             collect(classPath, usedMappings, nonModules, missingMappings, wrongMappings, ownModuleNamesPrefix);
         }
 
@@ -102,7 +87,8 @@ public abstract class ModulePathAnalysis extends DefaultTask {
             }
             p("");
             p("Notes / Options:");
-            p("  - This may be ok if you use the Classpath (aka ALL-UNNAMED) in addition to the Module Path (automatic modules can see ALL-UNNAMED)");
+            p(
+                    "  - This may be ok if you use the Classpath (aka ALL-UNNAMED) in addition to the Module Path (automatic modules can see ALL-UNNAMED)");
             p("  - Remove the dependencies or upgrade to higher versions");
             p("  - Patch legacy Jars to Modules: https://github.com/gradlex-org/extra-java-module-info");
         }
@@ -118,8 +104,10 @@ public abstract class ModulePathAnalysis extends DefaultTask {
             p("Options to fix:");
             p("  - Upgrade to newer version(s) - use ':recommendModuleVersions'");
             p("  - Fix wrong mapping, via 'moduleNameToGA.put('...', '...')'");
-            p("  - If it is about a legacy Jar you want to use as Module, you need to patch it: https://github.com/gradlex-org/extra-java-module-info");
-            p("  - Report a wrong mapping in the plugin: https://github.com/gradlex-org/java-module-dependencies/issues/new");
+            p(
+                    "  - If it is about a legacy Jar you want to use as Module, you need to patch it: https://github.com/gradlex-org/extra-java-module-info");
+            p(
+                    "  - Report a wrong mapping in the plugin: https://github.com/gradlex-org/java-module-dependencies/issues/new");
         }
 
         if (!missingMappings.isEmpty()) {
@@ -135,12 +123,20 @@ public abstract class ModulePathAnalysis extends DefaultTask {
             p("");
             p("Options to fix:");
             p("  - Add mappings in your convention plugins - you may copy&paste the above output");
-            p("  - Provide a PR to add missing mappings for well-known Modules to the plugin: https://github.com/gradlex-org/java-module-dependencies/pulls");
+            p(
+                    "  - Provide a PR to add missing mappings for well-known Modules to the plugin: https://github.com/gradlex-org/java-module-dependencies/pulls");
         }
         p("");
     }
 
-    private void collect(Configuration configuration, Set<String> usedMappings, Set<String> nonModules, Set<String> missingMappings, Set<String> wrongMappings, @Nullable String ownModuleNamesPrefix) throws IOException {
+    private void collect(
+            Configuration configuration,
+            Set<String> usedMappings,
+            Set<String> nonModules,
+            Set<String> missingMappings,
+            Set<String> wrongMappings,
+            @Nullable String ownModuleNamesPrefix)
+            throws IOException {
         for (ResolvedArtifactResult result : configuration.getIncoming().getArtifacts()) {
             ComponentIdentifier id = result.getId().getComponentIdentifier();
             File resultFile = result.getFile();
@@ -162,9 +158,10 @@ public abstract class ModulePathAnalysis extends DefaultTask {
                 if (capabilities.isEmpty()) {
                     moduleName = ownModuleNamesPrefix + "." + projectName;
                 } else {
-                    moduleName = ownModuleNamesPrefix + "." + capabilities.get(0).getName().replace("-", ".");
+                    moduleName = ownModuleNamesPrefix + "."
+                            + capabilities.get(0).getName().replace("-", ".");
                 }
-            } else if (id instanceof ModuleComponentIdentifier){
+            } else if (id instanceof ModuleComponentIdentifier) {
                 ModuleComponentIdentifier moduleVersion = (ModuleComponentIdentifier) id;
                 ga = moduleVersion.getGroup() + ":" + moduleVersion.getModule();
                 version = " (" + moduleVersion.getVersion() + ")";
@@ -200,5 +197,4 @@ public abstract class ModulePathAnalysis extends DefaultTask {
     private void p(String toPrint) {
         System.out.println(toPrint);
     }
-
 }

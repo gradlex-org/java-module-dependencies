@@ -1,21 +1,25 @@
-/*
- * Copyright the GradleX team.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package org.gradlex.javamodule.dependencies;
 
+import static java.util.Optional.empty;
+import static org.gradlex.javamodule.dependencies.internal.utils.DependencyDeclarationsUtil.copyVersionConstraint;
+import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_RUNTIME;
+
+import java.io.CharArrayReader;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
@@ -47,26 +51,6 @@ import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
 import org.gradlex.javamodule.dependencies.tasks.SyntheticModuleInfoFoldersGenerate;
 import org.jspecify.annotations.Nullable;
-
-import javax.inject.Inject;
-import java.io.CharArrayReader;
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-
-import static java.util.Optional.empty;
-import static org.gradlex.javamodule.dependencies.internal.utils.DependencyDeclarationsUtil.copyVersionConstraint;
-import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_RUNTIME;
 
 /**
  * - Configure behavior of the 'java-module-dependencies' plugin
@@ -136,7 +120,8 @@ public abstract class JavaModuleDependenciesExtension {
 
     public JavaModuleDependenciesExtension(@Nullable VersionCatalogsExtension versionCatalogs, File rootDir) {
         this.versionCatalogs = versionCatalogs;
-        getModuleInfoCache().convention(getProviders().provider(() -> getObjects().newInstance(ModuleInfoCache.class, false)));
+        getModuleInfoCache()
+                .convention(getProviders().provider(() -> getObjects().newInstance(ModuleInfoCache.class, false)));
         getModulesProperties().set(new File(rootDir, "gradle/modules.properties"));
         getVersionCatalogName().convention("libs");
         getModuleNameCheck().convention(true);
@@ -167,7 +152,10 @@ public abstract class JavaModuleDependenciesExtension {
      * @return Dependency notation
      */
     public Provider<String> ga(String moduleName) {
-        return getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName))).orElse(errorIfNotFound(moduleName));
+        return getModuleNameToGA()
+                .getting(moduleName)
+                .orElse(mapByPrefix(getProviders().provider(() -> moduleName)))
+                .orElse(errorIfNotFound(moduleName));
     }
 
     /**
@@ -178,36 +166,47 @@ public abstract class JavaModuleDependenciesExtension {
      * @return Dependency notation
      */
     public Provider<String> ga(Provider<String> moduleName) {
-        return moduleName.flatMap(n -> getModuleNameToGA().getting(n)).orElse(mapByPrefix(moduleName)).orElse(errorIfNotFound(moduleName));
+        return moduleName
+                .flatMap(n -> getModuleNameToGA().getting(n))
+                .orElse(mapByPrefix(moduleName))
+                .orElse(errorIfNotFound(moduleName));
     }
 
     private Provider<String> mapByPrefix(Provider<String> moduleName) {
-        return getModuleNamePrefixToGroup().map(
-                m -> {
-                    Optional<Map.Entry<String, String>> prefixToGroup = m.entrySet().stream()
-                            .filter(e -> moduleName.get().startsWith(e.getKey())).max(Comparator.comparingInt(e -> e.getKey().length()));
-                    if (prefixToGroup.isPresent()) {
-                        String group = prefixToGroup.get().getValue();
-                        String artifact = toProjectName(moduleName.get().substring(prefixToGroup.get().getKey().length()));
-                        return group + ":" + artifact;
-                    }
-                    return null;
-                }
-        );
+        return getModuleNamePrefixToGroup().map(m -> {
+            Optional<Map.Entry<String, String>> prefixToGroup = m.entrySet().stream()
+                    .filter(e -> moduleName.get().startsWith(e.getKey()))
+                    .max(Comparator.comparingInt(e -> e.getKey().length()));
+            if (prefixToGroup.isPresent()) {
+                String group = prefixToGroup.get().getValue();
+                String artifact = toProjectName(
+                        moduleName.get().substring(prefixToGroup.get().getKey().length()));
+                return group + ":" + artifact;
+            }
+            return null;
+        });
     }
 
     private String toProjectName(String moduleNameSuffix) {
-        List<String> allProjectNames = getProject().getRootProject().getSubprojects().stream().map(Project::getName).collect(Collectors.toList());
+        List<String> allProjectNames = getProject().getRootProject().getSubprojects().stream()
+                .map(Project::getName)
+                .collect(Collectors.toList());
 
-        Optional<String> perfectMatch = allProjectNames.stream().filter(p -> p.replace("-", ".").equals(moduleNameSuffix)).findFirst();
-        Optional<String> existingProjectName = allProjectNames.stream().filter(p -> moduleNameSuffix.startsWith(p.replace("-", ".") + "."))
+        Optional<String> perfectMatch = allProjectNames.stream()
+                .filter(p -> p.replace("-", ".").equals(moduleNameSuffix))
+                .findFirst();
+        Optional<String> existingProjectName = allProjectNames.stream()
+                .filter(p -> moduleNameSuffix.startsWith(p.replace("-", ".") + "."))
                 .max(Comparator.comparingInt(String::length));
 
         if (perfectMatch.isPresent()) {
             return perfectMatch.get();
         } else if (existingProjectName.isPresent()) {
-            String capabilityClassifier = moduleNameSuffix.substring(existingProjectName.get().length() + 1).replace(".", "-");
-            return existingProjectName.get() + "|" + capabilityClassifier; // no exact match (assume last segment is capability)
+            String capabilityClassifier = moduleNameSuffix
+                    .substring(existingProjectName.get().length() + 1)
+                    .replace(".", "-");
+            return existingProjectName.get() + "|"
+                    + capabilityClassifier; // no exact match (assume last segment is capability)
         }
 
         return moduleNameSuffix;
@@ -231,7 +230,8 @@ public abstract class JavaModuleDependenciesExtension {
 
             if (localModule != null) {
                 // local project
-                ProjectDependency projectDependency = (ProjectDependency) getDependencies().create(getProject().project(localModule.getProjectPath()));
+                ProjectDependency projectDependency = (ProjectDependency)
+                        getDependencies().create(getProject().project(localModule.getProjectPath()));
                 projectDependency.because(moduleName);
                 if (localModule.getCapability() != null) {
                     projectDependency.capabilities(c -> c.requireCapabilities(localModule.getCapability()));
@@ -245,32 +245,45 @@ public abstract class JavaModuleDependenciesExtension {
 
     private Provider<Dependency> createWithGuessing(String moduleName, SourceSet sourceSetWithModuleInfo) {
         return getProviders().provider(() -> {
-            Map<String, String> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream().collect(
-                    Collectors.toMap(Project::getName, p -> (String) p.getGroup(), (a, b) -> a));
+            Map<String, String> allProjectNamesAndGroups = getProject().getRootProject().getSubprojects().stream()
+                    .collect(Collectors.toMap(Project::getName, p -> (String) p.getGroup(), (a, b) -> a));
 
             ModuleInfo moduleInfo = getModuleInfoCache().get().get(sourceSetWithModuleInfo, getProviders());
-            String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(getProject().getName(), sourceSetWithModuleInfo.getName(), getModuleNameCheck().get());
+            String ownModuleNamesPrefix = moduleInfo.moduleNamePrefix(
+                    getProject().getName(),
+                    sourceSetWithModuleInfo.getName(),
+                    getModuleNameCheck().get());
 
-            String moduleNameSuffix = ownModuleNamesPrefix == null ? null :
-                    moduleName.startsWith(ownModuleNamesPrefix + ".") ? moduleName.substring(ownModuleNamesPrefix.length() + 1) :
-                            ownModuleNamesPrefix.isEmpty() ? moduleName : null;
+            String moduleNameSuffix = ownModuleNamesPrefix == null
+                    ? null
+                    : moduleName.startsWith(ownModuleNamesPrefix + ".")
+                            ? moduleName.substring(ownModuleNamesPrefix.length() + 1)
+                            : ownModuleNamesPrefix.isEmpty() ? moduleName : null;
 
-            String parentPath = getProject().getParent() == null ? "" : getProject().getParent().getPath();
-            Optional<String> perfectMatch = allProjectNamesAndGroups.keySet().stream().filter(p -> p.replace("-", ".").equals(moduleNameSuffix)).findFirst();
-            Optional<String> existingProjectName = allProjectNamesAndGroups.keySet().stream().filter(p -> moduleNameSuffix != null && moduleNameSuffix.startsWith(p.replace("-", ".") + "."))
+            String parentPath = getProject().getParent() == null
+                    ? ""
+                    : getProject().getParent().getPath();
+            Optional<String> perfectMatch = allProjectNamesAndGroups.keySet().stream()
+                    .filter(p -> p.replace("-", ".").equals(moduleNameSuffix))
+                    .findFirst();
+            Optional<String> existingProjectName = allProjectNamesAndGroups.keySet().stream()
+                    .filter(p -> moduleNameSuffix != null && moduleNameSuffix.startsWith(p.replace("-", ".") + "."))
                     .max(Comparator.comparingInt(String::length));
 
             if (perfectMatch.isPresent()) {
-                Dependency projectDependency = getDependencies().create(getProject().project(parentPath + ":" + perfectMatch.get()));
+                Dependency projectDependency =
+                        getDependencies().create(getProject().project(parentPath + ":" + perfectMatch.get()));
                 projectDependency.because(moduleName);
                 return projectDependency;
             } else if (existingProjectName.isPresent()) {
                 // no exact match -> add capability to point at Module in other source set
                 String projectName = existingProjectName.get();
-                ProjectDependency projectDependency = (ProjectDependency) getDependencies().create(getProject().project(parentPath + ":" + projectName));
-                String capabilityName = projectName + moduleNameSuffix.substring(projectName.length()).replace(".", "-");
-                projectDependency.capabilities(c -> c.requireCapabilities(
-                        allProjectNamesAndGroups.get(projectName) + ":" + capabilityName));
+                ProjectDependency projectDependency = (ProjectDependency)
+                        getDependencies().create(getProject().project(parentPath + ":" + projectName));
+                String capabilityName = projectName
+                        + moduleNameSuffix.substring(projectName.length()).replace(".", "-");
+                projectDependency.capabilities(
+                        c -> c.requireCapabilities(allProjectNamesAndGroups.get(projectName) + ":" + capabilityName));
                 projectDependency.because(moduleName);
                 return projectDependency;
             }
@@ -280,7 +293,9 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     private @Nullable ModuleDependency createExternalDependency(String moduleName) {
-        Provider<String> coordinates = getModuleNameToGA().getting(moduleName).orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
+        Provider<String> coordinates = getModuleNameToGA()
+                .getting(moduleName)
+                .orElse(mapByPrefix(getProviders().provider(() -> moduleName)));
         if (coordinates.isPresent()) {
             ExternalDependency component;
             String capability;
@@ -304,8 +319,10 @@ public abstract class JavaModuleDependenciesExtension {
             }
             return dependency;
         } else {
-            getProject().getLogger().lifecycle(
-                    "[WARN] [Java Module Dependencies] " + moduleName + "=group:artifact missing in " + getModulesProperties().get().getAsFile());
+            getProject()
+                    .getLogger()
+                    .lifecycle("[WARN] [Java Module Dependencies] " + moduleName + "=group:artifact missing in "
+                            + getModulesProperties().get().getAsFile());
             return null;
         }
     }
@@ -365,13 +382,16 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     private ExternalDependency findGav(String ga, String moduleName) {
-        Optional<VersionCatalog> catalog = versionCatalogs == null ? empty() : versionCatalogs.find(getVersionCatalogName().get());
-        Optional<VersionConstraint> version = catalog.flatMap(versionCatalog -> versionCatalog.findVersion(moduleName.replace('_', '.')));
+        Optional<VersionCatalog> catalog = versionCatalogs == null
+                ? empty()
+                : versionCatalogs.find(getVersionCatalogName().get());
+        Optional<VersionConstraint> version =
+                catalog.flatMap(versionCatalog -> versionCatalog.findVersion(moduleName.replace('_', '.')));
         ExternalDependency dependency = (ExternalDependency) getDependencies().create(ga);
-        version.ifPresent(versionConstraint -> dependency.version(copy -> copyVersionConstraint(versionConstraint, copy)));
+        version.ifPresent(
+                versionConstraint -> dependency.version(copy -> copyVersionConstraint(versionConstraint, copy)));
         return dependency;
     }
-
 
     /**
      * Finds the Module Name for given coordinates
@@ -391,16 +411,20 @@ public abstract class JavaModuleDependenciesExtension {
      */
     public Provider<String> moduleName(Provider<String> ga) {
         return ga.map(groupArtifact -> {
-            Optional<String> found = getModuleNameToGA().get().entrySet().stream().filter(
-                    e -> e.getValue().equals(groupArtifact)).map(Map.Entry::getKey).findFirst();
+            Optional<String> found = getModuleNameToGA().get().entrySet().stream()
+                    .filter(e -> e.getValue().equals(groupArtifact))
+                    .map(Map.Entry::getKey)
+                    .findFirst();
             if (found.isPresent()) {
                 return found.get();
             } else {
                 String[] split = groupArtifact.split(":");
                 String group = split[0];
                 String artifact = split[1];
-                Optional<String> modulePrefix = getModuleNamePrefixToGroup().get().entrySet().stream().filter(
-                        e -> e.getValue().equals(group)).map(Map.Entry::getKey).findFirst();
+                Optional<String> modulePrefix = getModuleNamePrefixToGroup().get().entrySet().stream()
+                        .filter(e -> e.getValue().equals(group))
+                        .map(Map.Entry::getKey)
+                        .findFirst();
                 return modulePrefix.map(s -> s + artifact).orElse(null);
             }
         });
@@ -435,8 +459,14 @@ public abstract class JavaModuleDependenciesExtension {
             c.setCanBeConsumed(false);
             c.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.class, Usage.JAVA_RUNTIME));
             c.getAttributes().attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.class, Category.LIBRARY));
-            c.getAttributes().attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.class, LibraryElements.JAR));
-            c.getAttributes().attribute(TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE, objects.named(TargetJvmEnvironment.class, TargetJvmEnvironment.STANDARD_JVM));
+            c.getAttributes()
+                    .attribute(
+                            LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+                            objects.named(LibraryElements.class, LibraryElements.JAR));
+            c.getAttributes()
+                    .attribute(
+                            TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE,
+                            objects.named(TargetJvmEnvironment.class, TargetJvmEnvironment.STANDARD_JVM));
             c.getAttributes().attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.class, Bundling.EXTERNAL));
         });
         getConfigurations().configureEach(c -> {
@@ -453,9 +483,11 @@ public abstract class JavaModuleDependenciesExtension {
 
     private Dependency createDependency(String project) {
         boolean isProjectInBuild = project.startsWith(":");
-        return getDependencies().create(isProjectInBuild
-                ? getDependencies().project(Collections.singletonMap("path", project))
-                : project);
+        return getDependencies()
+                .create(
+                        isProjectInBuild
+                                ? getDependencies().project(Collections.singletonMap("path", project))
+                                : project);
     }
 
     /**
@@ -471,7 +503,10 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     void doAddRequiresRuntimeSupport(SourceSet sourceSetForModuleInfo, SourceSet sourceSetForClasspath) {
-        List<String> requiresRuntime = getModuleInfoCache().get().get(sourceSetForModuleInfo, getProviders()).get(REQUIRES_RUNTIME);
+        List<String> requiresRuntime = getModuleInfoCache()
+                .get()
+                .get(sourceSetForModuleInfo, getProviders())
+                .get(REQUIRES_RUNTIME);
         String generatorTaskName = sourceSetForClasspath.getTaskName("generate", "syntheticModuleInfoFolders");
         if (requiresRuntime.isEmpty() || getProject().getTasks().getNames().contains(generatorTaskName)) {
             // Already active or not needed for this source set
@@ -479,15 +514,18 @@ public abstract class JavaModuleDependenciesExtension {
         }
 
         ConfigurableFileCollection syntheticModuleInfoFolders = getObjects().fileCollection();
-        Provider<Directory> moduleInfoFoldersBase = getLayout().getBuildDirectory().dir("tmp/java-module-dependencies/" + sourceSetForClasspath.getName());
-        TaskProvider<SyntheticModuleInfoFoldersGenerate> generatorTask = getProject().getTasks().register(
-                generatorTaskName,
-                SyntheticModuleInfoFoldersGenerate.class, t -> {
+        Provider<Directory> moduleInfoFoldersBase =
+                getLayout().getBuildDirectory().dir("tmp/java-module-dependencies/" + sourceSetForClasspath.getName());
+        TaskProvider<SyntheticModuleInfoFoldersGenerate> generatorTask = getProject()
+                .getTasks()
+                .register(generatorTaskName, SyntheticModuleInfoFoldersGenerate.class, t -> {
                     t.getModuleNames().set(requiresRuntime);
                     t.getSyntheticModuleInfoFolder().set(moduleInfoFoldersBase);
                 });
 
-        List<Provider<Directory>> moduleInfoFolders = requiresRuntime.stream().map(moduleName -> moduleInfoFoldersBase.map(b -> b.dir(moduleName))).collect(Collectors.toList());
+        List<Provider<Directory>> moduleInfoFolders = requiresRuntime.stream()
+                .map(moduleName -> moduleInfoFoldersBase.map(b -> b.dir(moduleName)))
+                .collect(Collectors.toList());
         for (Provider<Directory> syntheticModuleInfoFolder : moduleInfoFolders) {
             syntheticModuleInfoFolders.from(syntheticModuleInfoFolder);
         }

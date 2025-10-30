@@ -1,21 +1,9 @@
-/*
- * Copyright the GradleX team.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package org.gradlex.javamodule.dependencies.dsl;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.DependencyConstraint;
@@ -23,11 +11,7 @@ import org.gradle.api.artifacts.MutableVersionConstraint;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 
-import javax.inject.Inject;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-abstract public class ModuleVersions {
+public abstract class ModuleVersions {
 
     private final Map<String, String> declaredVersions = new LinkedHashMap<>();
     private final Configuration configuration;
@@ -54,17 +38,22 @@ abstract public class ModuleVersions {
     }
 
     public void version(String moduleName, String requiredVersion, Action<? super MutableVersionConstraint> version) {
-        getDependencies().getConstraints().add(configuration.getName(), javaModuleDependencies.ga(moduleName).map(ga -> {
-            String mainComponentCoordinates;
-            if (ga.contains("|")) {
-                mainComponentCoordinates = ga.substring(0, ga.indexOf("|")) + ":" + requiredVersion;
-            } else {
-                mainComponentCoordinates = ga + ":" + requiredVersion;
-            }
-            DependencyConstraint dependencyConstraint = getDependencies().getConstraints().create(mainComponentCoordinates);
-            dependencyConstraint.version(version);
-            return dependencyConstraint;
-        }));
+        getDependencies()
+                .getConstraints()
+                .add(
+                        configuration.getName(),
+                        javaModuleDependencies.ga(moduleName).map(ga -> {
+                            String mainComponentCoordinates;
+                            if (ga.contains("|")) {
+                                mainComponentCoordinates = ga.substring(0, ga.indexOf("|")) + ":" + requiredVersion;
+                            } else {
+                                mainComponentCoordinates = ga + ":" + requiredVersion;
+                            }
+                            DependencyConstraint dependencyConstraint =
+                                    getDependencies().getConstraints().create(mainComponentCoordinates);
+                            dependencyConstraint.version(version);
+                            return dependencyConstraint;
+                        }));
         declaredVersions.put(moduleName, requiredVersion);
     }
 }
