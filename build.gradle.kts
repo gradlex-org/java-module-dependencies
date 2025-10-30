@@ -12,9 +12,13 @@ configurations.compileClasspath {
 dependencies {
     implementation("org.ow2.asm:asm:9.9")
     compileOnly("org.gradlex:extra-java-module-info:1.13.1")
-    compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:3.4.0") {
-        exclude("dev.zacsweers.moshix", "moshi-sealed-runtime")
-        exclude("javax.inject", "javax.inject")
+    compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:3.4.0")
+}
+
+jvmDependencyConflicts.patch {
+    module("com.autonomousapps:dependency-analysis-gradle-plugin") {
+        removeDependency("dev.zacsweers.moshix:moshi-sealed-runtime")
+        removeDependency("javax.inject:javax.inject")
     }
 }
 
