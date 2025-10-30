@@ -32,9 +32,9 @@ publishingConventions {
     }
     gitHub("https://github.com/gradlex-org/java-module-dependencies")
     developer {
-        id.set("jjohannes")
-        name.set("Jendrik Johannes")
-        email.set("jendrik@gradlex.org")
+        id = "jjohannes"
+        name = "Jendrik Johannes"
+        email = "jendrik@gradlex.org"
     }
 }
 
@@ -63,13 +63,12 @@ val dep =
 
 val updateUniqueModulesProperties =
     tasks.register<UniqueModulesPropertiesUpdate>("updateUniqueModulesProperties") {
-        skipUpdate.set(providers.environmentVariable("CI").getOrElse("false").toBoolean())
+        skipUpdate = providers.environmentVariable("CI").getOrElse("false").toBoolean()
         modulesProperties.from(modulePropertiesPath)
-        uniqueModulesProperties.set(
+        uniqueModulesProperties =
             layout.projectDirectory.file(
                 "src/main/resources/org/gradlex/javamodule/dependencies/unique_modules.properties"
             )
-        )
     }
 
 sourceSets.main {
