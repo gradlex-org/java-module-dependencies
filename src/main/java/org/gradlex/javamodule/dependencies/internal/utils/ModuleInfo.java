@@ -3,12 +3,25 @@ package org.gradlex.javamodule.dependencies.internal.utils;
 
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleNamingUtil.sourceSetToModuleName;
 
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.expr.Name;
+import com.github.javaparser.ast.modules.ModuleDeclaration;
+import com.github.javaparser.ast.modules.ModuleDirective;
+import com.github.javaparser.ast.modules.ModuleProvidesDirective;
+import com.github.javaparser.ast.modules.ModuleRequiresDirective;
+import com.github.javaparser.ast.nodeTypes.NodeWithIdentifier;
+import com.github.javaparser.ast.nodeTypes.NodeWithName;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 
 public class ModuleInfo implements Serializable {
@@ -29,18 +42,34 @@ public class ModuleInfo implements Serializable {
 
     public static final ModuleInfo EMPTY = new ModuleInfo("");
 
-    private String moduleName = "";
+    private final String moduleName;
+    private final Map<String, String> imports;
     private final List<String> requires = new ArrayList<>();
     private final List<String> requiresTransitive = new ArrayList<>();
     private final List<String> requiresStatic = new ArrayList<>();
     private final List<String> requiresStaticTransitive = new ArrayList<>();
     private final List<String> requiresRuntime = new ArrayList<>();
+    private final Map<String, List<String>> provides = new LinkedHashMap<>();
 
     public ModuleInfo(String moduleInfoFileContent) {
-        boolean insideComment = false;
-        for (String line : moduleInfoFileContent.split("\n")) {
-            insideComment = parse(line, insideComment);
+        Optional<CompilationUnit> result =
+                new JavaParser().parse(moduleInfoFileContent).getResult();
+        if (!result.isPresent() || !result.get().getModule().isPresent()) {
+            moduleName = "";
+            imports = Collections.emptyMap();
+            return;
         }
+
+        ModuleDeclaration moduleDeclaration = result.get().getModule().get();
+        moduleName = moduleDeclaration.getNameAsString();
+        imports = processImports(result.get());
+        processDirectives(moduleDeclaration.getDirectives());
+    }
+
+    private Map<String, String> processImports(CompilationUnit cu) {
+        return cu.getImports().stream()
+                .map(NodeWithName::getName)
+                .collect(Collectors.toMap(NodeWithIdentifier::getId, Node::toString));
     }
 
     public String getModuleName() {
@@ -64,6 +93,10 @@ public class ModuleInfo implements Serializable {
             return requiresRuntime;
         }
         return Collections.emptyList();
+    }
+
+    public Map<String, List<String>> getProvides() {
+        return provides;
     }
 
     @Nullable
@@ -90,44 +123,47 @@ public class ModuleInfo implements Serializable {
         return null;
     }
 
-    /**
-     * @return true, if we are inside a multi-line comment after this line
-     */
-    private boolean parse(String moduleLine, boolean insideComment) {
-        if (insideComment) {
-            return !moduleLine.contains("*/");
-        }
-
-        List<String> tokens = Arrays.asList(moduleLine
-                .replace(";", "")
-                .replace("{", "")
-                .replace("}", "")
-                .replace(RUNTIME_KEYWORD, "runtime")
-                .replaceAll("/\\*.*?\\*/", " ")
-                .trim()
-                .split("\\s+"));
-        int singleLineCommentStartIndex = tokens.indexOf("//");
-        if (singleLineCommentStartIndex >= 0) {
-            tokens = tokens.subList(0, singleLineCommentStartIndex);
-        }
-
-        if (tokens.contains("module")) {
-            moduleName = tokens.get(tokens.size() - 1);
-        }
-        if (tokens.size() > 1 && tokens.get(0).equals("requires")) {
-            if (tokens.size() > 3 && tokens.contains("static") && tokens.contains("transitive")) {
-                requiresStaticTransitive.add(tokens.get(3));
-            } else if (tokens.size() > 2 && tokens.contains("transitive")) {
-                requiresTransitive.add(tokens.get(2));
-            } else if (tokens.size() > 2 && tokens.contains("static")) {
-                requiresStatic.add(tokens.get(2));
-            } else if (tokens.size() > 2 && tokens.contains("runtime")) {
-                requiresRuntime.add(tokens.get(2));
-            } else {
-                requires.add(tokens.get(1));
+    private void processDirectives(List<ModuleDirective> directives) {
+        for (ModuleDirective d : directives) {
+            if (d instanceof ModuleRequiresDirective) {
+                ModuleRequiresDirective directive = (ModuleRequiresDirective) d;
+                String identifier = directive.getNameAsString();
+                if (directive.isStatic() && directive.isTransitive()) {
+                    requiresStaticTransitive.add(identifier);
+                } else if (directive.isTransitive()) {
+                    requiresTransitive.add(identifier);
+                } else if (directive.isStatic()) {
+                    requiresStatic.add(identifier);
+                } else if (isRuntime(directive)) {
+                    requiresRuntime.add(identifier);
+                } else {
+                    requires.add(identifier);
+                }
+            }
+            if (d instanceof ModuleProvidesDirective) {
+                ModuleProvidesDirective directive = (ModuleProvidesDirective) d;
+                String name = qualifiedName(directive.getName());
+                List<String> with = provides.computeIfAbsent(name, k -> new ArrayList<>());
+                with.addAll(
+                        directive.getWith().stream().map(this::qualifiedName).collect(Collectors.toList()));
             }
         }
-        return moduleLine.lastIndexOf("/*") > moduleLine.lastIndexOf("*/");
+    }
+
+    private static boolean isRuntime(ModuleRequiresDirective directive) {
+        return directive
+                .getName()
+                .getComment()
+                .map(c -> "runtime".equals(c.getContent().trim()))
+                .orElse(false);
+    }
+
+    private String qualifiedName(Name name) {
+        if (imports.containsKey(name.getId())) {
+            return imports.get(name.getId());
+        } else {
+            return name.toString();
+        }
     }
 
     @Override

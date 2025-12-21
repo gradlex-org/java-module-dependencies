@@ -101,11 +101,12 @@ public abstract class ModuleInfoCache {
     }
 
     private boolean maybePutModuleInfo(File folder, ProviderFactory providers) {
+        if (moduleInfo.containsKey(folder)) {
+            return true;
+        }
         Provider<ModuleInfo> moduleInfoProvider = provideModuleInfo(folder, providers);
         if (moduleInfoProvider.isPresent()) {
-            if (!moduleInfo.containsKey(folder)) {
-                moduleInfo.put(folder, moduleInfoProvider.get());
-            }
+            moduleInfo.put(folder, moduleInfoProvider.get());
             return true;
         }
         return false;
