@@ -15,12 +15,12 @@ class OrderingCheckTest {
         build.appModuleInfoFile.writeText(
                 """
             module org.example.app {
-                requires a.b.c
-                requires b.f.g
-                requires b.z.u
+                requires a.b.c;
+                requires b.f.g;
+                requires b.z.u;
 
-                requires static c.w.q
-                requires static c.z.u
+                requires static c.w.q;
+                requires static c.z.u;
             }""");
 
         build.runner(":app:checkAllModuleInfo").build();
@@ -31,12 +31,12 @@ class OrderingCheckTest {
         build.appModuleInfoFile.writeText(
                 """
             module org.example.app {
-                requires a.b.c
-                requires b.z.u
-                requires b.f.g
+                requires a.b.c;
+                requires b.z.u;
+                requires b.f.g;
 
-                requires static c.w.q
-                requires static c.z.u
+                requires static c.w.q;
+                requires static c.z.u;
             }""");
 
         var result = build.runner(":app:checkAllModuleInfo").buildAndFail();
@@ -57,16 +57,16 @@ class OrderingCheckTest {
         build.appModuleInfoFile.writeText(
                 """
             module org.example.app {
-                requires org.example.h
-                requires org.example.j
+                requires org.example.h;
+                requires org.example.j;
 
-                requires a.b.c
-                requires b.f.g
-                requires z.z.u
+                requires a.b.c;
+                requires b.f.g;
+                requires z.z.u;
 
-                requires static org.example.z
-                requires static c.w.q
-                requires static c.z.u
+                requires static org.example.z;
+                requires static c.w.q;
+                requires static c.z.u;
             }""");
 
         build.runner(":app:checkAllModuleInfo").build();
