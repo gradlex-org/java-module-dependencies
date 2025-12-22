@@ -17,9 +17,11 @@
          <trust file="asciidoctor-gradle-jvm-4.0.5.jar"/>
       </trusted-artifacts>
       <trusted-keys>
-         <!-- PRODUCTION CODE: ASM -->
+         <!-- PRODUCTION CODE -->
          <!-- ✅ Signed by Eric Bruneton - ASM -->
          <trusted-key id="A5BD02B93E7A40482EB1D66A5F69AD087600B22C" group="org.ow2.asm" name="asm"/>
+         <!-- ✅ Signed by Jean Pierre Lerbscher - JAVA PARSER -->
+         <trusted-key id="6DE9B8077FBB2F8A019F4904BD17A565509DEE20" group="com.github.javaparser" name="javaparser-core"/>
          <!-- ✅ Signed by Tony Robalik - DAGP -->
          <trusted-key id="CF4B3A3F53BEF9A2CE2CBFB895962C5E716C39AA" group="com.autonomousapps" name="dependency-analysis-gradle-plugin"/>
          <!-- ✅ Signed by Square (squareup.com) -->
