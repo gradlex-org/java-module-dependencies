@@ -2,7 +2,7 @@ import java.util.Properties
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.util.internal.VersionNumber
 
-version = "1.11"
+version = "1.12"
 
 configurations.compileClasspath {
     // Allow Java 11 dependencies on compile classpath
