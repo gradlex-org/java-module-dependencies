@@ -60,14 +60,14 @@ you can check out my [Understanding Gradle video series](https://www.youtube.com
 Add this to the build file of your convention plugin's build
 (e.g. `build-logic/build.gradle(.kts)` or `buildSrc/build.gradle(.kts)`).
 
-```
+```kotlin
 dependencies {
   implementation("org.gradlex:java-module-dependencies:1.11")
 }
 ```
 
 > ⚠️ Due to [this bug](https://github.com/gradle/gradle/issues/21490#issuecomment-1458887481) in Gradle which may affect the plugin, it is recommented to add the following to your `settings.gradle(.kts)` file:
-> ```
+> ```kotlin
 > includeBuild(".")
 > ```
 
@@ -78,7 +78,7 @@ The plugin can be used in two ways:
 1. As _Settings Plugin_ in `settings.gradle(.kts)` file **(recommended)**
 2. As _Project Plugin_ in `build.gradle(.kts)` files (sometimes easier to add to existing setups)
 
-```
+```kotlin
 plugins {
   id("org.gradlex.java-module-dependencies")
 }
@@ -88,7 +88,7 @@ plugins {
 
 Once the plugin is applied, dependencies are automatically determined based on the `requires` directives in your `module-info.java` files. For example:
 
-```
+```java
 module org.example.mymodule {
   requires com.fasterxml.jackson.core;   // -> implementation("com.fasterxml.jackson.core:jackson-core")
   requires transitive org.slf4j;         // -> api("org.slf4j:slf4j-api")
@@ -109,7 +109,7 @@ By this, the plugin is later able to establish dependencies between your own mod
 how they need to be named (which is different when you use the plugin as
 [Project Plugin](#project-structure-definition-when-using-this-plugin-as-project-plugin)).
 
-```
+```kotlin
 // settings.gradle(.kts)
 javaModules { // use instead of 'include(...)'
   module("module-a") // Module in directory, discovers 'src/*/java/module-info.java' files
@@ -123,7 +123,7 @@ javaModules { // use instead of 'include(...)'
   directory("modules") {   // Auto-include all Modules in subfolders of 'modules' 
     group = "org.example"  // group for all Modules
     plugin("java-library") // apply plugin to all Modules' subprojects
-    module("app") { ... }  // individualise Module (only if needed)
+    module("app") { /**/ } // individualise Module (only if needed)
     
     // To optimze Configuration Cache hits:
     exclusions.add("_.*")  // do not inspect certain folders (regex)
@@ -137,7 +137,7 @@ javaModules { // use instead of 'include(...)'
 If you need more control over the properties of a Gradle subproject, in particular to define a nested project path,
 you can still use Gradle's `include(...)` and then register the subproject with this plugin.
 
-```
+```kotlin
 include(":project:with:custom:path")
 javaModules { 
   module(project(":project:with:custom:path")) {
@@ -161,7 +161,7 @@ With this plugin you move dependency definitions into `module-info.java` files a
 However, there are certain dependency "scopes" not supported by the `module-info.java` syntax.
 For this, the plugin offers an extension of Gradle's DSL to be used in `build.gradle(.kts)` files.
 
-```
+```kotlin
 mainModuleInfo {
   runtimeOnly("org.slf4j.simple") // runtime only dependency for the 'main' module
   annotationProcessor("dagger.compiler")  // annotation processor dependency for the 'main' module
@@ -173,7 +173,7 @@ For modules in other source sets, there are corresponding blocks to define depen
 In case a source set does **not** contain a `module-info.java`, all dependencies can be defined in the `build.gradle(.kts)` files.
 The only case where this should be used is for whitebox testing activated via the [org.gradlex.java-module-testing](https://github.com/gradlex-org/java-module-testing) plugin.
 
-```
+```kotlin
 testModuleInfo {
   requires("org.assertj.core")
   requires("org.hamcrest")
@@ -199,7 +199,7 @@ org.apache.commons.lang3.test.fixtures=org.apache.commons:commons-lang3|test-fix
 
 **Or** as part of the plugin configuration in your convention plugins:
 
-```
+```kotlin
 javaModuleDependencies {
   // Module Name to Component GA Coordinates
   moduleNameToGA.put("org.apache.commons.lang3", "org.apache.commons:commons-lang3")
@@ -234,7 +234,7 @@ For that you can combine the `java-platform` with the `org.gradlex.java-module-v
 In that block, you have the `version("module.name", "1.0")` notation to define a version by Module Name instead of coordinates.
 For libraries that consist of multiple components and have a BOM for version management, you might prefer to include the BOM, which you need to do by coordinates, because a BOM does not have a Module Name.
 
-```
+```kotlin
 plugins {
   id("java-platform")
   id("org.gradlex.java-module-versions")
@@ -258,7 +258,7 @@ dependencies {
 Note: If you need to declare additional dependencies without version, or want to use Gradle's rich versions, you can also use the `ga()` shortcut to map a Module Name to the corresponding GA coordinates.
 For example:
 
-```
+```kotlin
 dependencies {
   javaModuleDependencies {
     testRuntimeOnly(ga("org.junit.jupiter.engine"))
@@ -273,7 +273,7 @@ Alternatively, versions can be defined in the `[version]` block of a [version ca
 
 **settings.gradle.kts**
 
-```
+```kotlin
 dependencyResolutionManagement {
   versionCatalogs.create("libs") {
     version("org.apache.xmlbeans", "5.0.1")
@@ -286,7 +286,7 @@ dependencyResolutionManagement {
 ```
 
 **gradle/libs.versions.toml**
-```
+```toml
 [versions]
 org_apache_xmlbeans = "5.0.1"
 com_fasterxml_jackson_databind = "2.12.5"
@@ -448,7 +448,7 @@ This is not a sophisticated migration tool, but useful, in combination with `ana
 This plugin integrates with the [Extra Java Module Info](https://github.com/gradlex-org/extra-java-module-info) plugin if both are applied.
 Module Name mappings for Jars that were patched with extra module info will be automatically registered.
 
-```
+```kotlin
 plugins {
   id("org.gradlex.extra-java-module-info")
   id("org.gradlex.java-module-dependencies")
