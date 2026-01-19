@@ -1,5 +1,10 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.12
+* [#245](https://github.com/gradlex-org/java-module-dependencies/issues/195) Add option to generate META-INF/services configuration files
+* [#245](https://github.com/gradlex-org/java-module-dependencies/issues/175) Improve parsing of module-info
+* Update module name mappings
+
 ## Version 1.11
 * [#245](https://github.com/gradlex-org/java-module-dependencies/issues/245) Add 'allLocalModules' access to extension
 * [#245](https://github.com/gradlex-org/java-module-dependencies/issues/247) Defining a 'versions' project in settings supports applying additional plugins

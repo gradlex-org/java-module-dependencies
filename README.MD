@@ -297,6 +297,17 @@ org-junit-jupiter-api = "5.7.2"
 - Note that the TOML notation does not support `.` as separater in the Module Names, but allows you to use `_` or `-` instead.
 - _If_ you use a catalog with a custom name (not `libs`), you can tell the plugin using `versionCatalogName.set("customName")`.
 
+## Generate META-INF/services configuration files
+
+Turn on the following option to generate service provider configuration files in `META_INF/services` for all
+`provides ... with ...` directives in module-info files.
+
+```kotlin
+javaModuleDependencies {
+  generateMetaInfServices()
+}
+```
+
 ## Find the latest stable version of a Module
 
 The `recommendModuleVersions` help task prints the latest available versions of the Modules you require.

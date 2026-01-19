@@ -46,9 +46,13 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.language.jvm.tasks.ProcessResources;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
+import org.gradlex.javamodule.dependencies.tasks.MetaInfServicesGenerate;
 import org.gradlex.javamodule.dependencies.tasks.SyntheticModuleInfoFoldersGenerate;
 import org.jspecify.annotations.Nullable;
 
@@ -141,6 +145,31 @@ public abstract class JavaModuleDependenciesExtension {
             @SuppressWarnings({"rawtypes", "unchecked"})
             Map<String, String> result = (Map) p;
             return result;
+        });
+    }
+
+    /**
+     * If a module-info.java contains 'provides' directives, generate the corresponding META_INF/services entries for backward compatibility to load the module on the classpath.
+     */
+    public void generateMetaInfServices() {
+        SourceSetContainer sourceSets = getProject().getExtensions().getByType(SourceSetContainer.class);
+        sourceSets.all(sourceSet -> {
+            ModuleInfo moduleInfo = getModuleInfoCache().get().get(sourceSet, getProviders());
+            if (!moduleInfo.getProvides().isEmpty()) {
+                String taskName = sourceSet.getTaskName("generate", "MetaInfServices");
+                Provider<Directory> destinationDirectory =
+                        getLayout().getBuildDirectory().dir("tmp/" + taskName);
+                Provider<MetaInfServicesGenerate> generateMetaInfServices = getTasks()
+                        .register(taskName, MetaInfServicesGenerate.class, t -> {
+                            t.getModuleInfo().convention(moduleInfo);
+                            t.getDestinationDirectory().convention(destinationDirectory);
+                        });
+                getTasks()
+                        .named(
+                                sourceSet.getProcessResourcesTaskName(),
+                                ProcessResources.class,
+                                t -> t.from(generateMetaInfServices));
+            }
         });
     }
 
@@ -562,4 +591,7 @@ public abstract class JavaModuleDependenciesExtension {
 
     @Inject
     protected abstract ConfigurationContainer getConfigurations();
+
+    @Inject
+    protected abstract TaskContainer getTasks();
 }
