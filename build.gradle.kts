@@ -45,6 +45,10 @@ publishingConventions {
 
 testingConventions { testGradleVersions("7.4", "7.6.5", "8.0.2", "8.14.3") }
 
+// Turn off classfile lint as long as we still compile with Java 8
+// /org/objectweb/asm/ClassReader.class: Cannot find annotation method 'forRemoval()' in type 'Deprecated'
+tasks.compileJava { options.compilerArgs.add("-Xlint:-classfile") }
+
 val detachedResolver: ProjectInternal.DetachedResolver = (project as ProjectInternal).newDetachedResolver()
 
 detachedResolver.repositories.ivy {
