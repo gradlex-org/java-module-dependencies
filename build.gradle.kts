@@ -12,7 +12,7 @@ configurations.compileClasspath {
 dependencies {
     implementation("org.ow2.asm:asm:9.9.1")
     implementation("com.github.javaparser:javaparser-core:3.28.0")
-    compileOnly("org.gradlex:extra-java-module-info:1.13.1")
+    compileOnly("org.gradlex:extra-java-module-info:1.14")
     compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:3.5.1")
 }
 
