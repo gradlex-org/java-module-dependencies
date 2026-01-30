@@ -5,7 +5,9 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.initialization.Settings;
 import org.gradle.util.GradleVersion;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class JavaModuleDependenciesSettingsPlugin implements Plugin<Settings> {
 
     @Override

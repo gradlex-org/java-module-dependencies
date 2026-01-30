@@ -17,7 +17,9 @@ import org.gradle.api.artifacts.VersionConstraint;
 import org.gradle.api.attributes.Category;
 import org.gradle.api.capabilities.Capability;
 import org.gradle.api.provider.Provider;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class DependencyDeclarationsUtil {
 
     public static Provider<List<String>> declaredDependencies(Project project, String configuration) {

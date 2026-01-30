@@ -16,8 +16,10 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+@NullMarked
 public abstract class CatalogGenerate extends DefaultTask {
 
     public static class CatalogEntry implements Comparator<CatalogEntry> {

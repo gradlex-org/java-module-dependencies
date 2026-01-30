@@ -13,7 +13,9 @@ import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.diagnostics.DependencyReportTask;
 import org.gradlex.javamodule.dependencies.internal.diagnostics.AsciiModuleDependencyReportRenderer;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class ModuleDependencyReport extends DependencyReportTask {
 
     @Internal

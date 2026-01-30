@@ -8,7 +8,9 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Info;
 import org.gradle.api.tasks.diagnostics.internal.graph.NodeRenderer;
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableDependency;
 import org.gradle.internal.logging.text.StyledTextOutput;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public class StyledNodeRenderer implements NodeRenderer {
 
     @Override

@@ -9,7 +9,9 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoClassCreator;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 @CacheableTask
 public abstract class SyntheticModuleInfoFoldersGenerate extends DefaultTask {
 

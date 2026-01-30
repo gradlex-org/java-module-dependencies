@@ -12,8 +12,7 @@ class ExtensionTest {
 
     @Test
     void can_access_mapping_information_from_extension() {
-        build.appBuildFile.appendText(
-                """
+        build.appBuildFile.appendText("""
             javaModuleDependencies.moduleNamePrefixToGroup.put("org.example.app.", "org.example.gr")
 
             javaModuleDependencies {
@@ -34,9 +33,7 @@ class ExtensionTest {
 
         var result = build.build();
 
-        assertThat(result.getOutput())
-                .contains(
-                        """
+        assertThat(result.getOutput()).contains("""
             com.fasterxml.jackson.core:jackson-core
             com.fasterxml.jackson.core:jackson-databind
             com.fasterxml.jackson.core:jackson-core:1.0

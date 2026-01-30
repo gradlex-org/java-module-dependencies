@@ -3,7 +3,9 @@ package org.gradlex.javamodule.dependencies;
 
 import java.util.Arrays;
 import java.util.List;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 interface JDKInfo {
     List<String> MODULES = Arrays.asList(
             "java.base",

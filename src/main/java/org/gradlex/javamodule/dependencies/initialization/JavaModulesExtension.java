@@ -23,8 +23,10 @@ import org.gradlex.javamodule.dependencies.JavaModuleVersionsPlugin;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
 import org.gradlex.javamodule.dependencies.internal.utils.ValueModuleDirectoryListing;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+@NullMarked
 public abstract class JavaModulesExtension {
 
     private final Settings settings;

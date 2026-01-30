@@ -21,7 +21,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.VersionCatalogsExtension;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.plugins.ExtensionAware;
@@ -45,8 +44,9 @@ import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck;
 import org.gradlex.javamodule.dependencies.tasks.ModuleInfoGenerate;
 import org.gradlex.javamodule.dependencies.tasks.ModulePathAnalysis;
 import org.gradlex.javamodule.dependencies.tasks.ModuleVersionRecommendation;
+import org.jspecify.annotations.NullMarked;
 
-@SuppressWarnings("unused")
+@NullMarked
 public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAware> {
 
     private static final String EXTRA_JAVA_MODULE_INFO_PLUGIN_ID = "org.gradlex.extra-java-module-info";
@@ -134,7 +134,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
         if (registerHelpTasks) {
             setupOrderingCheckTasks(project, checkAllModuleInfo, javaModuleDependencies);
             setupModuleDependenciesTask(project);
-            setupReportTasks(project, javaModuleDependencies);
+            setupReportTasks(project);
             setupMigrationTasks(project, javaModuleDependencies);
         }
 
@@ -198,7 +198,7 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
         }));
     }
 
-    private void setupReportTasks(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
+    private void setupReportTasks(Project project) {
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         project.getTasks().register("analyzeModulePath", ModulePathAnalysis.class, t -> {
             t.setGroup(HELP_GROUP);
@@ -222,7 +222,6 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
 
     private void setupMigrationTasks(Project project, JavaModuleDependenciesExtension javaModuleDependencies) {
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-        ConfigurationContainer configurations = project.getConfigurations();
 
         TaskProvider<Task> generateAllModuleInfoFiles = project.getTasks().register("generateAllModuleInfoFiles", t -> {
             t.setGroup("java modules");
@@ -316,7 +315,6 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
             TaskProvider<Task> checkAllModuleInfo,
             JavaModuleDependenciesExtension javaModuleDependencies) {
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-        ConfigurationContainer configurations = project.getConfigurations();
 
         sourceSets.configureEach(sourceSet -> {
             TaskProvider<ModuleDirectivesOrderingCheck> checkModuleInfo = project.getTasks()

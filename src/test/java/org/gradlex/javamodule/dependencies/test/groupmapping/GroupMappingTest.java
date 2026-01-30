@@ -22,14 +22,12 @@ class GroupMappingTest {
         build.libBuildFile.appendText("group = \"com.foo\"");
         lib2ModuleInfoFile.appendText("module com.example.lib.b { }");
         lib2BuildFile.appendText("group = \"com.example\"");
-        build.appModuleInfoFile.appendText(
-                """
+        build.appModuleInfoFile.appendText("""
             module org.gradlex.test.app {
                 requires com.lib;
                 requires com.example.lib.b;
             }""");
-        build.appBuildFile.appendText(
-                """
+        build.appBuildFile.appendText("""
             javaModuleDependencies {
                 moduleNamePrefixToGroup.put("com.", "com.foo")
                 moduleNamePrefixToGroup.put("com.example.", "com.example")

@@ -5,7 +5,9 @@ import java.util.List;
 import org.gradle.api.tasks.SourceSet;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 import org.gradlex.javamodule.dependencies.dsl.GradleOnlyDirectives;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class GradleOnlyDirectivesInternal extends GradleOnlyDirectives {
 
     public GradleOnlyDirectivesInternal(

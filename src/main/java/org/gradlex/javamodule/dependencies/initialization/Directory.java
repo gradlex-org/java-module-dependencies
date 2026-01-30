@@ -10,7 +10,9 @@ import org.gradle.api.Action;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class Directory {
 
     private final File root;

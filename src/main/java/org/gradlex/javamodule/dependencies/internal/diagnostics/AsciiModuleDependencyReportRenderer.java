@@ -17,8 +17,10 @@ import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableDependenc
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableModuleResult;
 import org.gradle.internal.graph.GraphRenderer;
 import org.gradle.internal.logging.text.StyledTextOutput;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+@NullMarked
 public class AsciiModuleDependencyReportRenderer extends AsciiDependencyReportRenderer {
 
     private @Nullable DependencyGraphsRenderer dependencyGraphRenderer;

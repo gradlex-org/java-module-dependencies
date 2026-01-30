@@ -24,8 +24,7 @@ class SettingsPluginIncludeTest {
 
     @Test
     void can_define_included_subprojects_as_modules() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             include(":project:with:custom:path")
             javaModules {
                 module(project(":project:with:custom:path")) {
@@ -39,8 +38,7 @@ class SettingsPluginIncludeTest {
             }""");
 
         build.file("project/with/custom/path/src/main/java/module-info.java").writeText("module abc.liba { }");
-        build.file("project/with/custom/src/main/java/module-info.java")
-                .writeText("""
+        build.file("project/with/custom/src/main/java/module-info.java").writeText("""
             module abc.libb {
                 requires abc.liba;
             }""");
@@ -58,8 +56,7 @@ class SettingsPluginIncludeTest {
     @Test
     void can_define_included_subprojects_with_custom_project_directory_as_modules() {
         build.projectDir.dir("project/with/custom/path");
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             include(":project:with:custom:path")
             project(":project:with:custom:path").projectDir = file("lib")
             project(":project:with:custom").projectDir = file("app")
@@ -75,8 +72,7 @@ class SettingsPluginIncludeTest {
             }""");
 
         build.libModuleInfoFile.writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module abc.app {
                 requires abc.lib;
             }""");
@@ -95,8 +91,7 @@ class SettingsPluginIncludeTest {
 
     @Test
     void projects_with_same_name_but_different_paths_are_supported() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             include(":app1:feature1:data")
             include(":app1:feature2:data")
 
@@ -109,8 +104,7 @@ class SettingsPluginIncludeTest {
             }""");
 
         build.file("app1/feature1/data/src/main/java/module-info.java").writeText("module f1x.data { }");
-        build.file("app1/feature2/data/src/main/java/module-info.java")
-                .writeText("""
+        build.file("app1/feature2/data/src/main/java/module-info.java").writeText("""
             module f2x.data {
                 requires f1x.data;
             }""");

@@ -7,7 +7,9 @@ import javax.inject.Inject;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.tasks.SourceSet;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class GradleOnlyDirectives {
 
     protected final SourceSet sourceSet;

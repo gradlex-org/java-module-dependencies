@@ -7,7 +7,9 @@ import org.gradle.api.Project;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 import org.gradlex.javamodule.moduleinfo.ExtraJavaModuleInfoPluginExtension;
 import org.gradlex.javamodule.moduleinfo.ModuleSpec;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public class ExtraJavaModuleInfoBridge {
 
     public static void autoRegisterPatchedModuleMappings(

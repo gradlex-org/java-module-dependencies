@@ -8,7 +8,9 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class Module {
 
     /**

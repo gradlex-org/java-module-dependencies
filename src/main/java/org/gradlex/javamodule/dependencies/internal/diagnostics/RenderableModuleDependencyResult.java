@@ -18,7 +18,9 @@ import org.gradle.api.artifacts.result.UnresolvedDependencyResult;
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableDependency;
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableDependencyResult;
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableUnresolvedDependencyResult;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public class RenderableModuleDependencyResult extends RenderableDependencyResult {
     private final ResolvedDependencyResult dependency;
     private final Set<ResolvedArtifactResult> resolvedJars;

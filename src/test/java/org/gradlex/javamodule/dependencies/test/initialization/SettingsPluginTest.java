@@ -25,8 +25,7 @@ class SettingsPluginTest {
 
     @Test
     void can_define_individual_modules() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             javaModules {
                 module("app") { plugin("application") }
                 module("lib") {
@@ -35,8 +34,7 @@ class SettingsPluginTest {
                 }
             }""");
         build.libModuleInfoFile.writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.lib;
             }""");
@@ -50,14 +48,12 @@ class SettingsPluginTest {
 
     @Test
     void finds_all_modules_in_a_directory() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             javaModules {
                 directory(".") { plugin("java-library") }
             }""");
         build.libModuleInfoFile.writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.lib;
             }""");
@@ -70,14 +66,12 @@ class SettingsPluginTest {
 
     @Test
     void configurationCacheHit() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             javaModules {
                 directory(".") { plugin("java-library") }
             }""");
         build.libModuleInfoFile.writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.lib;
             }""");
@@ -95,14 +89,12 @@ class SettingsPluginTest {
 
     @Test
     void configurationCacheHitExtraDir() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             javaModules {
                 directory(".") { plugin("java-library") }
             }""");
         build.libModuleInfoFile.writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.lib;
             }""");
@@ -121,14 +113,12 @@ class SettingsPluginTest {
 
     @Test
     void configurationCacheHitExtraNotIgnored() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             javaModules {
                 directory(".") { plugin("java-library") }
             }""");
         build.libModuleInfoFile.writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.lib;
             }""");
@@ -149,14 +139,12 @@ class SettingsPluginTest {
 
     @Test
     void configurationCacheHitIrrelevantChange() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             javaModules {
                 directory(".") { plugin("java-library") }
             }""");
         build.libModuleInfoFile.writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.lib;
             }""");
@@ -167,8 +155,7 @@ class SettingsPluginTest {
         assertThat(result.getOutput())
                 .contains("Calculating task graph as no cached configuration is available for tasks: :app:compileJava");
 
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.lib; //This is a comment and should not break the configurationCache
             }""");
@@ -179,14 +166,12 @@ class SettingsPluginTest {
 
     @Test
     void configurationCacheMissRelevantChange() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             javaModules {
                 directory(".") { plugin("java-library") }
             }""");
         build.libModuleInfoFile.writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.lib;
             }""");
@@ -197,8 +182,7 @@ class SettingsPluginTest {
         assertThat(result.getOutput())
                 .contains("Calculating task graph as no cached configuration is available for tasks: :app:compileJava");
 
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                //dependency removed; so thats indeed a configuration change
             }
@@ -212,8 +196,7 @@ class SettingsPluginTest {
 
     @Test
     void automatically_sets_module_for_application_plugin() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             javaModules {
                 directory(".") {
                     plugin("java-library")
@@ -221,8 +204,7 @@ class SettingsPluginTest {
                 }
             }""");
         build.libModuleInfoFile.writeText("module abc.libxyz { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.libxyz;
             }""");
@@ -239,8 +221,7 @@ class SettingsPluginTest {
 
     @Test
     void can_depend_on_test_fixtures_module() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             javaModules {
                 directory(".") {
                     group = "bar.foo"
@@ -250,8 +231,7 @@ class SettingsPluginTest {
             }""");
         build.libModuleInfoFile.writeText("module foo.bar.m { }");
         build.file("lib/src/testFixtures/java/module-info.java").writeText("module abc.libxyz.dsdsds { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires foo.bar.m;
                 requires abc.libxyz.dsdsds;
@@ -279,8 +259,7 @@ class SettingsPluginTest {
 
     @Test
     void can_have_moduleinfo_in_custom_location() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             javaModules {
                 module("app") { plugin("application") }
                 module("lib") {
@@ -290,8 +269,7 @@ class SettingsPluginTest {
             }""");
         build.libBuildFile.appendText("sourceSets.main { java.setSrcDirs(listOf(\"src\")) }");
         build.file("lib/src/module-info.java").writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.lib;
             }""");
@@ -304,8 +282,7 @@ class SettingsPluginTest {
 
     @Test
     void can_access_local_module_information_in_project() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             javaModules {
                 directory(".") {
                     group = "org.example"
@@ -314,15 +291,12 @@ class SettingsPluginTest {
             }""");
         build.libModuleInfoFile.writeText("module abc.lib { }");
         build.file("lib/src/testFixtures/java/module-info.java").writeText("module abc.lib.test.fixtures { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.lib;
             }""");
 
-        build.file("aggregation/build.gradle.kts")
-                .writeText(
-                        """
+        build.file("aggregation/build.gradle.kts").writeText("""
             plugins { id("org.gradlex.java-module-dependencies") }
             tasks.register("info") {
                 val info = javaModuleDependencies.allLocalModules().joinToString("\\n")
@@ -331,9 +305,7 @@ class SettingsPluginTest {
 
         var result = build.runner(":aggregation:info").build();
 
-        assertThat(result.getOutput())
-                .contains(
-                        """
+        assertThat(result.getOutput()).contains("""
             > Task :aggregation:info
             [moduleName='abc.lib', projectPath=':lib', capability='null']
             [moduleName='abc.lib.test.fixtures', projectPath=':lib', capability='org.example:lib-test-fixtures']

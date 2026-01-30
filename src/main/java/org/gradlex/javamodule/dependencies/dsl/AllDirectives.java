@@ -3,7 +3,9 @@ package org.gradlex.javamodule.dependencies.dsl;
 
 import org.gradle.api.tasks.SourceSet;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class AllDirectives extends GradleOnlyDirectives {
 
     public AllDirectives(

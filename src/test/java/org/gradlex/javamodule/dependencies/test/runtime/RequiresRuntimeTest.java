@@ -13,16 +13,14 @@ class RequiresRuntimeTest {
 
     @Test
     void can_define_runtime_only_dependencies_in_moduleinfo() {
-        build.appBuildFile.appendText(
-                """
+        build.appBuildFile.appendText("""
             dependencies.constraints {
                 javaModuleDependencies {
                     implementation(gav("org.slf4j", "2.0.3"))
                     implementation(gav("org.slf4j.simple", "2.0.3"))
                 }
             }""");
-        build.appModuleInfoFile.appendText(
-                """
+        build.appModuleInfoFile.appendText("""
             module org.gradlex.test.app {
                 requires org.slf4j;
                 requires /*runtime*/ org.slf4j.simple;
@@ -42,25 +40,21 @@ class RequiresRuntimeTest {
 
     @Test
     void compiles_with_runtime_only_dependencies_in_moduleinfo() {
-        build.appBuildFile.appendText(
-                """
+        build.appBuildFile.appendText("""
             dependencies.constraints {
                 javaModuleDependencies {
                     implementation(gav("org.slf4j", "2.0.3"))
                     implementation(gav("org.slf4j.simple", "2.0.3"))
                 }
             }""");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires org.slf4j;
                 requires /*runtime*/ org.slf4j.simple;
 
                 exports org.gradlex.test.app;
             }""");
-        build.file("app/src/main/java/org/gradlex/test/app/Main.java")
-                .writeText(
-                        """
+        build.file("app/src/main/java/org/gradlex/test/app/Main.java").writeText("""
             package org.gradlex.test.app;
 
             import org.slf4j.Logger;
@@ -81,24 +75,20 @@ class RequiresRuntimeTest {
 
     @Test
     void runtime_only_dependencies_are_not_visible_at_compile_time() {
-        build.appBuildFile.appendText(
-                """
+        build.appBuildFile.appendText("""
             dependencies.constraints {
                 javaModuleDependencies {
                     implementation(gav("org.slf4j", "2.0.3"))
                 }
             }
         """);
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires /*runtime*/ org.slf4j;
 
                 exports org.gradlex.test.app;
             }""");
-        build.file("app/src/main/java/org/gradlex/test/app/Main.java")
-                .writeText(
-                        """
+        build.file("app/src/main/java/org/gradlex/test/app/Main.java").writeText("""
             package org.gradlex.test.app;
 
             import org.slf4j.Logger;
@@ -119,8 +109,7 @@ class RequiresRuntimeTest {
 
     @Test
     void generates_javadoc_with_runtime_only_dependencies_in_moduleinfo() {
-        build.appBuildFile.appendText(
-                """
+        build.appBuildFile.appendText("""
             java.withJavadocJar()
             dependencies.constraints {
                 javaModuleDependencies {
@@ -128,16 +117,14 @@ class RequiresRuntimeTest {
                     implementation(gav("org.slf4j.simple", "2.0.3"))
                 }
             }""");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires org.slf4j;
                 requires /*runtime*/ org.slf4j.simple;
 
                 exports org.gradlex.test.app;
             }""");
-        build.file("app/src/main/java/org/gradlex/test/app/Main.java")
-                .writeText("""
+        build.file("app/src/main/java/org/gradlex/test/app/Main.java").writeText("""
             package org.gradlex.test.app;
 
             public class Main {}""");
@@ -151,8 +138,7 @@ class RequiresRuntimeTest {
     @Test
     void can_configure_additional_compile_tasks_to_work_with_runtime_only_dependencies() {
         // This is typically needed for whitebox testing
-        build.appBuildFile.appendText(
-                """
+        build.appBuildFile.appendText("""
             javaModuleDependencies.addRequiresRuntimeSupport(sourceSets.main.get(), sourceSets.test.get())
             tasks.compileTestJava {
                 classpath += sourceSets.main.get().output
@@ -187,15 +173,12 @@ class RequiresRuntimeTest {
                 }
             }
             """);
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires org.slf4j;
                 requires /*runtime*/ org.slf4j.simple;
             }""");
-        build.file("app/src/test/java/org/gradlex/test/app/MainTest.java")
-                .writeText(
-                        """
+        build.file("app/src/test/java/org/gradlex/test/app/MainTest.java").writeText("""
             package org.gradlex.test.app;
 
             public class MainTest {

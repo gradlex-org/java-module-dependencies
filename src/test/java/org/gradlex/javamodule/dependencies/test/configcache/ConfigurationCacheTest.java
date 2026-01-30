@@ -23,8 +23,7 @@ class ConfigurationCacheTest {
     void configurationCacheHit() {
         build.libModuleInfoFile.writeText("module abc.lib { }");
 
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module abc.app {
                 requires abc.lib;
             }""");
@@ -42,8 +41,7 @@ class ConfigurationCacheTest {
     @Test
     void configurationCacheHitIrrelevantChange() {
         build.libModuleInfoFile.writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module abc.app {
                 requires abc.lib;
             }""");
@@ -53,8 +51,7 @@ class ConfigurationCacheTest {
 
         assertThat(result.getOutput()).contains(noCacheMessage);
 
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module abc.app {
                 requires abc.lib; //This is a comment and should not break the configurationCache
             }
@@ -67,8 +64,7 @@ class ConfigurationCacheTest {
     @Test
     void configurationCacheMissRelevantChange() {
         build.libModuleInfoFile.writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module abc.app {
                 requires abc.lib;
             }""");
@@ -78,8 +74,7 @@ class ConfigurationCacheTest {
 
         assertThat(result.getOutput()).contains(noCacheMessage);
 
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module abc.app {
                //dependency removed; so thats indeed a configuration change
             }""");

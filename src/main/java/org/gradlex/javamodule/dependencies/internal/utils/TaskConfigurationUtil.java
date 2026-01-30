@@ -5,7 +5,9 @@ import org.gradle.api.Task;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class TaskConfigurationUtil {
 
     public static boolean isJavaCompileTask(Task task, SourceSet sourceSet) {

@@ -12,8 +12,7 @@ class CustomizationTest {
 
     @Test
     void can_add_custom_mapping() {
-        build.appBuildFile.appendText(
-                """
+        build.appBuildFile.appendText("""
             javaModuleDependencies {
                 // Override because there are multiple alternatives
                 moduleNameToGA.put("jakarta.mail", "com.sun.mail:jakarta.mail")
@@ -23,8 +22,7 @@ class CustomizationTest {
                     implementation(gav("jakarta.mail", "2.0.1"))
                 }
             }""");
-        build.appModuleInfoFile.appendText(
-                """
+        build.appModuleInfoFile.appendText("""
             module org.gradlex.test.app {
                 requires jakarta.mail;
             }""");
@@ -41,8 +39,7 @@ class CustomizationTest {
         customModulesPropertiesFile.writeText("jakarta.mail=com.sun.mail:jakarta.mail");
         build.appBuildFile.appendText("moduleInfo { version(\"jakarta.mail\", \"2.0.1\") }");
 
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires jakarta.mail;
             }""");
@@ -56,15 +53,13 @@ class CustomizationTest {
         var customModulesPropertiesFile = build.file(".hidden/modules.properties");
 
         customModulesPropertiesFile.writeText("jakarta.mail=com.sun.mail:jakarta.mail");
-        build.appBuildFile.appendText(
-                """
+        build.appBuildFile.appendText("""
             moduleInfo { version("jakarta.mail", "2.0.1") }
             javaModuleDependencies {
                 modulesProperties.set(File(rootDir,".hidden/modules.properties"))
             }""");
 
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires jakarta.mail;
             }""");
@@ -76,16 +71,14 @@ class CustomizationTest {
 
     @Test
     void can_use_custom_catalog() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             dependencyResolutionManagement.versionCatalogs.create("moduleLibs") {
                 version("org.apache.xmlbeans", "5.0.1")
                 version("com.fasterxml.jackson.databind", "2.12.5")
             }""");
         build.appBuildFile.appendText("""
             javaModuleDependencies.versionCatalogName.set("moduleLibs")""");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires com.fasterxml.jackson.databind;
                 requires static org.apache.xmlbeans;
@@ -107,16 +100,14 @@ class CustomizationTest {
         var customModulesPropertiesFile = build.file("gradle/modules.properties");
 
         customModulesPropertiesFile.writeText("jakarta.mail=com.sun.mail:jakarta.mail");
-        build.appBuildFile.appendText(
-                """
+        build.appBuildFile.appendText("""
             moduleInfo {
                 version("jakarta.mail", "2.0.1")
                 version("jakarta.servlet", "6.0.0") { reject("[7.0.0,)") }
                 version("java.inject") { require("1.0.5"); reject("[2.0.0,)") }
             }""");
 
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires jakarta.mail;
                 requires jakarta.servlet;
@@ -131,13 +122,11 @@ class CustomizationTest {
 
     @Test
     void can_use_toml_catalog_with_underscore_for_dot() {
-        build.file("gradle/libs.versions.toml")
-                .writeText("""
+        build.file("gradle/libs.versions.toml").writeText("""
             [versions]
             org_apache_xmlbeans = "5.0.1"
             """);
-        build.appModuleInfoFile.appendText(
-                """
+        build.appModuleInfoFile.appendText("""
             module org.gradlex.test.app {
                 requires org.apache.xmlbeans;
             }""");
@@ -149,13 +138,11 @@ class CustomizationTest {
 
     @Test
     void can_use_toml_catalog_with_dash_for_dot() {
-        build.file("gradle/libs.versions.toml")
-                .writeText("""
+        build.file("gradle/libs.versions.toml").writeText("""
             [versions]
             org-apache-xmlbeans = "5.0.1"
             """);
-        build.appModuleInfoFile.appendText(
-                """
+        build.appModuleInfoFile.appendText("""
             module org.gradlex.test.app {
                 requires org.apache.xmlbeans;
             }""");

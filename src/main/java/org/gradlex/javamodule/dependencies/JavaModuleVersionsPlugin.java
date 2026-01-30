@@ -22,14 +22,14 @@ import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPlatformPlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.util.GradleVersion;
 import org.gradlex.javamodule.dependencies.dsl.ModuleVersions;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.tasks.CatalogGenerate;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-@SuppressWarnings("unused")
+@NullMarked
 public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
     private static final boolean MIN_GRADLE_9_0 =
             GradleVersion.current().compareTo(GradleVersion.version("9.0.0")) >= 0;
@@ -49,7 +49,6 @@ public abstract class JavaModuleVersionsPlugin implements Plugin<Project> {
 
     private void setupForJavaProject(Project project) {
         ObjectFactory objects = project.getObjects();
-        SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
 
         Configuration versions = project.getConfigurations().create("versions", c -> {
             c.setCanBeResolved(false);

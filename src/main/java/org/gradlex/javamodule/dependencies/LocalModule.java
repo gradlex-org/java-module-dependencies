@@ -3,8 +3,10 @@ package org.gradlex.javamodule.dependencies;
 
 import java.io.Serializable;
 import java.util.Objects;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+@NullMarked
 public class LocalModule implements Comparable<LocalModule>, Serializable {
     private final String moduleName;
     private final String projectPath;

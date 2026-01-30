@@ -7,7 +7,9 @@ import javax.inject.Inject;
 import org.gradle.api.IsolatedAction;
 import org.gradle.api.Project;
 import org.gradle.api.initialization.Settings;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class RootPluginsExtension {
 
     private final List<String> ids = new ArrayList<>();

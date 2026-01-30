@@ -12,8 +12,7 @@ class OrderingCheckTest {
 
     @Test
     void order_is_expected_to_be_alphabetic_for_each_scope_individually() {
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.example.app {
                 requires a.b.c;
                 requires b.f.g;
@@ -28,8 +27,7 @@ class OrderingCheckTest {
 
     @Test
     void if_order_is_not_alphabetic_for_a_scope_an_advice_is_given() {
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.example.app {
                 requires a.b.c;
                 requires b.z.u;
@@ -40,22 +38,18 @@ class OrderingCheckTest {
             }""");
 
         var result = build.runner(":app:checkAllModuleInfo").buildAndFail();
-        assertThat(result.getOutput())
-                .contains(
-                        """
+        assertThat(result.getOutput()).contains("""
             > %s/app/src/main/java/module-info.java
              \s
               'requires' are not declared in alphabetical order. Please use this order:
                   requires a.b.c;
                   requires b.f.g;
-                  requires b.z.u;"""
-                                .formatted(build.projectDir.canonicalPath()));
+                  requires b.z.u;""".formatted(build.projectDir.canonicalPath()));
     }
 
     @Test
     void own_modules_are_expected_to_go_first() {
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.example.app {
                 requires org.example.h;
                 requires org.example.j;

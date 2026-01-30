@@ -15,9 +15,11 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.SourceSet;
 import org.gradlex.javamodule.dependencies.LocalModule;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.LoggerFactory;
 
+@NullMarked
 public abstract class ModuleInfoCache {
     private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(ModuleInfoCache.class);
 

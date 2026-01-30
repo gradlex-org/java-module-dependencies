@@ -54,6 +54,7 @@ import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfoCache;
 import org.gradlex.javamodule.dependencies.tasks.MetaInfServicesGenerate;
 import org.gradlex.javamodule.dependencies.tasks.SyntheticModuleInfoFoldersGenerate;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -62,6 +63,7 @@ import org.jspecify.annotations.Nullable;
  * - Define dependencies and dependency constraints by Module Name
  *   using {@link #ga(String)}, {@link #gav(String, String)} or {@link #gav(String)}
  */
+@NullMarked
 public abstract class JavaModuleDependenciesExtension {
     static final String JAVA_MODULE_DEPENDENCIES = "javaModuleDependencies";
 

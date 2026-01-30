@@ -10,7 +10,9 @@ import org.gradle.api.artifacts.DependencyConstraint;
 import org.gradle.api.artifacts.MutableVersionConstraint;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class ModuleVersions {
 
     private final Map<String, String> declaredVersions = new LinkedHashMap<>();

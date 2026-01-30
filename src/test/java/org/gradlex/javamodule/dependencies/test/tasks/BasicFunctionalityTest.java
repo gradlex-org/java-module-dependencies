@@ -13,8 +13,7 @@ class BasicFunctionalityTest {
     @Test
     void can_configure_all_tasks_in_a_build_without_error() {
         build.libModuleInfoFile.writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.lib;
             }
@@ -22,9 +21,7 @@ class BasicFunctionalityTest {
 
         var result = build.runner("tasks").build();
 
-        assertThat(result.getOutput())
-                .contains(
-                        """
+        assertThat(result.getOutput()).contains("""
             Java modules tasks
             ------------------
             checkModuleInfo - Check order of directives in 'module-info.java' in 'main' source set

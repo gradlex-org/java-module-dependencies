@@ -12,7 +12,9 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.provider.ValueSource;
 import org.gradle.api.provider.ValueSourceParameters;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class ValueModuleDirectoryListing
         implements ValueSource<List<String>, ValueModuleDirectoryListing.Parameter> {
 

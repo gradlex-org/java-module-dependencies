@@ -28,8 +28,10 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+@NullMarked
 public abstract class ModulePathAnalysis extends DefaultTask {
     private final String projectName;
     private final SourceSetContainer sourceSets;

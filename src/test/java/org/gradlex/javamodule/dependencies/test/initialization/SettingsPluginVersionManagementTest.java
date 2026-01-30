@@ -18,12 +18,10 @@ class SettingsPluginVersionManagementTest {
 
     @BeforeEach
     void setup() {
-        var buildFile =
-                """
+        var buildFile = """
             plugins { id("java-library") }
             dependencies { implementation(platform(project(":versions"))) }""";
-        build.settingsFile.writeText(
-                """
+        build.settingsFile.writeText("""
             plugins { id("org.gradlex.java-module-dependencies") }
             dependencyResolutionManagement { repositories.mavenCentral() }
             """);
@@ -33,22 +31,18 @@ class SettingsPluginVersionManagementTest {
 
     @Test
     void can_define_a_version_providing_project_in_settings() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             javaModules {
                 directory(".")
                 versions("gradle/versions")
             }""");
         build.libModuleInfoFile.writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.lib;
                 requires java.inject;
             }""");
-        build.file("gradle/versions/build.gradle.kts")
-                .writeText(
-                        """
+        build.file("gradle/versions/build.gradle.kts").writeText("""
                 moduleInfo {
                     version("java.inject", "1.0.5")
                 }""");
@@ -60,22 +54,18 @@ class SettingsPluginVersionManagementTest {
 
     @Test
     void can_define_a_version_providing_project_in_settings_with_additional_plugin() {
-        build.settingsFile.appendText(
-                """
+        build.settingsFile.appendText("""
             javaModules {
                 directory(".")
                 versions("gradle/versions") { plugin("maven-publish") }
             }""");
         build.libModuleInfoFile.writeText("module abc.lib { }");
-        build.appModuleInfoFile.writeText(
-                """
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires abc.lib;
                 requires java.inject;
             }""");
-        build.file("gradle/versions/build.gradle.kts")
-                .writeText(
-                        """
+        build.file("gradle/versions/build.gradle.kts").writeText("""
                 moduleInfo {
                     version("java.inject", "1.0.5")
                 }""");

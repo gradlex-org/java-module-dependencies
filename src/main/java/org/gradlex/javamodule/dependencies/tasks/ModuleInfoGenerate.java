@@ -19,8 +19,10 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+@NullMarked
 public abstract class ModuleInfoGenerate extends DefaultTask {
 
     @Input

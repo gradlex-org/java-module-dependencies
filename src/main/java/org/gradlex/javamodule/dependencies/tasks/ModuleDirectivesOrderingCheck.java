@@ -15,7 +15,9 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 @CacheableTask
 public abstract class ModuleDirectivesOrderingCheck extends DefaultTask {
 

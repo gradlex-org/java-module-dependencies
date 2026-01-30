@@ -44,15 +44,13 @@ public class GradleBuild {
         this.appModuleInfoFile = new WritableFile(projectDir.dir("app/src/main/java"), "module-info.java");
         this.libModuleInfoFile = new WritableFile(projectDir.dir("lib/src/main/java"), "module-info.java");
 
-        settingsFile.writeText(
-                """
+        settingsFile.writeText("""
             dependencyResolutionManagement { repositories.mavenCentral() }
             rootProject.name = "test-project"
             include("lib", "app")
             includeBuild(".")
         """);
-        appBuildFile.writeText(
-                """
+        appBuildFile.writeText("""
             plugins {
                 id("org.gradlex.java-module-dependencies")
                 id("org.gradlex.java-module-versions")
@@ -76,8 +74,7 @@ public class GradleBuild {
                 doLast { println(inputs.files.map { it.name }) }
             }
         """);
-        libBuildFile.writeText(
-                """
+        libBuildFile.writeText("""
                     plugins {
                         id("org.gradlex.java-module-dependencies")
                         id("java-library")

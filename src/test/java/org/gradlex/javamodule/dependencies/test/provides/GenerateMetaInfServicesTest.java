@@ -14,17 +14,14 @@ class GenerateMetaInfServicesTest {
 
     @Test
     void generates_meta_inf_services_files() {
-        build.libBuildFile.appendText(
-                """
+        build.libBuildFile.appendText("""
             javaModuleDependencies { generateMetaInfServices() }
             dependencies.constraints {
                 implementation("org.junit.platform:junit-platform-engine:6.0.2")
                 testFixturesImplementation("org.junit.platform:junit-platform-engine:6.0.2")
             }
         """);
-        build.file("lib/src/main/java/abc/lib/NoOpTestEngine.java")
-                .writeText(
-                        """
+        build.file("lib/src/main/java/abc/lib/NoOpTestEngine.java").writeText("""
                 package abc.lib;
                 import org.junit.platform.engine.*;
                 public class NoOpTestEngine implements TestEngine {
@@ -34,8 +31,7 @@ class GenerateMetaInfServicesTest {
                 }
                 """);
         build.file("lib/src/testFixtures/java/abc/lib/fixtures/NoOpTestEngine.java")
-                .writeText(
-                        """
+                .writeText("""
                 package abc.lib.fixtures;
                 import org.junit.platform.engine.*;
                 public class NoOpTestEngine implements TestEngine {
@@ -45,17 +41,14 @@ class GenerateMetaInfServicesTest {
                 }
                 """);
 
-        build.libModuleInfoFile.writeText(
-                """
+        build.libModuleInfoFile.writeText("""
                 module abc.lib {
                     requires org.junit.platform.engine;
                     provides org.junit.platform.engine.TestEngine
                         with abc.lib.NoOpTestEngine;
                 }
                 """);
-        build.file("lib/src/testFixtures/java/module-info.java")
-                .writeText(
-                        """
+        build.file("lib/src/testFixtures/java/module-info.java").writeText("""
                 module abc.lib.test.fixtures {
                     requires org.junit.platform.engine;
                     provides org.junit.platform.engine.TestEngine

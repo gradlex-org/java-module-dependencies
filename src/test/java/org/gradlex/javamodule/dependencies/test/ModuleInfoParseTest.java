@@ -15,8 +15,7 @@ class ModuleInfoParseTest {
 
     @Test
     void ignores_single_line_comments() {
-        var moduleInfo = new ModuleInfo(
-                """
+        var moduleInfo = new ModuleInfo("""
             module some.thing {
                 // requires com.bla.blub;
                 requires transitive foo.bar.la;
@@ -32,8 +31,7 @@ class ModuleInfoParseTest {
 
     @Test
     void ignores_single_line_comments_late_in_line() {
-        var moduleInfo = new ModuleInfo(
-                """
+        var moduleInfo = new ModuleInfo("""
             module some.thing { // module some.thing.else
                 requires transitive foo.bar.la;
             }""");
@@ -48,8 +46,7 @@ class ModuleInfoParseTest {
 
     @Test
     void ignores_multi_line_comments() {
-        var moduleInfo = new ModuleInfo(
-                """
+        var moduleInfo = new ModuleInfo("""
             module some.thing {
                 /* requires com.bla.blub;
                 requires transitive foo.bar.la;
@@ -67,8 +64,7 @@ class ModuleInfoParseTest {
 
     @Test
     void ignores_multi_line_comments_between_keywords() {
-        var moduleInfo = new ModuleInfo(
-                """
+        var moduleInfo = new ModuleInfo("""
             module some.thing {
                 /*odd comment*/ requires transitive foo.bar.la;
                 requires/* weird comment*/ static foo.bar.lo;
@@ -86,8 +82,7 @@ class ModuleInfoParseTest {
 
     @Test
     void supports_runtime_dependencies_through_special_keyword() {
-        var moduleInfo = new ModuleInfo(
-                """
+        var moduleInfo = new ModuleInfo("""
             module some.thing {
                 requires /*runtime*/ foo.bar.lo;
             }

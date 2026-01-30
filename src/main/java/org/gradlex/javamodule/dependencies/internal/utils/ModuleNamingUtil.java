@@ -4,8 +4,10 @@ package org.gradlex.javamodule.dependencies.internal.utils;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import org.gradle.api.tasks.SourceSet;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+@NullMarked
 public abstract class ModuleNamingUtil {
 
     public static String sourceSetToModuleName(String projectName, String sourceSetName) {

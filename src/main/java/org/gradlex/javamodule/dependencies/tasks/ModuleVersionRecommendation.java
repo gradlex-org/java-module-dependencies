@@ -30,7 +30,9 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class ModuleVersionRecommendation extends DefaultTask {
 
     @Input

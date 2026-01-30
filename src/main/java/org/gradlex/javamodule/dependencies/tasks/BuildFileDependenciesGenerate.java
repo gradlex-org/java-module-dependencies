@@ -17,7 +17,9 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class BuildFileDependenciesGenerate extends DefaultTask {
     public abstract static class SourceSetDependencies {
 
