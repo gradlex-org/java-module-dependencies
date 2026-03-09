@@ -1,5 +1,8 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.12.1
+* Update module name mappings [#285](https://github.com/gradlex-org/java-module-dependencies/issues/285)/[#286](https://github.com/gradlex-org/java-module-dependencies/issues/286)
+
 ## Version 1.12
 * [#245](https://github.com/gradlex-org/java-module-dependencies/issues/195) Add option to generate META-INF/services configuration files
 * [#245](https://github.com/gradlex-org/java-module-dependencies/issues/175) Improve parsing of module-info
