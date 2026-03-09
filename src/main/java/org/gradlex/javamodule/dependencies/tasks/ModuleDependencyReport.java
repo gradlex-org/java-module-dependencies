@@ -12,9 +12,11 @@ import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.diagnostics.DependencyReportTask;
+import org.gradle.work.DisableCachingByDefault;
 import org.gradlex.javamodule.dependencies.internal.diagnostics.AsciiModuleDependencyReportRenderer;
 import org.jspecify.annotations.NullMarked;
 
+@DisableCachingByDefault(because = "reporting task")
 @NullMarked
 public abstract class ModuleDependencyReport extends DependencyReportTask {
 

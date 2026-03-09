@@ -26,12 +26,16 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 import org.jspecify.annotations.NullMarked;
 
+@DisableCachingByDefault(because = "reporting task")
 @NullMarked
 public abstract class ModuleVersionRecommendation extends DefaultTask {
 
@@ -45,6 +49,7 @@ public abstract class ModuleVersionRecommendation extends DefaultTask {
     public abstract Property<Boolean> getPrintForCatalog();
 
     @InputFile
+    @PathSensitive(PathSensitivity.NAME_ONLY)
     @Optional
     public abstract RegularFileProperty getPrintForPropertiesFile();
 
