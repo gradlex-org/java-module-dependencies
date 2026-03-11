@@ -23,14 +23,18 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.capabilities.Capability;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 import org.gradlex.javamodule.dependencies.JavaModuleDependenciesExtension;
 import org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+@DisableCachingByDefault(because = "reporting task")
 @NullMarked
 public abstract class ModulePathAnalysis extends DefaultTask {
     private final String projectName;
@@ -38,6 +42,7 @@ public abstract class ModulePathAnalysis extends DefaultTask {
     private final JavaModuleDependenciesExtension javaModuleDependencies;
 
     @InputFiles
+    @PathSensitive(PathSensitivity.NAME_ONLY)
     public abstract ListProperty<Configuration> getClasspathConfigurations();
 
     @Inject

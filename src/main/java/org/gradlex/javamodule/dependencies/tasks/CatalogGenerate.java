@@ -16,9 +16,11 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+@DisableCachingByDefault(because = "modifies source files")
 @NullMarked
 public abstract class CatalogGenerate extends DefaultTask {
 
