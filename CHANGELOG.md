@@ -1,5 +1,9 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.12.2
+* [#319](https://github.com/gradlex-org/java-module-dependencies/pull/319) Address Gradle 9.6.0 deprecations
+* Update module name mappings [#313](https://github.com/gradlex-org/java-module-dependencies/issues/313)/[#316](https://github.com/gradlex-org/java-module-dependencies/issues/316)
+
 ## Version 1.12.1
 * Update module name mappings [#285](https://github.com/gradlex-org/java-module-dependencies/issues/285)/[#286](https://github.com/gradlex-org/java-module-dependencies/issues/286)
 
