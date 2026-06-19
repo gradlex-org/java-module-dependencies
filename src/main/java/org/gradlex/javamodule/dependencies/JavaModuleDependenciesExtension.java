@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package org.gradlex.javamodule.dependencies;
 
+import static java.util.Collections.singletonMap;
 import static java.util.Optional.empty;
 import static org.gradlex.javamodule.dependencies.internal.utils.DependencyDeclarationsUtil.copyVersionConstraint;
 import static org.gradlex.javamodule.dependencies.internal.utils.ModuleInfo.Directive.REQUIRES_RUNTIME;
@@ -261,8 +262,8 @@ public abstract class JavaModuleDependenciesExtension {
 
             if (localModule != null) {
                 // local project
-                ProjectDependency projectDependency = (ProjectDependency)
-                        getDependencies().create(getProject().project(localModule.getProjectPath()));
+                ProjectDependency projectDependency = (ProjectDependency) getDependencies()
+                        .create(getDependencies().project(singletonMap("path", localModule.getProjectPath())));
                 projectDependency.because(moduleName);
                 if (localModule.getCapability() != null) {
                     projectDependency.capabilities(c -> c.requireCapabilities(localModule.getCapability()));
@@ -302,15 +303,15 @@ public abstract class JavaModuleDependenciesExtension {
                     .max(Comparator.comparingInt(String::length));
 
             if (perfectMatch.isPresent()) {
-                Dependency projectDependency =
-                        getDependencies().create(getProject().project(parentPath + ":" + perfectMatch.get()));
+                Dependency projectDependency = getDependencies()
+                        .create(getDependencies().project(singletonMap("path", parentPath + ":" + perfectMatch.get())));
                 projectDependency.because(moduleName);
                 return projectDependency;
             } else if (existingProjectName.isPresent()) {
                 // no exact match -> add capability to point at Module in other source set
                 String projectName = existingProjectName.get();
-                ProjectDependency projectDependency = (ProjectDependency)
-                        getDependencies().create(getProject().project(parentPath + ":" + projectName));
+                ProjectDependency projectDependency = (ProjectDependency) getDependencies()
+                        .create(getDependencies().project(singletonMap("path", parentPath + ":" + projectName)));
                 String capabilityName = projectName
                         + moduleNameSuffix.substring(projectName.length()).replace(".", "-");
                 projectDependency.capabilities(
@@ -515,10 +516,7 @@ public abstract class JavaModuleDependenciesExtension {
     private Dependency createDependency(String project) {
         boolean isProjectInBuild = project.startsWith(":");
         return getDependencies()
-                .create(
-                        isProjectInBuild
-                                ? getDependencies().project(Collections.singletonMap("path", project))
-                                : project);
+                .create(isProjectInBuild ? getDependencies().project(singletonMap("path", project)) : project);
     }
 
     /**
