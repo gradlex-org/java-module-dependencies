@@ -9,7 +9,7 @@ dependencies {
     implementation("org.ow2.asm:asm:9.10.1")
     implementation("com.github.javaparser:javaparser-core:3.28.2")
     compileOnly("org.gradlex:extra-java-module-info:1.14")
-    compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:3.15.0")
+    compileOnly("com.autonomousapps:dependency-analysis-gradle-plugin:3.16.0")
 }
 
 jvmDependencyConflicts.patch {
