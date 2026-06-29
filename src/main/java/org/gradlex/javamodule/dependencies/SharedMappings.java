@@ -26,7 +26,7 @@ public final class SharedMappings {
         Map<String, String> propertiesAsMap = (Map) properties;
 
         try (InputStream coordinatesFile =
-                JavaModuleDependenciesExtension.class.getResourceAsStream("unique_modules.properties")) {
+                JavaModuleDependenciesExtension.class.getResourceAsStream("module-maven.properties")) {
             properties.load(coordinatesFile);
         } catch (IOException e) {
             throw new RuntimeException(e);
