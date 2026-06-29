@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS;
 
 import org.gradlex.javamodule.dependencies.test.fixture.GradleBuild;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 class GroupMappingTest {
@@ -41,24 +42,27 @@ class GroupMappingTest {
     }
 
     @Test
+    @Tag("no-cross-version")
     void can_map_groups_with_classifier() {
+        build.settingsFile.writeText(
+                "plugins { id(\"org.gradlex.java-module-dependencies\") }\n" + build.settingsFile.text());
+
         var testFixturesModuleInfoFile = build.file("lib/src/testFixtures/java/module-info.java");
 
         build.libModuleInfoFile.writeText("module com.example.lib { }");
-        testFixturesModuleInfoFile.writeText("module com.other.lib.test.fixtures { }");
+        testFixturesModuleInfoFile.writeText("module com.example.lib.test.fixtures { }");
         build.libBuildFile.appendText("group = \"com.example\"");
         build.appModuleInfoFile.appendText("""
             module org.gradlex.test.app {
                 requires com.example.lib;
-                requires com.other.lib.test.fixtures;
+                requires com.example.lib.test.fixtures;
             }""");
         build.appBuildFile.appendText("""
             javaModuleDependencies {
-                moduleNamePrefixToGroup.put("com.example.", "com.example")
-                moduleNamePrefixToGroup.put("com.other.|.test.fixtures", "com.example|test-fixtures")
+                moduleNamePrefixToGroup.put("com.example.|.test.fixtures", "com.example|test-fixtures")
             }""");
 
-        var result = build.runner(false, "assemble").build();
+        var result = build.runner("assemble").build();
         assertThat(requireNonNull(result.task(":lib:compileJava")).getOutcome()).isEqualTo(SUCCESS);
         assertThat(requireNonNull(result.task(":lib:compileTestFixturesJava")).getOutcome())
                 .isEqualTo(SUCCESS);

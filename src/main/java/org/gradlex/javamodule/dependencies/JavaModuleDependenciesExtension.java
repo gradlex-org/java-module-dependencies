@@ -225,12 +225,16 @@ public abstract class JavaModuleDependenciesExtension {
                     classifier = "|" + split[1];
                 }
 
-                String artifact = toProjectName(moduleName
-                        .get()
-                        .substring(0, moduleName.get().length() - nameSuffix.length())
-                        .substring(namePrefix.length()));
-
-                return group + ":" + artifact + classifier;
+                if (moduleName.get().endsWith(nameSuffix)) {
+                    String artifact = toProjectName(moduleName
+                            .get()
+                            .substring(0, moduleName.get().length() - nameSuffix.length())
+                            .substring(namePrefix.length()));
+                    return group + ":" + artifact + classifier;
+                } else {
+                    String artifact = toProjectName(moduleName.get().substring(namePrefix.length()));
+                    return group + ":" + artifact;
+                }
             }
             return null;
         });
