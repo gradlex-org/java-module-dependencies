@@ -2,6 +2,7 @@
 
 ## Version 1.13
 * Update module name mappings
+* [#328](https://github.com/gradlex-org/java-module-dependencies/issues/328) Support classifiers in moduleNamePrefixToGroup mapping
 
 ## Version 1.12.2
 * [#319](https://github.com/gradlex-org/java-module-dependencies/pull/319) Address Gradle 9.6.0 deprecations
