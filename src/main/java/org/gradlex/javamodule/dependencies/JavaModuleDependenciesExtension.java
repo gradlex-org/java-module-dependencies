@@ -207,16 +207,37 @@ public abstract class JavaModuleDependenciesExtension {
     private Provider<String> mapByPrefix(Provider<String> moduleName) {
         return getModuleNamePrefixToGroup().map(m -> {
             Optional<Map.Entry<String, String>> prefixToGroup = m.entrySet().stream()
-                    .filter(e -> moduleName.get().startsWith(e.getKey()))
-                    .max(Comparator.comparingInt(e -> e.getKey().length()));
+                    .filter(e -> moduleName.get().startsWith(keyWithoutClassifier(e)))
+                    .max(Comparator.comparingInt(e -> keyWithoutClassifier(e).length()));
             if (prefixToGroup.isPresent()) {
+                String namePrefix = prefixToGroup.get().getKey();
+                String nameSuffix = "";
+                if (namePrefix.contains("|")) {
+                    String[] split = namePrefix.split("\\|");
+                    namePrefix = split[0];
+                    nameSuffix = split[1];
+                }
                 String group = prefixToGroup.get().getValue();
-                String artifact = toProjectName(
-                        moduleName.get().substring(prefixToGroup.get().getKey().length()));
-                return group + ":" + artifact;
+                String classifier = "";
+                if (group.contains("|")) {
+                    String[] split = group.split("\\|");
+                    group = split[0];
+                    classifier = "|" + split[1];
+                }
+
+                String artifact = toProjectName(moduleName
+                        .get()
+                        .substring(0, moduleName.get().length() - nameSuffix.length())
+                        .substring(namePrefix.length()));
+
+                return group + ":" + artifact + classifier;
             }
             return null;
         });
+    }
+
+    private String keyWithoutClassifier(Map.Entry<String, String> e) {
+        return e.getKey().contains("|") ? e.getKey().substring(0, e.getKey().indexOf("|")) : e.getKey();
     }
 
     private String toProjectName(String moduleNameSuffix) {
