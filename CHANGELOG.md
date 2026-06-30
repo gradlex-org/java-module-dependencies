@@ -1,5 +1,8 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.13.1
+* [#330](https://github.com/gradlex-org/java-module-dependencies/issues/330) Update module name mappings (restore accidentally removed)
+
 ## Version 1.13
 * Update module name mappings
 * [#328](https://github.com/gradlex-org/java-module-dependencies/issues/328) Support classifiers in moduleNamePrefixToGroup mapping

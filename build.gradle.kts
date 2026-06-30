@@ -1,4 +1,4 @@
-version = "1.13"
+version = "1.13.1"
 
 configurations.compileClasspath {
     // Allow Java 11 dependencies on compile classpath
