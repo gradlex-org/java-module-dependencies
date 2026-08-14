@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
+import org.gradle.util.GradleVersion;
 
 public class GradleBuild {
 
@@ -26,6 +27,8 @@ public class GradleBuild {
     public final WritableFile libModuleInfoFile;
 
     public static final String GRADLE_VERSION_UNDER_TEST = System.getProperty("gradleVersionUnderTest");
+    public static final boolean GRADLE_VERSION_8_8_MIN = GRADLE_VERSION_UNDER_TEST == null
+            || GradleVersion.version(GRADLE_VERSION_UNDER_TEST).compareTo(GradleVersion.version("8.8")) >= 0;
 
     public GradleBuild() {
         this(false, createBuildTmpDir());
@@ -44,12 +47,17 @@ public class GradleBuild {
         this.appModuleInfoFile = new WritableFile(projectDir.dir("app/src/main/java"), "module-info.java");
         this.libModuleInfoFile = new WritableFile(projectDir.dir("lib/src/main/java"), "module-info.java");
 
+        var includeStatement = GRADLE_VERSION_8_8_MIN
+                ? "plugins { id(\"org.gradlex.java-module-dependencies\") }\n"
+                        + "   javaModules { directory(\".\") { group = \"com.example\" } }"
+                : "include(\"lib\", \"app\")";
+
         settingsFile.writeText("""
+            %s
             dependencyResolutionManagement { repositories.mavenCentral() }
             rootProject.name = "test-project"
-            include("lib", "app")
             includeBuild(".")
-        """);
+        """.formatted(includeStatement));
         appBuildFile.writeText("""
             plugins {
                 id("org.gradlex.java-module-dependencies")
@@ -81,6 +89,8 @@ public class GradleBuild {
                         id("java-test-fixtures")
                     }
                 """);
+        appModuleInfoFile.writeText("module app {}");
+        libModuleInfoFile.writeText("module lib {}");
     }
 
     public WritableFile file(String path) {
@@ -116,14 +126,8 @@ public class GradleBuild {
                 .getInputArguments()
                 .toString()
                 .contains("-agentlib:jdwp");
-        List<String> latestFeaturesArgs = GRADLE_VERSION_UNDER_TEST != null || !projectIsolation
-                ? List.of()
-                : List.of(
-                        "--configuration-cache",
-                        "-Dorg.gradle.unsafe.isolated-projects=true",
-                        // "getGroup" in "JavaModuleDependenciesExtension.create"
-                        "--configuration-cache-problems=warn",
-                        "-Dorg.gradle.configuration-cache.max-problems=3");
+        List<String> latestFeaturesArgs =
+                GRADLE_VERSION_UNDER_TEST != null || !projectIsolation ? List.of() : List.of("--isolated-projects");
         Stream<String> standardArgs = Stream.of(
                 "-s",
                 "--warning-mode=fail",

@@ -2,8 +2,7 @@
 package org.gradlex.javamodule.dependencies.test.configcache;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gradle.util.GradleVersion.version;
-import static org.gradlex.javamodule.dependencies.test.fixture.GradleBuild.GRADLE_VERSION_UNDER_TEST;
+import static org.gradlex.javamodule.dependencies.test.fixture.GradleBuild.GRADLE_VERSION_8_8_MIN;
 
 import org.gradlex.javamodule.dependencies.test.fixture.GradleBuild;
 import org.junit.jupiter.api.Tag;
@@ -14,8 +13,7 @@ class ConfigurationCacheTest {
 
     GradleBuild build = new GradleBuild();
 
-    final String noCacheMessage = GRADLE_VERSION_UNDER_TEST == null
-                    || version(GRADLE_VERSION_UNDER_TEST).compareTo(version("8.8")) >= 0
+    final String noCacheMessage = GRADLE_VERSION_8_8_MIN
             ? "Calculating task graph as no cached configuration is available for tasks: :app:compileJava"
             : "Calculating task graph as no configuration cache is available for tasks: :app:compileJava";
 
