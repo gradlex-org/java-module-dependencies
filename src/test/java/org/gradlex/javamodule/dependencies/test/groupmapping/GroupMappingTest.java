@@ -20,11 +20,11 @@ class GroupMappingTest {
         var lib2BuildFile = build.file("lib-b/build.gradle.kts").writeText(build.libBuildFile.text());
         build.settingsFile.appendText("include(\"lib-b\")");
 
-        build.libModuleInfoFile.appendText("module com.lib { }");
+        build.libModuleInfoFile.writeText("module com.lib { }");
         build.libBuildFile.appendText("group = \"com.foo\"");
-        lib2ModuleInfoFile.appendText("module com.example.lib.b { }");
+        lib2ModuleInfoFile.writeText("module com.example.lib.b { }");
         lib2BuildFile.appendText("group = \"com.example\"");
-        build.appModuleInfoFile.appendText("""
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires com.lib;
                 requires com.example.lib.b;
@@ -44,15 +44,12 @@ class GroupMappingTest {
     @Test
     @Tag("no-cross-version")
     void can_map_groups_with_classifier() {
-        build.settingsFile.writeText(
-                "plugins { id(\"org.gradlex.java-module-dependencies\") }\n" + build.settingsFile.text());
-
         var testFixturesModuleInfoFile = build.file("lib/src/testFixtures/java/module-info.java");
 
         build.libModuleInfoFile.writeText("module com.example.lib { }");
         testFixturesModuleInfoFile.writeText("module com.example.lib.test.fixtures { }");
         build.libBuildFile.appendText("group = \"com.example\"");
-        build.appModuleInfoFile.appendText("""
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires com.example.lib;
                 requires com.example.lib.test.fixtures;

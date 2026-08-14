@@ -259,6 +259,7 @@ class SettingsPluginTest {
 
     @Test
     void can_have_moduleinfo_in_custom_location() {
+        build.libModuleInfoFile.delete();
         build.settingsFile.appendText("""
             javaModules {
                 module("app") { plugin("application") }

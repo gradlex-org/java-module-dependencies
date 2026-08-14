@@ -126,7 +126,7 @@ class CustomizationTest {
             [versions]
             org_apache_xmlbeans = "5.0.1"
             """);
-        build.appModuleInfoFile.appendText("""
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires org.apache.xmlbeans;
             }""");
@@ -142,7 +142,7 @@ class CustomizationTest {
             [versions]
             org-apache-xmlbeans = "5.0.1"
             """);
-        build.appModuleInfoFile.appendText("""
+        build.appModuleInfoFile.writeText("""
             module org.gradlex.test.app {
                 requires org.apache.xmlbeans;
             }""");
