@@ -21,7 +21,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.VersionCatalogsExtension;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.ExtensionContainer;
@@ -66,13 +65,11 @@ public abstract class JavaModuleDependenciesPlugin implements Plugin<ExtensionAw
     }
 
     private void applyProject(Project project) {
-        VersionCatalogsExtension versionCatalogs = project.getExtensions().findByType(VersionCatalogsExtension.class);
-        @SuppressWarnings("DataFlowIssue")
         JavaModuleDependenciesExtension javaModuleDependencies = project.getExtensions()
                 .create(
                         JAVA_MODULE_DEPENDENCIES,
                         JavaModuleDependenciesExtension.class,
-                        versionCatalogs,
+                        project.getExtensions(),
                         project.getRootDir());
 
         setupExtraJavaModulePluginBridge(project, javaModuleDependencies);

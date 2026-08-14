@@ -1,5 +1,9 @@
 # Java Module Dependencies Gradle Plugin - Changelog
 
+## Version 1.13.2
+* Fix: module versions from catalog do not work in combination with settings plugin
+* [#330](https://github.com/gradlex-org/java-module-dependencies/issues/330) Update module name mappings
+
 ## Version 1.13.1
 * [#330](https://github.com/gradlex-org/java-module-dependencies/issues/330) Update module name mappings (restore accidentally removed)
 

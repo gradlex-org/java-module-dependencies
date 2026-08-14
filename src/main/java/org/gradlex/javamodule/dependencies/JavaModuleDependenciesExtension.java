@@ -42,6 +42,7 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -68,7 +69,7 @@ import org.jspecify.annotations.Nullable;
 public abstract class JavaModuleDependenciesExtension {
     static final String JAVA_MODULE_DEPENDENCIES = "javaModuleDependencies";
 
-    private final @Nullable VersionCatalogsExtension versionCatalogs;
+    private final ExtensionContainer projectExtensions;
 
     public abstract Property<ModuleInfoCache> getModuleInfoCache();
 
@@ -125,8 +126,8 @@ public abstract class JavaModuleDependenciesExtension {
      */
     public abstract Property<Boolean> getAnalyseOnly();
 
-    public JavaModuleDependenciesExtension(@Nullable VersionCatalogsExtension versionCatalogs, File rootDir) {
-        this.versionCatalogs = versionCatalogs;
+    public JavaModuleDependenciesExtension(ExtensionContainer projectExtensions, File rootDir) {
+        this.projectExtensions = projectExtensions;
         getModuleInfoCache()
                 .convention(getProviders().provider(() -> getObjects().newInstance(ModuleInfoCache.class, false)));
         getModulesProperties().set(new File(rootDir, "gradle/modules.properties"));
@@ -439,6 +440,7 @@ public abstract class JavaModuleDependenciesExtension {
     }
 
     private ExternalDependency findGav(String ga, String moduleName) {
+        VersionCatalogsExtension versionCatalogs = projectExtensions.findByType(VersionCatalogsExtension.class);
         Optional<VersionCatalog> catalog = versionCatalogs == null
                 ? empty()
                 : versionCatalogs.find(getVersionCatalogName().get());
