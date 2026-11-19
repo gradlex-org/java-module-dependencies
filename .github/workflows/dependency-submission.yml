@@ -13,5 +13,4 @@ jobs:
       - uses: gradle/actions/dependency-submission@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           build-scan-publish: true
-          build-scan-terms-of-use-url: https://gradle.com/help/legal-terms-of-use
-          build-scan-terms-of-use-agree: yes
+          develocity-access-key: ${{ secrets.DEVELOCITY_ACCESS_KEY }}

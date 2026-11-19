@@ -2,6 +2,7 @@
 
 [![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fgradlex-org%2Fjava-module-dependencies%2Fbadge%3Fref%3Dmain&style=flat)](https://actions-badge.atrox.dev/gradlex-org/java-module-dependencies/goto?ref=main)
 [![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v?label=Plugin%20Portal&metadataUrl=https%3A%2F%2Fplugins.gradle.org%2Fm2%2Forg%2Fgradlex%2Fjava-module-dependencies%2Forg.gradlex.java-module-dependencies.gradle.plugin%2Fmaven-metadata.xml)](https://plugins.gradle.org/plugin/org.gradlex.java-module-dependencies)
+[![Revved up by Develocity](https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?logo=Gradle&labelColor=02303A)](https://community.develocity.cloud/scans?search.names=Git%20repository&search.values=*gradlex-org%2F*)
 
 A Gradle plugin to make Gradle use dependencies from _module-info.java_ files automatically.
 If you have a project that fully uses Java Modules, you do **not** need to declare dependencies in the `dependencies { }` block anymore.
